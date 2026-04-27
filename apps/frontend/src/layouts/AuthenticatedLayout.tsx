@@ -15,7 +15,7 @@ const navigationByProfile: Record<TipoUsuario, NavigationItem[]> = {
     { label: 'Resumo', href: '/app/cliente' },
     { label: 'Meus endereços', href: '/app/cliente/enderecos' },
     { label: 'Minhas solicitações', href: '/app/cliente/solicitacoes' },
-    { label: 'Pagamentos' },
+    { label: 'Pagamentos', href: '/app/cliente/pagamentos' },
     { label: 'Histórico' },
   ],
   PROFISSIONAL: [

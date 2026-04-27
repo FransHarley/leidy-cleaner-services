@@ -5,6 +5,9 @@ import { PublicLayout } from '../layouts/PublicLayout';
 import { AdminDashboardPage } from '../pages/app/AdminDashboardPage';
 import { ClienteDashboardPage } from '../pages/app/ClienteDashboardPage';
 import { ClienteEnderecosPage } from '../pages/app/ClienteEnderecosPage';
+import { ClientePagamentoPage } from '../pages/app/ClientePagamentoPage';
+import { ClientePagamentoRetornoPage } from '../pages/app/ClientePagamentoRetornoPage';
+import { ClientePagamentosPage } from '../pages/app/ClientePagamentosPage';
 import { ClienteSelecionarProfissionaisPage } from '../pages/app/ClienteSelecionarProfissionaisPage';
 import { ClienteSolicitacoesPage } from '../pages/app/ClienteSolicitacoesPage';
 import { ProfissionalConviteDetalhePage } from '../pages/app/ProfissionalConviteDetalhePage';
@@ -41,6 +44,10 @@ export function App() {
               <Route path="enderecos" element={<ClienteEnderecosPage />} />
               <Route path="solicitacoes" element={<ClienteSolicitacoesPage />} />
               <Route path="solicitacoes/:id/profissionais" element={<ClienteSelecionarProfissionaisPage />} />
+              <Route path="pagamentos" element={<ClientePagamentosPage />} />
+              <Route path="pagamentos/retorno" element={<ClientePagamentoRetornoPage />} />
+              <Route path="pagamentos/atendimento/:atendimentoId" element={<ClientePagamentoPage />} />
+              <Route path="pagamentos/:pagamentoId" element={<ClientePagamentoPage />} />
             </Route>
           </Route>
           <Route element={<RequireProfile profile="PROFISSIONAL" />}>

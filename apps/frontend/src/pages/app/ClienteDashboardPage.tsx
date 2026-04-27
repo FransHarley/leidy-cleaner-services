@@ -15,7 +15,8 @@ const clienteItems = [
   },
   {
     title: 'Pagamentos',
-    description: 'Área futura para acompanhar cobranças vinculadas aos atendimentos.',
+    description: 'Acompanhe checkouts e status de pagamentos vinculados aos atendimentos.',
+    href: '/app/cliente/pagamentos',
   },
   {
     title: 'Histórico',

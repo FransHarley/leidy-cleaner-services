@@ -282,19 +282,19 @@ Entregar o módulo de convites da profissional.
 Entregar a tela de pagamento alinhada ao backend e ao Asaas.
 
 ### Entregas
-- [ ] implementar tela de checkout/pagamento vinculada ao atendimento
-- [ ] exibir método de pagamento
-- [ ] exibir QR Code / Pix copia-e-cola / link / status
-- [ ] implementar polling ou refresh controlado de status quando necessário
-- [ ] implementar visual de “aguardando confirmação”
-- [ ] integrar com rota principal de checkout implementada no backend
-- [ ] integrar com `GET /api/v1/pagamentos/{id}`
-- [ ] integrar com `GET /api/v1/pagamentos/atendimento/{atendimentoId}`
-- [ ] integrar com `POST /api/v1/pagamentos/{id}/consultar-status`
+- [x] implementar tela de checkout/pagamento vinculada ao atendimento
+- [x] exibir método de pagamento
+- [x] exibir QR Code / Pix copia-e-cola / link / status
+- [x] implementar polling ou refresh controlado de status quando necessário
+- [x] implementar visual de “aguardando confirmação”
+- [x] integrar com rota principal de checkout implementada no backend
+- [x] integrar com `GET /api/v1/pagamentos/{id}`
+- [x] integrar com `GET /api/v1/pagamentos/atendimento/{atendimentoId}`
+- [x] integrar com `POST /api/v1/pagamentos/{id}/consultar-status`
 
 ### Critério de pronto
-- [ ] cliente consegue visualizar e acompanhar o pagamento
-- [ ] frontend não confirma pagamento por conta própria
+- [x] cliente consegue visualizar e acompanhar o pagamento
+- [x] frontend não confirma pagamento por conta própria
 
 ---
 
@@ -387,7 +387,7 @@ Transformar o frontend de funcional em utilizável de verdade.
 - [x] F7 — Solicitação de faxina
 - [x] F8 — Profissionais elegíveis e seleção
 - [x] F9 — Convites
-- [ ] F10 — Pagamento
+- [x] F10 — Pagamento
 - [ ] F11 — Atendimentos
 - [ ] F12 — Avaliação
 - [ ] F13 — Admin
