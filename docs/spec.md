@@ -559,6 +559,7 @@ Use esta seção como checklist viva de execução.
 - [x] Implementar dashboard admin básico
 - [x] Implementar listagem de profissionais pendentes
 - [x] Implementar fluxo de aprovação/rejeição
+- [ ] Implementar listagens admin de atendimentos/pagamentos/solicitações/clientes — Pendente: F13-C identificou gaps de backend para essas listagens.
 
 ## M10 — Polimento
 - [ ] Adicionar validações UX no frontend — Parcial: formulários principais usam Zod, falta revisão global.

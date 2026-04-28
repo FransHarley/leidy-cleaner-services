@@ -51,6 +51,12 @@ Cria conta de profissional.
 ### PATCH `/usuarios/{id}/status`
 Admin altera status da conta.
 
+### GET `/usuarios`
+Gap F13-C: não existe no backend atual.
+
+### GET `/clientes`
+Gap F13-C: não existe no backend atual.
+
 ---
 
 ## 4. Endereços
@@ -160,6 +166,9 @@ Cliente cria solicitação de faxina.
 ### GET `/solicitacoes/minhas`
 Cliente lista suas solicitações.
 
+### GET `/solicitacoes`
+Gap F13-C: não existe listagem administrativa no backend atual.
+
 ### GET `/solicitacoes/{id}`
 Detalhe da solicitação.
 
@@ -199,10 +208,10 @@ Lista atendimentos do usuario autenticado:
 - nao implementa listagem admin ampla neste marco
 
 ### GET `/atendimentos/{id}`
-Detalha atendimento relacionado ao usuario autenticado.
+Detalha atendimento relacionado ao usuario autenticado. Admin não tem acesso amplo por esta rota no backend atual.
 
 ### GET `/atendimentos`
-Admin lista atendimentos.
+Gap F13-C: documentado como necessário para listagem admin, mas não existe no backend atual.
 
 ### POST `/atendimentos/{id}/iniciar`
 Profissional atribuida inicia o servico. Transicao: `CONFIRMADO -> EM_EXECUCAO`.
@@ -236,10 +245,13 @@ Cria checkout Asaas para um atendimento da cliente autenticada. Esse e o caminho
 Cria cobranca direta do atendimento. Endpoint legado/deprecado; depende de `ASAAS_DEFAULT_CUSTOMER_ID` e nao e o caminho principal do checkout.
 
 ### GET `/pagamentos/{id}`
-Consulta pagamento.
+Consulta pagamento do cliente relacionado. Não é endpoint administrativo amplo.
 
 ### GET `/pagamentos/atendimento/{atendimentoId}`
-Consulta pagamento pelo atendimento.
+Consulta pagamento pelo atendimento para o cliente relacionado. Não é endpoint administrativo amplo.
+
+### GET `/pagamentos`
+Gap F13-C: não existe listagem administrativa no backend atual.
 
 ### POST `/pagamentos/{id}/consultar-status`
 Reconsulta o gateway, mas nao confirma pagamento de forma definitiva. Estados recebidos do gateway podem ir para `AGUARDANDO_CONFIRMACAO`; `PAGO` so vem do webhook.

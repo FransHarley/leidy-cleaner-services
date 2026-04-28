@@ -375,9 +375,22 @@ Entregar o básico do operacional administrativo no frontend.
 - [x] usuário autenticado consegue listar, abrir e consultar ocorrências
 - [x] admin consegue listar, consultar e atualizar status de ocorrências
 
+### F13-C — Listagens operacionais admin
+- [x] auditar endpoints administrativos reais para atendimentos, pagamentos, solicitações e usuários/clientes
+- [ ] implementar listagem admin de atendimentos — Bloqueado: `GET /api/v1/atendimentos` não existe no backend atual.
+- [ ] implementar detalhe admin de atendimento — Bloqueado: `GET /api/v1/atendimentos/{id}` existe apenas para usuário relacionado.
+- [ ] exibir pagamento no detalhe admin de atendimento — Bloqueado: `GET /api/v1/pagamentos/atendimento/{atendimentoId}` existe apenas para cliente relacionado.
+- [ ] implementar listagem admin de pagamentos — Bloqueado: não há endpoint administrativo de listagem.
+- [ ] implementar listagem admin de solicitações — Bloqueado: não há endpoint administrativo de listagem.
+- [ ] implementar listagem admin de usuários/clientes — Bloqueado: não há endpoint administrativo de listagem.
+
+### Critério de pronto F13-C
+- [x] gaps reais de backend foram identificados sem criar telas falsas
+- [ ] admin consegue listar atendimentos operacionalmente — Bloqueado por backend.
+
 ### Entregas futuras
-- [ ] implementar listagens operacionais mínimas conforme backend existente — Parcial: verificações, profissionais e ocorrências estão integrados.
-- [ ] integrar com endpoints admin disponíveis — Parcial: faltam áreas admin além de verificações/profissionais/ocorrências.
+- [ ] implementar listagens operacionais mínimas conforme backend existente — Parcial: verificações, profissionais e ocorrências estão integrados; atendimentos/pagamentos/solicitações/clientes dependem de endpoints admin.
+- [ ] integrar com endpoints admin disponíveis — Parcial: não há endpoints admin disponíveis além dos já integrados para verificações, profissionais e ocorrências.
 
 ---
 
