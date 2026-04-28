@@ -346,23 +346,42 @@ apps/frontend/src/
 
 ### Regiões / disponibilidade
 - `GET /api/v1/regioes`
+- `GET /api/v1/profissionais/me`
+- `PUT /api/v1/profissionais/me`
 - `POST /api/v1/profissionais/me/regioes`
+- `GET /api/v1/profissionais/me/regioes`
 - `POST /api/v1/profissionais/me/disponibilidades`
+- `GET /api/v1/profissionais/me/disponibilidades`
+- `PUT /api/v1/profissionais/me/disponibilidades/{id}`
+- `DELETE /api/v1/profissionais/me/disponibilidades/{id}`
+
+### Verificação / aprovação profissional
+- `POST /api/v1/verificacoes/documentos`
+- `GET /api/v1/verificacoes/minha`
+- `GET /api/v1/verificacoes`
+- `GET /api/v1/verificacoes/{id}`
+- `PATCH /api/v1/verificacoes/{id}/analisar`
+- `GET /api/v1/profissionais`
+- `PATCH /api/v1/profissionais/{id}/aprovacao`
 
 ### Solicitações
 - `POST /api/v1/solicitacoes`
 - `GET /api/v1/solicitacoes/minhas`
+- `GET /api/v1/solicitacoes/{id}`
 - `GET /api/v1/solicitacoes/{id}/profissionais-disponiveis`
 - `POST /api/v1/solicitacoes/{id}/selecionados`
+- `PATCH /api/v1/solicitacoes/{id}/cancelar`
 
 ### Convites
 - `GET /api/v1/convites/meus`
+- `GET /api/v1/convites/{id}`
 - `POST /api/v1/convites/{id}/aceitar`
 - `POST /api/v1/convites/{id}/recusar`
 
 ### Atendimentos
 - `GET /api/v1/atendimentos/meus`
 - `GET /api/v1/atendimentos/{id}`
+- `GET /api/v1/atendimentos/{id}/checkpoints`
 - `POST /api/v1/atendimentos/{id}/iniciar`
 - `POST /api/v1/atendimentos/{id}/finalizar`
 
@@ -377,6 +396,13 @@ apps/frontend/src/
 ### Avaliações
 - `POST /api/v1/avaliacoes`
 - `GET /api/v1/profissionais/{id}/avaliacoes`
+
+### Ocorrências
+- `POST /api/v1/ocorrencias`
+- `GET /api/v1/ocorrencias/meus`
+- `GET /api/v1/ocorrencias/{id}`
+- `GET /api/v1/ocorrencias`
+- `PATCH /api/v1/ocorrencias/{id}/status`
 
 ---
 
@@ -512,7 +538,7 @@ Use esta seção como checklist viva de execução.
 - [x] Criar migration de `pagamentos`
 - [x] Implementar integracao Asaas Checkout para iniciar pagamento
 - [x] Persistir identificador externo do checkout/pagamento
-- [ ] Criar tela frontend de pagamento e retorno
+- [x] Criar tela frontend de pagamento e retorno
 - [x] Implementar webhook do Asaas em `POST /api/v1/webhooks/asaas`
 - [x] Garantir idempotencia basica do webhook
 - [x] Atualizar pagamento para `PAGO` via webhook
@@ -530,18 +556,18 @@ Use esta seção como checklist viva de execução.
 - [x] Criar migration de `ocorrencias_atendimento`
 - [x] Implementar abertura de ocorrência
 - [x] Implementar listagem/admin de ocorrências
-- [ ] Implementar dashboard admin básico
-- [ ] Implementar listagem de profissionais pendentes
+- [x] Implementar dashboard admin básico
+- [x] Implementar listagem de profissionais pendentes
 - [x] Implementar fluxo de aprovação/rejeição
 
 ## M10 — Polimento
-- [ ] Adicionar validações UX no frontend
-- [ ] Adicionar estados de loading
-- [ ] Adicionar empty states
-- [ ] Adicionar feedbacks/toasts
-- [ ] Revisar permissões por perfil
-- [ ] Revisar status e transições
-- [ ] Revisar segurança mínima dos endpoints
+- [ ] Adicionar validações UX no frontend — Parcial: formulários principais usam Zod, falta revisão global.
+- [ ] Adicionar estados de loading — Parcial: telas principais têm estados, falta padronização global.
+- [ ] Adicionar empty states — Parcial: vários fluxos têm vazio, falta componente/padrão global.
+- [ ] Adicionar feedbacks/toasts — Parcial: `FormAlert` existe, não há sistema de toast.
+- [ ] Revisar permissões por perfil — Parcial: rotas e endpoints críticos protegem perfis, falta revisão final.
+- [ ] Revisar status e transições — Parcial: backend concentra regras, falta revisão final de consistência.
+- [ ] Revisar segurança mínima dos endpoints — Parcial: há testes de segurança em fluxos críticos, falta auditoria final.
 - [ ] Revisar documentação final
 
 ---

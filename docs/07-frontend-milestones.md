@@ -48,18 +48,18 @@ Deixar a base do frontend organizada para crescimento real, sem virar bagunça.
 - [x] definir estrutura de `features/`
 - [x] definir estrutura de `services/`
 - [x] definir estrutura de `routes/`
-- [ ] definir estrutura de `types/`
+- [ ] definir estrutura de `types/` — Pendente: tipos seguem locais por feature, sem `src/types`.
 - [x] criar base de tema visual alinhada à identidade do projeto
-- [ ] criar componente base de botão
+- [ ] criar componente base de botão — Parcial: existe `PublicButton`, falta botão base compartilhado da área app.
 - [x] criar componente base de input
-- [ ] criar componente base de select
+- [ ] criar componente base de select — Pendente: selects ainda são implementados inline.
 - [x] criar componente base de textarea
-- [ ] criar componente base de card
-- [ ] criar componente base de badge/status
-- [ ] criar componente base de modal/drawer
-- [ ] criar componente base de tabela/listagem
-- [ ] criar componente base de loading skeleton/spinner
-- [ ] criar componente base de empty state
+- [ ] criar componente base de card — Pendente: cards ainda são específicos por feature/página.
+- [ ] criar componente base de badge/status — Parcial: badges existem por feature, falta base compartilhada.
+- [ ] criar componente base de modal/drawer — Pendente.
+- [ ] criar componente base de tabela/listagem — Pendente.
+- [ ] criar componente base de loading skeleton/spinner — Pendente.
+- [ ] criar componente base de empty state — Pendente: estados vazios ainda são locais por página.
 
 ### Critério de pronto
 - [x] frontend sobe limpo
@@ -125,7 +125,7 @@ Ligar os formulários públicos ao backend de cadastro já existente.
 - [x] integrar tela de cadastro de profissional
 - [x] implementar validação visual de formulário
 - [x] exibir mensagens de erro vindas da API
-- [ ] implementar redirecionamento pós-cadastro
+- [ ] implementar redirecionamento pós-cadastro — Pendente: cadastro exibe sucesso, mas não redireciona automaticamente.
 - [x] implementar feedback de sucesso
 
 ### Critério de pronto
@@ -146,7 +146,7 @@ Criar a estrutura inicial das áreas logadas, sem ainda implementar todos os flu
 - [x] implementar dashboard inicial de cliente
 - [x] implementar dashboard inicial de profissional
 - [x] implementar dashboard inicial de admin
-- [ ] implementar componente de status do usuário/perfil
+- [ ] implementar componente de status do usuário/perfil — Parcial: layout exibe nome/perfil, falta componente dedicado.
 - [x] criar placeholders funcionais para áreas ainda não finalizadas
 
 ### Critério de pronto
@@ -376,8 +376,8 @@ Entregar o básico do operacional administrativo no frontend.
 - [x] admin consegue listar, consultar e atualizar status de ocorrências
 
 ### Entregas futuras
-- [ ] implementar listagens operacionais mínimas conforme backend existente
-- [ ] integrar com endpoints admin disponíveis
+- [ ] implementar listagens operacionais mínimas conforme backend existente — Parcial: verificações, profissionais e ocorrências estão integrados.
+- [ ] integrar com endpoints admin disponíveis — Parcial: faltam áreas admin além de verificações/profissionais/ocorrências.
 
 ---
 
@@ -386,15 +386,15 @@ Entregar o básico do operacional administrativo no frontend.
 Transformar o frontend de funcional em utilizável de verdade.
 
 ### Entregas
-- [ ] implementar loading states consistentes
-- [ ] implementar empty states
-- [ ] implementar toasts/feedbacks
-- [ ] implementar tratamento elegante de erro
-- [ ] implementar estados de sucesso
-- [ ] refinar responsividade
-- [ ] revisar acessibilidade básica
-- [ ] revisar textos e consistência visual
-- [ ] revisar navegação e proteção de rotas
+- [ ] implementar loading states consistentes — Parcial: fluxos principais têm loading, falta padrão global.
+- [ ] implementar empty states — Parcial: fluxos principais têm vazio, falta padrão global.
+- [ ] implementar toasts/feedbacks — Parcial: `FormAlert` cobre telas, falta sistema de toast.
+- [ ] implementar tratamento elegante de erro — Parcial: erros de API aparecem, falta revisão global.
+- [ ] implementar estados de sucesso — Parcial: vários fluxos têm sucesso, falta padronização.
+- [ ] refinar responsividade — Parcial: layout é responsivo, falta rodada final de polimento.
+- [ ] revisar acessibilidade básica — Pendente como revisão final.
+- [ ] revisar textos e consistência visual — Pendente como revisão final.
+- [ ] revisar navegação e proteção de rotas — Parcial: rotas protegidas existem, falta revisão final.
 
 ### Critério de pronto
 - [ ] frontend fica coerente, navegável e menos cru
@@ -432,8 +432,8 @@ Transformar o frontend de funcional em utilizável de verdade.
 # Definição de pronto do frontend
 - [x] a home pública está alinhada ao mock
 - [x] login/cadastro estão conectados ao backend
-- [ ] cliente consegue percorrer o fluxo principal do produto
-- [ ] profissional consegue operar onboarding, convites e atendimento
-- [ ] pagamento pode ser acompanhado pelo frontend sem violar a regra do webhook
-- [ ] avaliação funciona ao final do serviço
-- [ ] admin tem pelo menos o básico operacional
+- [x] cliente consegue percorrer o fluxo principal do produto
+- [x] profissional consegue operar onboarding, convites e atendimento
+- [x] pagamento pode ser acompanhado pelo frontend sem violar a regra do webhook
+- [x] avaliação funciona ao final do serviço
+- [x] admin tem pelo menos o básico operacional
