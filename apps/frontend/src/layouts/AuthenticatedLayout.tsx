@@ -17,6 +17,7 @@ const navigationByProfile: Record<TipoUsuario, NavigationItem[]> = {
     { label: 'Minhas solicitações', href: '/app/cliente/solicitacoes' },
     { label: 'Pagamentos', href: '/app/cliente/pagamentos' },
     { label: 'Atendimentos', href: '/app/cliente/atendimentos' },
+    { label: 'Ocorrências', href: '/app/ocorrencias' },
   ],
   PROFISSIONAL: [
     { label: 'Resumo', href: '/app/profissional' },
@@ -26,6 +27,7 @@ const navigationByProfile: Record<TipoUsuario, NavigationItem[]> = {
     { label: 'Verificações' },
     { label: 'Convites', href: '/app/profissional/convites' },
     { label: 'Atendimentos', href: '/app/profissional/atendimentos' },
+    { label: 'Ocorrências', href: '/app/ocorrencias' },
   ],
   ADMIN: [
     { label: 'Resumo', href: '/app/admin' },
@@ -34,7 +36,7 @@ const navigationByProfile: Record<TipoUsuario, NavigationItem[]> = {
     { label: 'Solicitações' },
     { label: 'Atendimentos' },
     { label: 'Pagamentos' },
-    { label: 'Ocorrências' },
+    { label: 'Ocorrências', href: '/app/admin/ocorrencias' },
   ],
 };
 

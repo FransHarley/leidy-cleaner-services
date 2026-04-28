@@ -27,7 +27,8 @@ const adminItems = [
   },
   {
     title: 'Ocorrências',
-    description: 'Espaço reservado para acompanhamento e resolução de ocorrências.',
+    description: 'Acompanhe registros abertos e atualize status pelo contrato administrativo.',
+    href: '/app/admin/ocorrencias',
   },
 ];
 
@@ -38,7 +39,7 @@ export function AdminDashboardPage() {
     <div className="grid gap-5">
       <DashboardHeader
         title={`Administração, ${getFirstName(user?.nomeCompleto ?? '')}.`}
-        description="Acompanhe verificações documentais e aprovações profissionais sem simular dados ou indicadores."
+        description="Acompanhe verificações, aprovações profissionais e ocorrências sem simular dados ou indicadores."
       />
       <DashboardCards items={adminItems} />
     </div>

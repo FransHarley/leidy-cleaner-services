@@ -23,6 +23,11 @@ const clienteItems = [
     description: 'Acompanhe atendimentos, checkpoints e andamento operacional.',
     href: '/app/cliente/atendimentos',
   },
+  {
+    title: 'Ocorrências',
+    description: 'Abra e acompanhe ocorrências vinculadas aos seus atendimentos.',
+    href: '/app/ocorrencias',
+  },
 ];
 
 export function ClienteDashboardPage() {

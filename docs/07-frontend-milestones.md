@@ -353,15 +353,31 @@ Entregar o básico do operacional administrativo no frontend.
 - [x] integrar com `PATCH /api/v1/verificacoes/{id}/analisar`
 - [x] implementar listagem de profissionais por `GET /api/v1/profissionais`
 
-### Entregas futuras
-- [ ] implementar listagens operacionais mínimas conforme backend existente
-- [ ] preparar futura área de ocorrências quando esse módulo estiver pronto
-- [ ] integrar com endpoints admin disponíveis
-
 ### Critério de pronto F13-A
 - [x] admin consegue operar verificações pelo frontend
 - [x] admin consegue alterar aprovação profissional pelo frontend
 - [x] admin consegue listar profissionais pelo frontend
+
+### F13-B — Ocorrências
+- [x] implementar listagem de minhas ocorrências
+- [x] implementar criação de ocorrência vinculada a atendimento
+- [x] implementar detalhe de ocorrência autenticada
+- [x] implementar listagem admin de ocorrências
+- [x] implementar detalhe admin de ocorrência
+- [x] implementar atualização admin de status de ocorrência
+- [x] integrar com `POST /api/v1/ocorrencias`
+- [x] integrar com `GET /api/v1/ocorrencias/meus`
+- [x] integrar com `GET /api/v1/ocorrencias/{id}`
+- [x] integrar com `GET /api/v1/ocorrencias`
+- [x] integrar com `PATCH /api/v1/ocorrencias/{id}/status`
+
+### Critério de pronto F13-B
+- [x] usuário autenticado consegue listar, abrir e consultar ocorrências
+- [x] admin consegue listar, consultar e atualizar status de ocorrências
+
+### Entregas futuras
+- [ ] implementar listagens operacionais mínimas conforme backend existente
+- [ ] integrar com endpoints admin disponíveis
 
 ---
 

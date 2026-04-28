@@ -30,6 +30,11 @@ const profissionalItems = [
     description: 'Acompanhe serviços atribuídos e registre início ou fim quando permitido.',
     href: '/app/profissional/atendimentos',
   },
+  {
+    title: 'Ocorrências',
+    description: 'Registre e acompanhe ocorrências vinculadas aos seus atendimentos.',
+    href: '/app/ocorrencias',
+  },
 ];
 
 export function ProfissionalDashboardPage() {

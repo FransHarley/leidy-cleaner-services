@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthenticatedLayout } from '../layouts/AuthenticatedLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { AdminDashboardPage } from '../pages/app/AdminDashboardPage';
+import { AdminOcorrenciaDetalhePage } from '../pages/app/AdminOcorrenciaDetalhePage';
+import { AdminOcorrenciasPage } from '../pages/app/AdminOcorrenciasPage';
 import { AdminProfissionaisPage } from '../pages/app/AdminProfissionaisPage';
 import { AdminVerificacaoDetalhePage } from '../pages/app/AdminVerificacaoDetalhePage';
 import { AdminVerificacoesPage } from '../pages/app/AdminVerificacoesPage';
@@ -15,6 +17,9 @@ import { ClientePagamentoRetornoPage } from '../pages/app/ClientePagamentoRetorn
 import { ClientePagamentosPage } from '../pages/app/ClientePagamentosPage';
 import { ClienteSelecionarProfissionaisPage } from '../pages/app/ClienteSelecionarProfissionaisPage';
 import { ClienteSolicitacoesPage } from '../pages/app/ClienteSolicitacoesPage';
+import { NovaOcorrenciaPage } from '../pages/app/NovaOcorrenciaPage';
+import { OcorrenciaDetalhePage } from '../pages/app/OcorrenciaDetalhePage';
+import { OcorrenciasPage } from '../pages/app/OcorrenciasPage';
 import { ProfissionalAtendimentoDetalhePage } from '../pages/app/ProfissionalAtendimentoDetalhePage';
 import { ProfissionalAtendimentosPage } from '../pages/app/ProfissionalAtendimentosPage';
 import { ProfissionalConviteDetalhePage } from '../pages/app/ProfissionalConviteDetalhePage';
@@ -45,6 +50,9 @@ export function App() {
       <Route element={<RequireAuth />}>
         <Route path="app" element={<AuthenticatedLayout />}>
           <Route index element={<AppHomeRedirect />} />
+          <Route path="ocorrencias" element={<OcorrenciasPage />} />
+          <Route path="ocorrencias/nova" element={<NovaOcorrenciaPage />} />
+          <Route path="ocorrencias/:id" element={<OcorrenciaDetalhePage />} />
           <Route element={<RequireProfile profile="CLIENTE" />}>
             <Route path="cliente">
               <Route index element={<ClienteDashboardPage />} />
@@ -75,6 +83,8 @@ export function App() {
               <Route path="verificacoes" element={<AdminVerificacoesPage />} />
               <Route path="verificacoes/:id" element={<AdminVerificacaoDetalhePage />} />
               <Route path="profissionais" element={<AdminProfissionaisPage />} />
+              <Route path="ocorrencias" element={<AdminOcorrenciasPage />} />
+              <Route path="ocorrencias/:id" element={<AdminOcorrenciaDetalhePage />} />
             </Route>
           </Route>
         </Route>
