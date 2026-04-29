@@ -52,10 +52,18 @@ Cria conta de profissional.
 Admin altera status da conta.
 
 ### GET `/usuarios`
-Gap F13-C: não existe no backend atual.
+Admin lista usuários em modo somente leitura.
+
+Parametros opcionais:
+- `tipoUsuario`
+- `statusConta`
+- `search`
+
+### GET `/usuarios/{id}`
+Admin consulta detalhe seguro do usuário em modo somente leitura.
 
 ### GET `/clientes`
-Gap F13-C: não existe no backend atual.
+Não existe endpoint separado. Clientes são consultados pela visão admin de `/usuarios`, com `perfilClienteId` quando houver perfil vinculado.
 
 ---
 

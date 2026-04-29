@@ -389,7 +389,10 @@ Entregar o básico do operacional administrativo no frontend.
 - [x] implementar detalhe admin de solicitação
 - [x] integrar com `GET /api/v1/solicitacoes`
 - [x] integrar admin read-only com `GET /api/v1/solicitacoes/{id}`
-- [ ] implementar listagem admin de usuários/clientes — Bloqueado: não há endpoint administrativo de listagem.
+- [x] implementar listagem admin de usuários/clientes
+- [x] implementar detalhe admin de usuário/cliente
+- [x] integrar com `GET /api/v1/usuarios`
+- [x] integrar admin read-only com `GET /api/v1/usuarios/{id}`
 
 ### Critério de pronto F13-C
 - [x] gaps reais de backend foram identificados sem criar telas falsas
@@ -397,10 +400,11 @@ Entregar o básico do operacional administrativo no frontend.
 - [x] admin consegue consultar checkpoints de atendimentos
 - [x] admin consegue listar e consultar pagamentos sem alterar status
 - [x] admin consegue listar e consultar solicitações sem alterar fluxo de cliente
+- [x] admin consegue listar e consultar usuários/clientes sem alterar contas
 
 ### Entregas futuras
-- [ ] implementar listagens operacionais mínimas conforme backend existente — Parcial: verificações, profissionais, ocorrências, atendimentos, pagamentos e solicitações estão integrados; clientes dependem de endpoint admin.
-- [ ] integrar com endpoints admin disponíveis — Parcial: falta endpoint admin para clientes.
+- [x] implementar listagens operacionais mínimas conforme backend existente
+- [ ] integrar com endpoints admin disponíveis — Parcial: painel de pagamento no detalhe admin de atendimento ainda pendente.
 
 ---
 

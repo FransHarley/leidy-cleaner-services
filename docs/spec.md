@@ -343,6 +343,8 @@ apps/frontend/src/
 ### Usuários
 - `POST /api/v1/usuarios/clientes`
 - `POST /api/v1/usuarios/profissionais`
+- `GET /api/v1/usuarios`
+- `GET /api/v1/usuarios/{id}`
 
 ### Regiões / disponibilidade
 - `GET /api/v1/regioes`
@@ -564,7 +566,7 @@ Use esta seção como checklist viva de execução.
 - [x] Implementar listagem admin de atendimentos
 - [x] Implementar listagem admin de pagamentos
 - [x] Implementar listagem admin de solicitações
-- [ ] Implementar listagem admin de clientes — Pendente: F13-C identificou gap de backend para essa listagem.
+- [x] Implementar listagem/detalhe admin de usuários/clientes
 
 ## M10 — Polimento
 - [ ] Adicionar validações UX no frontend — Parcial: formulários principais usam Zod, falta revisão global.

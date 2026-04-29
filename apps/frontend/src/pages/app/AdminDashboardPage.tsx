@@ -14,6 +14,11 @@ const adminItems = [
     href: '/app/admin/profissionais',
   },
   {
+    title: 'Usuários',
+    description: 'Consulte contas e vínculos de perfil sem alterar status ou senhas.',
+    href: '/app/admin/usuarios',
+  },
+  {
     title: 'Atendimentos',
     description: 'Consulte atendimentos e checkpoints em visão administrativa somente leitura.',
     href: '/app/admin/atendimentos',

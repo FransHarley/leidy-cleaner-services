@@ -12,6 +12,8 @@ import { AdminPagamentosPage } from '../pages/app/AdminPagamentosPage';
 import { AdminProfissionaisPage } from '../pages/app/AdminProfissionaisPage';
 import { AdminSolicitacaoDetalhePage } from '../pages/app/AdminSolicitacaoDetalhePage';
 import { AdminSolicitacoesPage } from '../pages/app/AdminSolicitacoesPage';
+import { AdminUsuarioDetalhePage } from '../pages/app/AdminUsuarioDetalhePage';
+import { AdminUsuariosPage } from '../pages/app/AdminUsuariosPage';
 import { AdminVerificacaoDetalhePage } from '../pages/app/AdminVerificacaoDetalhePage';
 import { AdminVerificacoesPage } from '../pages/app/AdminVerificacoesPage';
 import { ClienteAtendimentoDetalhePage } from '../pages/app/ClienteAtendimentoDetalhePage';
@@ -97,6 +99,8 @@ export function App() {
               <Route path="pagamentos/:id" element={<AdminPagamentoDetalhePage />} />
               <Route path="solicitacoes" element={<AdminSolicitacoesPage />} />
               <Route path="solicitacoes/:id" element={<AdminSolicitacaoDetalhePage />} />
+              <Route path="usuarios" element={<AdminUsuariosPage />} />
+              <Route path="usuarios/:id" element={<AdminUsuarioDetalhePage />} />
             </Route>
           </Route>
         </Route>

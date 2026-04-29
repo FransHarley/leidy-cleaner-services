@@ -292,6 +292,131 @@ class AuthUsuarioIntegrationTest {
     }
 
     @Test
+    void adminListaUsuariosComFiltrosSemExporSenha() throws Exception {
+        String emailCliente = "cliente.m1b.admin-lista@example.com";
+        String emailProfissional = "profissional.m1b.admin-lista@example.com";
+        cadastrarCliente(emailCliente, "senha-segura-123");
+        cadastrarProfissional(emailProfissional, "333.444.555-66");
+        Long clienteId = usuarioRepository.findByEmail(emailCliente).orElseThrow().getId();
+        Long profissionalId = usuarioRepository.findByEmail(emailProfissional).orElseThrow().getId();
+        String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
+
+        mockMvc.perform(patch("/api/v1/usuarios/{id}/status", clienteId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "statusConta": "BLOQUEADA"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        String response = mockMvc.perform(get("/api/v1/usuarios")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].senhaHash").doesNotExist())
+                .andExpect(jsonPath("$.data[0].senha").doesNotExist())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(response).doesNotContain("senhaHash", "password");
+        JsonNode cliente = encontrarUsuarioNaLista(response, clienteId);
+        assertThat(cliente.path("usuarioId").asLong()).isEqualTo(clienteId);
+        assertThat(cliente.path("perfilClienteId").isNumber()).isTrue();
+        assertThat(cliente.path("nomeCompleto").asText()).isEqualTo("Cliente Auxiliar");
+        assertThat(cliente.path("email").asText()).isEqualTo(emailCliente);
+        assertThat(cliente.path("tipoUsuario").asText()).isEqualTo("CLIENTE");
+        assertThat(cliente.path("statusConta").asText()).isEqualTo("BLOQUEADA");
+
+        String filtroTipo = mockMvc.perform(get("/api/v1/usuarios")
+                        .param("tipoUsuario", "CLIENTE")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(listaContemUsuario(filtroTipo, clienteId)).isTrue();
+        assertThat(listaContemUsuario(filtroTipo, profissionalId)).isFalse();
+
+        String filtroStatus = mockMvc.perform(get("/api/v1/usuarios")
+                        .param("statusConta", "BLOQUEADA")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(listaContemUsuario(filtroStatus, clienteId)).isTrue();
+        assertThat(listaContemUsuario(filtroStatus, profissionalId)).isFalse();
+
+        String filtroBusca = mockMvc.perform(get("/api/v1/usuarios")
+                        .param("search", emailProfissional)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(listaContemUsuario(filtroBusca, profissionalId)).isTrue();
+        assertThat(listaContemUsuario(filtroBusca, clienteId)).isFalse();
+    }
+
+    @Test
+    void naoAdminNaoListaUsuarios() throws Exception {
+        String email = "cliente.m1b.admin-lista-403@example.com";
+        cadastrarCliente(email, "senha-segura-123");
+        String tokenCliente = login(email, "senha-segura-123");
+
+        mockMvc.perform(get("/api/v1/usuarios")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void adminVisualizaDetalheUsuarioSemExporSenha() throws Exception {
+        String email = "cliente.m1b.admin-detalhe@example.com";
+        cadastrarCliente(email, "senha-segura-123");
+        Long usuarioId = usuarioRepository.findByEmail(email).orElseThrow().getId();
+        String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
+
+        String response = mockMvc.perform(get("/api/v1/usuarios/{id}", usuarioId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.usuarioId").value(usuarioId))
+                .andExpect(jsonPath("$.data.perfilClienteId").isNumber())
+                .andExpect(jsonPath("$.data.nomeCompleto").value("Cliente Auxiliar"))
+                .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.tipoUsuario").value("CLIENTE"))
+                .andExpect(jsonPath("$.data.senhaHash").doesNotExist())
+                .andExpect(jsonPath("$.data.senha").doesNotExist())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(response).doesNotContain("senhaHash", "password");
+    }
+
+    @Test
+    void naoAdminNaoVisualizaDetalheArbitrarioDeUsuario() throws Exception {
+        String emailDona = "cliente.m1b.admin-detalhe-dona@example.com";
+        String emailOutra = "cliente.m1b.admin-detalhe-outra@example.com";
+        cadastrarCliente(emailDona, "senha-segura-123");
+        cadastrarCliente(emailOutra, "senha-segura-123");
+        Long usuarioId = usuarioRepository.findByEmail(emailDona).orElseThrow().getId();
+        String tokenOutraCliente = login(emailOutra, "senha-segura-123");
+
+        mockMvc.perform(get("/api/v1/usuarios/{id}", usuarioId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenOutraCliente))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
     void endpointsPublicosContinuamPublicos() throws Exception {
         mockMvc.perform(get("/api/v1/health"))
                 .andExpect(status().isOk());
@@ -366,5 +491,27 @@ class AuthUsuarioIntegrationTest {
                 .getContentAsString();
         JsonNode root = objectMapper.readTree(response);
         return root.path("data").path("accessToken").asText();
+    }
+
+    private JsonNode encontrarUsuarioNaLista(String response, Long usuarioId) throws Exception {
+        JsonNode data = objectMapper.readTree(response).path("data");
+        for (JsonNode usuario : data) {
+            if (usuario.path("usuarioId").asLong() == usuarioId) {
+                return usuario;
+            }
+        }
+
+        throw new AssertionError("Usuario nao encontrado na lista: " + usuarioId);
+    }
+
+    private boolean listaContemUsuario(String response, Long usuarioId) throws Exception {
+        JsonNode data = objectMapper.readTree(response).path("data");
+        for (JsonNode usuario : data) {
+            if (usuario.path("usuarioId").asLong() == usuarioId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
