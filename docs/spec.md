@@ -343,6 +343,7 @@ apps/frontend/src/
 ### Usuários
 - `POST /api/v1/usuarios/clientes`
 - `POST /api/v1/usuarios/profissionais`
+- `PATCH /api/v1/usuarios/{id}/status`
 - `GET /api/v1/usuarios`
 - `GET /api/v1/usuarios/{id}`
 
@@ -383,6 +384,7 @@ apps/frontend/src/
 
 ### Atendimentos
 - `GET /api/v1/atendimentos/meus`
+- `GET /api/v1/atendimentos`
 - `GET /api/v1/atendimentos/{id}`
 - `GET /api/v1/atendimentos/{id}/checkpoints`
 - `POST /api/v1/atendimentos/{id}/iniciar`
