@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { buscarAtendimentoAdmin, listarCheckpointsAtendimentoAdmin } from '../../features/admin/atendimentos/adminAtendimentosApi';
 import { AtendimentoInfoPanel } from '../../features/atendimentos/AtendimentoInfoPanel';
 import { CheckpointsList } from '../../features/atendimentos/CheckpointsList';
@@ -87,7 +88,7 @@ export function AdminAtendimentoDetalhePage() {
         message="A administração pode consultar o atendimento, mas início e finalização continuam restritos à profissional atribuída."
       />
 
-      {atendimentoQuery.isLoading && <StateBox title="Carregando atendimento" description="Buscando os dados operacionais." />}
+      {atendimentoQuery.isLoading && <StateBox tone="loading" title="Carregando atendimento" description="Buscando os dados operacionais." />}
 
       {atendimentoQuery.isError && !protectedError && (
         <FormAlert
@@ -106,7 +107,7 @@ export function AdminAtendimentoDetalhePage() {
           <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
         </div>
 
-        {checkpointsQuery.isLoading && <StateBox title="Carregando checkpoints" description="Buscando registros do atendimento." />}
+        {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
 
         {checkpointsQuery.isError && !protectedError && (
           <FormAlert
@@ -123,14 +124,6 @@ export function AdminAtendimentoDetalhePage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

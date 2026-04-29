@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { AdminUsuarioCard } from '../../features/admin/usuarios/AdminUsuarioCard';
 import { listarUsuariosAdmin } from '../../features/admin/usuarios/adminUsuariosApi';
 import { statusContaOptions, tipoUsuarioOptions } from '../../features/admin/usuarios/usuarioLabels';
@@ -162,7 +163,7 @@ export function AdminUsuariosPage() {
         message="Esta tela não altera status, senha, permissões ou dados cadastrais."
       />
 
-      {usuariosQuery.isLoading && <StateBox title="Carregando usuários" description="Buscando registros operacionais." />}
+      {usuariosQuery.isLoading && <StateBox tone="loading" title="Carregando usuários" description="Buscando registros operacionais." />}
 
       {usuariosQuery.isError && !protectedError && (
         <FormAlert
@@ -174,7 +175,7 @@ export function AdminUsuariosPage() {
       )}
 
       {usuariosQuery.isSuccess && usuarios.length === 0 && (
-        <StateBox title="Nenhum usuário encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhum usuário encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
       )}
 
       {usuarios.length > 0 && (
@@ -188,14 +189,6 @@ export function AdminUsuariosPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function toApiParams(filters: FilterState): ListarUsuariosAdminParams {
   return {

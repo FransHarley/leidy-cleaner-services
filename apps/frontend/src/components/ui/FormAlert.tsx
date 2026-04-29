@@ -13,7 +13,11 @@ const toneClassName = {
 
 export function FormAlert({ tone = 'info', title, message, details = [] }: FormAlertProps) {
   return (
-    <div className={`rounded-lg border px-4 py-3 text-sm ${toneClassName[tone]}`} role={tone === 'error' ? 'alert' : 'status'}>
+    <div
+      className={`rounded-lg border px-4 py-3 text-sm ${toneClassName[tone]}`}
+      role={tone === 'error' ? 'alert' : 'status'}
+      aria-live={tone === 'error' ? 'assertive' : 'polite'}
+    >
       {title && <p className="font-black">{title}</p>}
       <p className={title ? 'mt-1 leading-6' : 'leading-6'}>{message}</p>
       {details.length > 0 && (

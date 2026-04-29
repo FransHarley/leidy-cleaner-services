@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { AtendimentoPagamentoCard } from '../../features/cliente/pagamentos/AtendimentoPagamentoCard';
 import { listarMeusAtendimentosParaPagamento } from '../../features/cliente/pagamentos/pagamentosApi';
@@ -54,7 +55,7 @@ export function ClientePagamentosPage() {
           </p>
         </div>
 
-        {atendimentosQuery.isLoading && <StateBox title="Carregando atendimentos" description="Buscando seus atendimentos vinculados." />}
+        {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus atendimentos vinculados." />}
 
         {atendimentosQuery.isError && !protectedError && (
           <FormAlert
@@ -66,7 +67,7 @@ export function ClientePagamentosPage() {
         )}
 
         {atendimentosQuery.isSuccess && atendimentos.length === 0 && (
-          <StateBox
+          <StateBox tone="empty"
             title="Nenhum atendimento encontrado"
             description="Quando uma profissional aceitar sua solicitação e o atendimento for criado, o pagamento aparecerá aqui."
           />
@@ -88,14 +89,6 @@ export function ClientePagamentosPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { AdminPagamentoCard } from '../../features/admin/pagamentos/AdminPagamentoCard';
 import {
   listarPagamentosAdmin,
@@ -168,7 +169,7 @@ export function AdminPagamentosPage() {
         A confirmação definitiva de pagamento continua dependendo do webhook processado pelo backend.
       </div>
 
-      {pagamentosQuery.isLoading && <StateBox title="Carregando pagamentos" description="Buscando registros operacionais." />}
+      {pagamentosQuery.isLoading && <StateBox tone="loading" title="Carregando pagamentos" description="Buscando registros operacionais." />}
 
       {pagamentosQuery.isError && !protectedError && (
         <FormAlert
@@ -180,7 +181,7 @@ export function AdminPagamentosPage() {
       )}
 
       {pagamentosQuery.isSuccess && pagamentos.length === 0 && (
-        <StateBox title="Nenhum pagamento encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhum pagamento encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
       )}
 
       {pagamentos.length > 0 && (
@@ -210,14 +211,6 @@ function FilterInput({ label, onChange, value }: { label: string; onChange: (val
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function normalizePositiveInteger(value: string) {
   const parsed = Number(value);

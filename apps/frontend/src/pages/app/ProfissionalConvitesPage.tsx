@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { ConviteCard } from '../../features/profissional/convites/ConviteCard';
 import { listarMeusConvites } from '../../features/profissional/convites/convitesApi';
@@ -54,7 +55,7 @@ export function ProfissionalConvitesPage() {
           </p>
         </div>
 
-        {convitesQuery.isLoading && <StateBox title="Carregando convites" description="Buscando seus convites recebidos." />}
+        {convitesQuery.isLoading && <StateBox tone="loading" title="Carregando convites" description="Buscando seus convites recebidos." />}
 
         {convitesQuery.isError && !protectedError && (
           <FormAlert
@@ -66,7 +67,7 @@ export function ProfissionalConvitesPage() {
         )}
 
         {convitesQuery.isSuccess && convites.length === 0 && (
-          <StateBox title="Nenhum convite recebido" description="Quando uma solicitação for enviada para você, ela aparecerá aqui." />
+          <StateBox tone="empty" title="Nenhum convite recebido" description="Quando uma solicitação for enviada para você, ela aparecerá aqui." />
         )}
 
         {convites.length > 0 && (
@@ -81,14 +82,6 @@ export function ProfissionalConvitesPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

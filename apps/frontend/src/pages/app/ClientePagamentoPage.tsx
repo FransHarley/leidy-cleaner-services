@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { PagamentoDetail } from '../../features/cliente/pagamentos/PagamentoDetail';
 import {
@@ -260,7 +261,7 @@ function AtendimentoContext({
   protectedError: unknown;
 }) {
   if (isLoading) {
-    return <StateBox title="Carregando atendimento" description="Buscando o contexto do atendimento." />;
+    return <StateBox tone="loading" title="Carregando atendimento" description="Buscando o contexto do atendimento." />;
   }
 
   if (error && !protectedError) {
@@ -317,7 +318,7 @@ function renderPaymentState({
   shouldCreateCheckout: boolean;
 }) {
   if (pagamentoIsLoading) {
-    return <StateBox title="Carregando pagamento" description="Buscando o pagamento vinculado." />;
+    return <StateBox tone="loading" title="Carregando pagamento" description="Buscando o pagamento vinculado." />;
   }
 
   if (pagamento) {
@@ -325,7 +326,7 @@ function renderPaymentState({
   }
 
   if (isCreatingCheckout || shouldCreateCheckout) {
-    return <StateBox title="Preparando checkout" description="Criando o pagamento pelo checkout principal do backend." />;
+    return <StateBox tone="loading" title="Preparando checkout" description="Criando o pagamento pelo checkout principal do backend." />;
   }
 
   if (checkoutPreview) {
@@ -385,14 +386,6 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { ProfissionaisElegiveisList } from '../../features/cliente/profissionais/ProfissionaisElegiveisList';
 import { SelecaoProfissionaisPanel } from '../../features/cliente/profissionais/SelecaoProfissionaisPanel';
@@ -196,7 +197,7 @@ export function ClienteSelecionarProfissionaisPage() {
               </p>
             </div>
 
-            {profissionaisQuery.isLoading && <StateBox title="Carregando profissionais" description="Buscando profissionais elegíveis para esta solicitação." />}
+            {profissionaisQuery.isLoading && <StateBox tone="loading" title="Carregando profissionais" description="Buscando profissionais elegíveis para esta solicitação." />}
 
             {profissionaisQuery.isError && !protectedError && (
               <FormAlert
@@ -208,7 +209,7 @@ export function ClienteSelecionarProfissionaisPage() {
             )}
 
             {profissionaisQuery.isSuccess && profissionais.length === 0 && (
-              <StateBox title="Nenhuma profissional elegível" description="Não há profissionais disponíveis para os critérios desta solicitação." />
+              <StateBox tone="empty" title="Nenhuma profissional elegível" description="Não há profissionais disponíveis para os critérios desta solicitação." />
             )}
 
             {profissionais.length > 0 && (
@@ -244,7 +245,7 @@ function RequestContextSection({
   solicitacao?: SolicitacaoFaxina;
 }) {
   if (isLoading) {
-    return <StateBox title="Carregando solicitação" description="Buscando o contexto da solicitação." />;
+    return <StateBox tone="loading" title="Carregando solicitação" description="Buscando o contexto da solicitação." />;
   }
 
   if (error) {
@@ -285,14 +286,6 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

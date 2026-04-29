@@ -79,19 +79,19 @@ export function AuthenticatedLayout() {
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 md:grid-cols-[260px_1fr] md:px-8 md:py-8">
-        <aside className="self-start rounded-lg border border-slate-100 bg-white p-3 shadow-sm">
+        <aside className="self-start rounded-lg border border-slate-100 bg-white p-3 shadow-sm md:sticky md:top-24">
           <div className="px-3 py-3">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-green-700">Área {getProfileLabel(profile)}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">Olá, {getFirstName(user.nomeCompleto)}.</p>
           </div>
-          <nav className="mt-2 grid gap-1" aria-label="Navegação autenticada">
+          <nav className="mt-2 grid gap-1 sm:grid-cols-2 md:grid-cols-1" aria-label="Navegação autenticada">
             {navigationItems.map((item) =>
               item.href ? (
                 <NavLink
                   key={item.label}
                   className={({ isActive }) =>
                     [
-                      'rounded-lg px-3 py-3 text-sm font-bold transition',
+                      'flex min-h-11 items-center rounded-lg px-3 py-3 text-sm font-bold transition',
                       isActive ? 'bg-green-50 text-green-700' : 'text-slate-700 hover:bg-slate-50 hover:text-green-700',
                     ].join(' ')
                   }
@@ -103,7 +103,7 @@ export function AuthenticatedLayout() {
               ) : (
                 <span
                   key={item.label}
-                  className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-400"
+                  className="flex min-h-11 items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-slate-400"
                   aria-disabled="true"
                 >
                   {item.label}
@@ -113,7 +113,7 @@ export function AuthenticatedLayout() {
             )}
           </nav>
           <Link
-            className="mt-3 flex rounded-lg border border-green-100 px-3 py-3 text-sm font-bold text-green-700 transition hover:bg-green-50"
+            className="mt-3 flex min-h-11 items-center rounded-lg border border-green-100 px-3 py-3 text-sm font-bold text-green-700 transition hover:bg-green-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700"
             to="/"
           >
             Ver página pública

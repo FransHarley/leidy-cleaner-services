@@ -572,10 +572,10 @@ Use esta seção como checklist viva de execução.
 
 ## M10 — Polimento
 - [ ] Adicionar validações UX no frontend — Parcial: formulários principais usam Zod, falta revisão global.
-- [ ] Adicionar estados de loading — Parcial: telas principais têm estados, falta padronização global.
-- [ ] Adicionar empty states — Parcial: vários fluxos têm vazio, falta componente/padrão global.
-- [ ] Adicionar feedbacks/toasts — Parcial: `FormAlert` existe, não há sistema de toast.
-- [ ] Revisar permissões por perfil — Parcial: rotas e endpoints críticos protegem perfis, falta revisão final.
+- [x] Adicionar estados de loading — Padronizado no frontend com `PageState`/`StateBox`.
+- [x] Adicionar empty states — Padronizado no frontend com `PageState`/`StateBox`.
+- [x] Adicionar feedbacks/toasts — Implementado como feedback inline com `FormAlert`; sem sistema de toast global.
+- [ ] Revisar permissões por perfil — Parcial: rotas protegidas foram conferidas no frontend, endpoints críticos seguem protegidos; falta auditoria final ampla.
 - [ ] Revisar status e transições — Parcial: backend concentra regras, falta revisão final de consistência.
 - [ ] Revisar segurança mínima dos endpoints — Parcial: há testes de segurança em fluxos críticos, falta auditoria final.
 - [ ] Revisar documentação final

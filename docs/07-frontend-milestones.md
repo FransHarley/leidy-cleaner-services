@@ -58,8 +58,8 @@ Deixar a base do frontend organizada para crescimento real, sem virar bagunça.
 - [ ] criar componente base de badge/status — Parcial: badges existem por feature, falta base compartilhada.
 - [ ] criar componente base de modal/drawer — Pendente.
 - [ ] criar componente base de tabela/listagem — Pendente.
-- [ ] criar componente base de loading skeleton/spinner — Pendente.
-- [ ] criar componente base de empty state — Pendente: estados vazios ainda são locais por página.
+- [x] criar componente base de loading skeleton/spinner — Implementado como `PageState`/`StateBox` com indicador de carregamento.
+- [x] criar componente base de empty state — Implementado como `PageState`/`StateBox` compartilhado.
 
 ### Critério de pronto
 - [x] frontend sobe limpo
@@ -413,18 +413,18 @@ Entregar o básico do operacional administrativo no frontend.
 Transformar o frontend de funcional em utilizável de verdade.
 
 ### Entregas
-- [ ] implementar loading states consistentes — Parcial: fluxos principais têm loading, falta padrão global.
-- [ ] implementar empty states — Parcial: fluxos principais têm vazio, falta padrão global.
-- [ ] implementar toasts/feedbacks — Parcial: `FormAlert` cobre telas, falta sistema de toast.
-- [ ] implementar tratamento elegante de erro — Parcial: erros de API aparecem, falta revisão global.
-- [ ] implementar estados de sucesso — Parcial: vários fluxos têm sucesso, falta padronização.
-- [ ] refinar responsividade — Parcial: layout é responsivo, falta rodada final de polimento.
-- [ ] revisar acessibilidade básica — Pendente como revisão final.
-- [ ] revisar textos e consistência visual — Pendente como revisão final.
-- [ ] revisar navegação e proteção de rotas — Parcial: rotas protegidas existem, falta revisão final.
+- [x] implementar loading states consistentes — Padronizado com `PageState`/`StateBox` nos fluxos principais de app/admin.
+- [x] implementar empty states — Padronizado com `PageState`/`StateBox` nos fluxos principais de app/admin.
+- [x] implementar toasts/feedbacks — Implementado como feedback inline com `FormAlert`; sem dependência de toast global.
+- [x] implementar tratamento elegante de erro — Erros de API seguem `FormAlert`, agora com anúncio acessível.
+- [ ] implementar estados de sucesso — Parcial: vários fluxos têm sucesso inline, mas ainda não há padrão único para todas as ações.
+- [x] refinar responsividade — Layout autenticado, navegação e home pública receberam ajustes pontuais.
+- [x] revisar acessibilidade básica — Alertas, estados, imagens e links principais foram revisados.
+- [x] revisar textos e consistência visual — Home pública passou a usar assets locais e navegação sem links mortos.
+- [x] revisar navegação e proteção de rotas — Links principais conferidos e `/login` redireciona para `/entrar`.
 
 ### Critério de pronto
-- [ ] frontend fica coerente, navegável e menos cru
+- [x] frontend fica coerente, navegável e menos cru
 
 ---
 
@@ -443,7 +443,7 @@ Transformar o frontend de funcional em utilizável de verdade.
 - [x] F11 — Atendimentos
 - [x] F12 — Avaliação
 - [ ] F13 — Admin
-- [ ] F14 — Polimento
+- [x] F14 — Polimento
 
 ---
 

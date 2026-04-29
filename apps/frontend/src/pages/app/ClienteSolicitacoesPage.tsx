@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { listarMeusEnderecos } from '../../features/cliente/enderecos/enderecoApi';
 import type { Endereco } from '../../features/cliente/enderecos/types';
@@ -185,7 +186,7 @@ export function ClienteSolicitacoesPage() {
         </div>
 
         {(enderecosQuery.isLoading || regioesQuery.isLoading) && (
-          <StateBox title="Carregando dados" description="Buscando seus endereços e regiões ativas." />
+          <StateBox tone="loading" title="Carregando dados" description="Buscando seus endereços e regiões ativas." />
         )}
 
         {(enderecosQuery.isError || regioesQuery.isError) && !protectedError && (
@@ -228,7 +229,7 @@ export function ClienteSolicitacoesPage() {
           <p className="mt-2 text-sm leading-6 text-slate-600">Veja o status das suas solicitações e abra os detalhes quando precisar.</p>
         </div>
 
-        {solicitacoesQuery.isLoading && <StateBox title="Carregando solicitações" description="Buscando suas solicitações cadastradas." />}
+        {solicitacoesQuery.isLoading && <StateBox tone="loading" title="Carregando solicitações" description="Buscando suas solicitações cadastradas." />}
 
         {solicitacoesQuery.isError && !protectedError && (
           <FormAlert
@@ -240,7 +241,7 @@ export function ClienteSolicitacoesPage() {
         )}
 
         {solicitacoesQuery.isSuccess && solicitacoes.length === 0 && (
-          <StateBox title="Nenhuma solicitação cadastrada" description="Crie sua primeira solicitação usando o formulário acima." />
+          <StateBox tone="empty" title="Nenhuma solicitação cadastrada" description="Crie sua primeira solicitação usando o formulário acima." />
         )}
 
         {solicitacoes.length > 0 && (
@@ -294,7 +295,7 @@ function SolicitacaoDetailPanel({
   }
 
   if (isLoading) {
-    return <StateBox title="Carregando detalhes" description="Buscando dados completos da solicitação." />;
+    return <StateBox tone="loading" title="Carregando detalhes" description="Buscando dados completos da solicitação." />;
   }
 
   if (error) {
@@ -368,14 +369,6 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', {

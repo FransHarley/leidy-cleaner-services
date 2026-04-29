@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { AtendimentoInfoPanel } from '../../features/atendimentos/AtendimentoInfoPanel';
 import {
   buscarAtendimento,
@@ -158,7 +159,7 @@ export function ProfissionalAtendimentoDetalhePage() {
 
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
-      {atendimentoQuery.isLoading && <StateBox title="Carregando atendimento" description="Buscando os dados do atendimento." />}
+      {atendimentoQuery.isLoading && <StateBox tone="loading" title="Carregando atendimento" description="Buscando os dados do atendimento." />}
 
       {atendimentoQuery.isError && !protectedError && (
         <FormAlert
@@ -201,7 +202,7 @@ export function ProfissionalAtendimentoDetalhePage() {
           <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
         </div>
 
-        {checkpointsQuery.isLoading && <StateBox title="Carregando checkpoints" description="Buscando registros do atendimento." />}
+        {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
 
         {checkpointsQuery.isError && !protectedError && (
           <FormAlert
@@ -226,14 +227,6 @@ async function refreshAttendanceQueries(queryClient: QueryClient, atendimentoId:
   ]);
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

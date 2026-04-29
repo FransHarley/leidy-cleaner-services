@@ -11,6 +11,25 @@ const navItems = [
   { label: 'Entrar', to: '/entrar' },
 ];
 
+const footerColumns = [
+  {
+    title: 'Navegação',
+    items: [
+      { label: 'Início', href: '/#inicio' },
+      { label: 'Como funciona', href: '/#como-funciona' },
+      { label: 'Profissionais', href: '/#profissionais' },
+    ],
+  },
+  {
+    title: 'Acesso',
+    items: [
+      { label: 'Entrar', to: '/entrar' },
+      { label: 'Cadastro cliente', to: '/cadastro/cliente' },
+      { label: 'Cadastro profissional', to: '/cadastro/profissional' },
+    ],
+  },
+];
+
 export function PublicLayout() {
   return (
     <div className="min-h-screen bg-[#f6f7f4] text-slate-900">
@@ -53,8 +72,9 @@ export function PublicLayout() {
                 Plataforma operacional para conectar clientes a profissionais de limpeza verificadas.
               </p>
             </div>
-            <FooterColumn title="Navegação" items={['Início', 'Como funciona', 'Profissionais']} />
-            <FooterColumn title="Institucional" items={['Sobre nós', 'Privacidade']} />
+            {footerColumns.map((column) => (
+              <FooterColumn key={column.title} {...column} />
+            ))}
             <div>
               <h2 className="text-sm font-bold text-slate-900">Contato</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-600">
@@ -100,16 +120,22 @@ function PublicNavItem({ label, href, to }: { label: string; href?: string; to?:
   );
 }
 
-function FooterColumn({ title, items }: { title: string; items: string[] }) {
+function FooterColumn({ title, items }: { title: string; items: Array<{ label: string; href?: string; to?: string }> }) {
   return (
     <div>
       <h2 className="text-sm font-bold text-slate-900">{title}</h2>
       <ul className="mt-4 space-y-3 text-sm text-slate-600">
         {items.map((item) => (
-          <li key={item}>
-            <a href="#inicio" className="transition hover:text-green-700">
-              {item}
-            </a>
+          <li key={item.label}>
+            {item.to ? (
+              <Link to={item.to} className="transition hover:text-green-700">
+                {item.label}
+              </Link>
+            ) : (
+              <a href={item.href} className="transition hover:text-green-700">
+                {item.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>

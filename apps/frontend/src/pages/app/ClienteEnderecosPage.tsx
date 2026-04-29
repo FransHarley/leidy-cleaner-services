@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 import {
   atualizarEndereco,
@@ -193,7 +194,7 @@ export function ClienteEnderecosPage() {
       )}
 
       <section className="grid gap-4">
-        {enderecosQuery.isLoading && <StateBox title="Carregando endereços" description="Buscando seus endereços cadastrados." />}
+        {enderecosQuery.isLoading && <StateBox tone="loading" title="Carregando endereços" description="Buscando seus endereços cadastrados." />}
 
         {enderecosQuery.isError && (
           <FormAlert
@@ -205,7 +206,7 @@ export function ClienteEnderecosPage() {
         )}
 
         {enderecosQuery.isSuccess && addresses.length === 0 && (
-          <StateBox
+          <StateBox tone="empty"
             title="Nenhum endereço cadastrado"
             description="Adicione seu primeiro endereço para preparar as próximas etapas de solicitação de faxina."
           />
@@ -222,15 +223,6 @@ export function ClienteEnderecosPage() {
             />
           ))}
       </section>
-    </div>
-  );
-}
-
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h2 className="text-lg font-black text-slate-900">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
     </div>
   );
 }

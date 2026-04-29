@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { AdminSolicitacaoCard } from '../../features/admin/solicitacoes/AdminSolicitacaoCard';
 import {
   listarSolicitacoesAdmin,
@@ -167,7 +168,7 @@ export function AdminSolicitacoesPage() {
         </button>
       </form>
 
-      {solicitacoesQuery.isLoading && <StateBox title="Carregando solicitações" description="Buscando registros operacionais." />}
+      {solicitacoesQuery.isLoading && <StateBox tone="loading" title="Carregando solicitações" description="Buscando registros operacionais." />}
 
       {solicitacoesQuery.isError && !protectedError && (
         <FormAlert
@@ -179,7 +180,7 @@ export function AdminSolicitacoesPage() {
       )}
 
       {solicitacoesQuery.isSuccess && solicitacoes.length === 0 && (
-        <StateBox title="Nenhuma solicitação encontrada" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhuma solicitação encontrada" description="O backend retornou uma lista vazia para os filtros atuais." />
       )}
 
       {solicitacoes.length > 0 && (
@@ -209,14 +210,6 @@ function FilterInput({ label, onChange, value }: { label: string; onChange: (val
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function normalizePositiveInteger(value: string) {
   const parsed = Number(value);

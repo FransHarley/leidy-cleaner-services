@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { DisponibilidadeForm } from '../../features/profissional/disponibilidades/DisponibilidadeForm';
 import { DisponibilidadeList } from '../../features/profissional/disponibilidades/DisponibilidadeList';
 import {
@@ -224,7 +225,7 @@ export function ProfissionalOnboardingPage() {
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
       <OnboardingSection title="Perfil profissional" description="Dados de apresentação e disponibilidade operacional para receber chamados.">
-        {perfilQuery.isLoading && <StateBox title="Carregando perfil" description="Buscando suas informações profissionais." />}
+        {perfilQuery.isLoading && <StateBox tone="loading" title="Carregando perfil" description="Buscando suas informações profissionais." />}
         {perfilQuery.isError && !protectedError && (
           <FormAlert tone="error" title="Não foi possível carregar o perfil" message={getApiErrorMessage(perfilQuery.error)} />
         )}
@@ -249,7 +250,7 @@ export function ProfissionalOnboardingPage() {
 
       <OnboardingSection title="Regiões de atendimento" description="Selecione as regiões em que você atende. A elegibilidade final é calculada pelo backend.">
         {(regioesQuery.isLoading || minhasRegioesQuery.isLoading) && (
-          <StateBox title="Carregando regiões" description="Buscando regiões ativas e suas seleções atuais." />
+          <StateBox tone="loading" title="Carregando regiões" description="Buscando regiões ativas e suas seleções atuais." />
         )}
         {(regioesQuery.isError || minhasRegioesQuery.isError) && !protectedError && (
           <FormAlert
@@ -288,7 +289,7 @@ export function ProfissionalOnboardingPage() {
         </div>
 
         {disponibilidadesQuery.isLoading && (
-          <StateBox title="Carregando disponibilidades" description="Buscando seus horários cadastrados." />
+          <StateBox tone="loading" title="Carregando disponibilidades" description="Buscando seus horários cadastrados." />
         )}
         {disponibilidadesQuery.isError && !protectedError && (
           <FormAlert
@@ -298,7 +299,7 @@ export function ProfissionalOnboardingPage() {
           />
         )}
         {disponibilidadesQuery.isSuccess && disponibilidades.length === 0 && (
-          <StateBox title="Nenhum horário cadastrado" description="Adicione seu primeiro horário de disponibilidade semanal." />
+          <StateBox tone="empty" title="Nenhum horário cadastrado" description="Adicione seu primeiro horário de disponibilidade semanal." />
         )}
         {disponibilidades.length > 0 && (
           <DisponibilidadeList
@@ -314,7 +315,7 @@ export function ProfissionalOnboardingPage() {
       </OnboardingSection>
 
       <OnboardingSection title="Verificação documental" description="Registre os dados exigidos para análise. O backend atual recebe URLs/caminhos em JSON, não upload multipart.">
-        {verificacaoQuery.isLoading && <StateBox title="Carregando verificação" description="Buscando seu status documental atual." />}
+        {verificacaoQuery.isLoading && <StateBox tone="loading" title="Carregando verificação" description="Buscando seu status documental atual." />}
         {verificacaoQuery.isError && !verificacaoNotFound && !protectedError && (
           <FormAlert
             tone="error"
@@ -337,7 +338,7 @@ export function ProfissionalOnboardingPage() {
           </div>
         )}
         {verificacaoNotFound && (
-          <StateBox title="Nenhuma verificação registrada" description="Envie seus dados documentais para iniciar a análise." />
+          <StateBox tone="empty" title="Nenhuma verificação registrada" description="Envie seus dados documentais para iniciar a análise." />
         )}
         <VerificacaoDocumentalForm
           isSubmitting={registerVerificationMutation.isPending}
@@ -368,15 +369,6 @@ function OnboardingSection({
       </div>
       {children}
     </section>
-  );
-}
-
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 p-5 text-center">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
   );
 }
 

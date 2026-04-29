@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { listarMeusAtendimentos } from '../../features/atendimentos/atendimentosApi';
 import { useAuth } from '../../features/auth/useAuth';
 import { OcorrenciaForm } from '../../features/ocorrencias/OcorrenciaForm';
@@ -104,7 +105,7 @@ export function NovaOcorrenciaPage() {
 
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
-      {atendimentosQuery.isLoading && <StateBox title="Carregando atendimentos" description="Buscando seus atendimentos disponíveis." />}
+      {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus atendimentos disponíveis." />}
 
       {atendimentosQuery.isError && !protectedError && (
         <FormAlert
@@ -116,7 +117,7 @@ export function NovaOcorrenciaPage() {
       )}
 
       {atendimentosQuery.isSuccess && atendimentos.length === 0 && (
-        <StateBox
+        <StateBox tone="empty"
           title="Nenhum atendimento encontrado"
           description="O backend exige um atendimento vinculado para abrir uma ocorrência."
         />
@@ -129,14 +130,6 @@ export function NovaOcorrenciaPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

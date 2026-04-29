@@ -10,11 +10,9 @@ import {
   UserIcon,
 } from '../../components/public/PublicIcons';
 import { PublicButton } from '../../components/public/PublicButton';
-import {
-  HeroCleanerPlaceholder,
-  HomeSparkPlaceholder,
-  ProfessionalCtaPlaceholder,
-} from '../../components/public/PlaceholderVisuals';
+import { HomeSparkPlaceholder } from '../../components/public/PlaceholderVisuals';
+import faxineiraHeroUrl from '../../assets/images/faxineira-hero.png';
+import profissionalCtaUrl from '../../assets/images/prof_peq.png';
 
 const trustItems = [
   { label: 'Profissionais verificadas', icon: ShieldCheckIcon },
@@ -98,7 +96,13 @@ export function HomePage() {
           </div>
         </div>
 
-        <HeroCleanerPlaceholder />
+        <div className="relative min-h-[340px] overflow-hidden rounded-bl-[64px] bg-green-50 md:min-h-[470px]">
+          <img
+            src={faxineiraHeroUrl}
+            alt="Profissional de limpeza Leidy Cleaner Services com materiais de faxina"
+            className="absolute bottom-0 right-0 h-full w-full object-contain object-bottom"
+          />
+        </div>
       </section>
 
       <section id="como-funciona" className="mx-auto max-w-[980px] px-5 py-4 md:px-8">
@@ -128,8 +132,12 @@ export function HomePage() {
 
       <section id="profissionais" className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
         <div className="grid items-center gap-5 overflow-hidden rounded-lg bg-green-700 px-5 py-5 text-white md:grid-cols-[180px_1fr_auto] md:px-8 md:py-0">
-          <div className="hidden md:block">
-            <ProfessionalCtaPlaceholder />
+          <div className="hidden self-end md:block">
+            <img
+              src={profissionalCtaUrl}
+              alt="Profissional de limpeza cadastrada"
+              className="h-32 w-auto object-contain"
+            />
           </div>
           <div className="relative">
             <SparkleIcon className="absolute -left-12 top-1 hidden h-8 w-8 text-lime-300 md:block" />

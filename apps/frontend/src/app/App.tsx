@@ -49,6 +49,7 @@ export function App() {
       <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
       </Route>
+      <Route path="login" element={<Navigate to="/entrar" replace />} />
       <Route path="entrar" element={<LoginPage />} />
       <Route path="cadastro">
         <Route path="cliente" element={<ClientRegistrationPage />} />

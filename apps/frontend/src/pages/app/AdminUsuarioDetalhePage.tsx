@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { buscarUsuarioAdmin } from '../../features/admin/usuarios/adminUsuariosApi';
 import { AdminUsuarioInfoPanel } from '../../features/admin/usuarios/AdminUsuarioInfoPanel';
 import { useAuth } from '../../features/auth/useAuth';
@@ -75,7 +76,7 @@ export function AdminUsuarioDetalhePage() {
         message="A administração pode consultar a conta, mas bloqueio, reset de senha e exclusão não fazem parte desta etapa."
       />
 
-      {usuarioQuery.isLoading && <StateBox title="Carregando usuário" description="Buscando os dados operacionais." />}
+      {usuarioQuery.isLoading && <StateBox tone="loading" title="Carregando usuário" description="Buscando os dados operacionais." />}
 
       {usuarioQuery.isError && !protectedError && (
         <FormAlert
@@ -91,14 +92,6 @@ export function AdminUsuarioDetalhePage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { buscarPagamentoAdmin } from '../../features/admin/pagamentos/adminPagamentosApi';
 import { AdminPagamentoInfoPanel } from '../../features/admin/pagamentos/AdminPagamentoInfoPanel';
 import { useAuth } from '../../features/auth/useAuth';
@@ -75,7 +76,7 @@ export function AdminPagamentoDetalhePage() {
         message="A administração pode consultar pagamentos, mas a confirmação definitiva continua restrita ao webhook do backend."
       />
 
-      {pagamentoQuery.isLoading && <StateBox title="Carregando pagamento" description="Buscando os dados operacionais." />}
+      {pagamentoQuery.isLoading && <StateBox tone="loading" title="Carregando pagamento" description="Buscando os dados operacionais." />}
 
       {pagamentoQuery.isError && !protectedError && (
         <FormAlert
@@ -99,14 +100,6 @@ export function AdminPagamentoDetalhePage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

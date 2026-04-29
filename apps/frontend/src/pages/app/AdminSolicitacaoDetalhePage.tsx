@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { buscarSolicitacaoAdmin } from '../../features/admin/solicitacoes/adminSolicitacoesApi';
 import { AdminSolicitacaoInfoPanel } from '../../features/admin/solicitacoes/AdminSolicitacaoInfoPanel';
 import { useAuth } from '../../features/auth/useAuth';
@@ -75,7 +76,7 @@ export function AdminSolicitacaoDetalhePage() {
         message="A administração pode consultar solicitações, mas cancelamento, seleção de profissionais e convites continuam restritos aos fluxos existentes."
       />
 
-      {solicitacaoQuery.isLoading && <StateBox title="Carregando solicitação" description="Buscando os dados operacionais." />}
+      {solicitacaoQuery.isLoading && <StateBox tone="loading" title="Carregando solicitação" description="Buscando os dados operacionais." />}
 
       {solicitacaoQuery.isError && !protectedError && (
         <FormAlert
@@ -91,14 +92,6 @@ export function AdminSolicitacaoDetalhePage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

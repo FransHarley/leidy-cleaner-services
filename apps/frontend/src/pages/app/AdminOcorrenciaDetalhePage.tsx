@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { OcorrenciaInfoPanel } from '../../features/ocorrencias/OcorrenciaInfoPanel';
 import { atualizarStatusOcorrenciaAdmin, buscarOcorrencia } from '../../features/ocorrencias/ocorrenciasApi';
@@ -120,7 +121,7 @@ export function AdminOcorrenciaDetalhePage() {
 
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
-      {ocorrenciaQuery.isLoading && <StateBox title="Carregando ocorrência" description="Buscando o registro selecionado." />}
+      {ocorrenciaQuery.isLoading && <StateBox tone="loading" title="Carregando ocorrência" description="Buscando o registro selecionado." />}
 
       {ocorrenciaQuery.isError && !protectedError && (
         <FormAlert
@@ -145,14 +146,6 @@ export function AdminOcorrenciaDetalhePage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

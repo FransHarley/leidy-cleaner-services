@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { listarVerificacoesAdmin } from '../../features/admin/verificacoes/adminVerificacoesApi';
 import { VerificacaoCard } from '../../features/admin/verificacoes/VerificacaoCard';
 import { useAuth } from '../../features/auth/useAuth';
@@ -56,7 +57,7 @@ export function AdminVerificacoesPage() {
         </div>
       </section>
 
-      {verificacoesQuery.isLoading && <StateBox title="Carregando verificações" description="Buscando documentos enviados." />}
+      {verificacoesQuery.isLoading && <StateBox tone="loading" title="Carregando verificações" description="Buscando documentos enviados." />}
 
       {verificacoesQuery.isError && !protectedError && (
         <FormAlert
@@ -68,7 +69,7 @@ export function AdminVerificacoesPage() {
       )}
 
       {verificacoesQuery.isSuccess && verificacoes.length === 0 && (
-        <StateBox title="Nenhuma verificação encontrada" description="Quando profissionais enviarem documentos, eles aparecerão aqui." />
+        <StateBox tone="empty" title="Nenhuma verificação encontrada" description="Quando profissionais enviarem documentos, eles aparecerão aqui." />
       )}
 
       {verificacoes.length > 0 && (
@@ -82,14 +83,6 @@ export function AdminVerificacoesPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {

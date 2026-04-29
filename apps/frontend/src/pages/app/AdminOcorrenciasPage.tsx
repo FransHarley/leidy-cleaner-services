@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
+import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import { OcorrenciaCard } from '../../features/ocorrencias/OcorrenciaCard';
 import { listarOcorrenciasAdmin } from '../../features/ocorrencias/ocorrenciasApi';
@@ -56,7 +57,7 @@ export function AdminOcorrenciasPage() {
         </div>
       </section>
 
-      {ocorrenciasQuery.isLoading && <StateBox title="Carregando ocorrências" description="Buscando registros administrativos." />}
+      {ocorrenciasQuery.isLoading && <StateBox tone="loading" title="Carregando ocorrências" description="Buscando registros administrativos." />}
 
       {ocorrenciasQuery.isError && !protectedError && (
         <FormAlert
@@ -68,7 +69,7 @@ export function AdminOcorrenciasPage() {
       )}
 
       {ocorrenciasQuery.isSuccess && ocorrencias.length === 0 && (
-        <StateBox title="Nenhuma ocorrência encontrada" description="Quando usuários abrirem ocorrências, elas aparecerão aqui." />
+        <StateBox tone="empty" title="Nenhuma ocorrência encontrada" description="Quando usuários abrirem ocorrências, elas aparecerão aqui." />
       )}
 
       {ocorrencias.length > 0 && (
@@ -82,14 +83,6 @@ export function AdminOcorrenciasPage() {
   );
 }
 
-function StateBox({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm">
-      <h3 className="font-black text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  );
-}
 
 function requireToken(token: string | null) {
   if (!token) {
