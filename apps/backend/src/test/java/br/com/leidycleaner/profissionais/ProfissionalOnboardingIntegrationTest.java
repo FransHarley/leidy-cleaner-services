@@ -12,6 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +90,102 @@ class ProfissionalOnboardingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.length()").value(2));
+    }
+
+    @Test
+    void profissionalDefineRegioesComIdsDuplicadosSemViolarIntegridade() throws Exception {
+        String token = criarProfissionalELogar("m2a.regioes-duplicadas@example.com", "51322233344");
+        List<RegiaoAtendimento> regioes = regiaoAtendimentoRepository.findByAtivoTrueOrderByNomeAsc();
+        Long primeiraRegiaoId = regioes.getFirst().getId();
+        Long segundaRegiaoId = regioes.get(1).getId();
+
+        String response = mockMvc.perform(post("/api/v1/profissionais/me/regioes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "regiaoIds": [%d, %d, %d]
+                                }
+                                """.formatted(primeiraRegiaoId, primeiraRegiaoId, segundaRegiaoId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(extrairRegiaoIds(response)).containsExactlyInAnyOrder(primeiraRegiaoId, segundaRegiaoId);
+    }
+
+    @Test
+    void profissionalSubstituiRegioesMantendoAssociacaoExistenteSemFalhar() throws Exception {
+        String token = criarProfissionalELogar("m2a.regioes-substitui@example.com", "51422233344");
+        List<RegiaoAtendimento> regioes = regiaoAtendimentoRepository.findByAtivoTrueOrderByNomeAsc();
+        Long primeiraRegiaoId = regioes.getFirst().getId();
+        Long segundaRegiaoId = regioes.get(1).getId();
+        Long terceiraRegiaoId = regioes.get(2).getId();
+
+        mockMvc.perform(post("/api/v1/profissionais/me/regioes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "regiaoIds": [%d, %d]
+                                }
+                                """.formatted(primeiraRegiaoId, segundaRegiaoId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(2));
+
+        String response = mockMvc.perform(post("/api/v1/profissionais/me/regioes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "regiaoIds": [%d, %d]
+                                }
+                                """.formatted(segundaRegiaoId, terceiraRegiaoId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(extrairRegiaoIds(response)).containsExactlyInAnyOrder(segundaRegiaoId, terceiraRegiaoId);
+
+        String listResponse = mockMvc.perform(get("/api/v1/profissionais/me/regioes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(extrairRegiaoIds(listResponse)).containsExactlyInAnyOrder(segundaRegiaoId, terceiraRegiaoId);
+    }
+
+    @Test
+    void profissionalRecebeErroControladoAoDefinirRegiaoInvalida() throws Exception {
+        String token = criarProfissionalELogar("m2a.regioes-invalidas@example.com", "51522233344");
+        Long primeiraRegiaoId = regiaoAtendimentoRepository.findByAtivoTrueOrderByNomeAsc().getFirst().getId();
+        Long regiaoInvalidaId = 999_999_999L;
+
+        mockMvc.perform(post("/api/v1/profissionais/me/regioes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "regiaoIds": [%d, %d]
+                                }
+                                """.formatted(primeiraRegiaoId, regiaoInvalidaId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("REGIAO_INVALIDA"))
+                .andExpect(jsonPath("$.message").value("Uma ou mais regioes nao existem ou estao inativas"))
+                .andExpect(jsonPath("$.errors").isArray());
     }
 
     @Test
@@ -399,6 +498,12 @@ class ProfissionalOnboardingIntegrationTest {
             }
         }
         return false;
+    }
+
+    private Set<Long> extrairRegiaoIds(String response) throws Exception {
+        return StreamSupport.stream(objectMapper.readTree(response).path("data").spliterator(), false)
+                .map(node -> node.path("id").asLong())
+                .collect(Collectors.toSet());
     }
 
     private Long criarDisponibilidade(String token, String diaSemana, String horaInicio, String horaFim) throws Exception {

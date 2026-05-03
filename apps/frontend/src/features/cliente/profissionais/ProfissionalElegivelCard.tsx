@@ -2,6 +2,7 @@ import type { ProfissionalDisponivel } from './types';
 
 type ProfissionalElegivelCardProps = {
   disabled?: boolean;
+  onReadReviews: (profissional: ProfissionalDisponivel) => void;
   onToggle: (profissional: ProfissionalDisponivel) => void;
   profissional: ProfissionalDisponivel;
   selectionOrder?: number;
@@ -10,6 +11,7 @@ type ProfissionalElegivelCardProps = {
 
 export function ProfissionalElegivelCard({
   disabled = false,
+  onReadReviews,
   onToggle,
   profissional,
   selectionOrder,
@@ -47,19 +49,30 @@ export function ProfissionalElegivelCard({
           </div>
         </div>
 
-        <button
-          className={[
-            'min-h-10 rounded-lg px-4 text-sm font-black transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700',
-            selected
-              ? 'border border-red-100 text-red-700 hover:bg-red-50 focus-visible:ring-red-600'
-              : 'bg-green-700 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-slate-300',
-          ].join(' ')}
-          disabled={disabled && !selected}
-          type="button"
-          onClick={() => onToggle(profissional)}
-        >
-          {selected ? 'Remover' : 'Selecionar'}
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {profissional.totalAvaliacoes > 0 && (
+            <button
+              className="min-h-10 rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700"
+              type="button"
+              onClick={() => onReadReviews(profissional)}
+            >
+              Ler avaliações
+            </button>
+          )}
+          <button
+            className={[
+              'min-h-10 rounded-lg px-4 text-sm font-black transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700',
+              selected
+                ? 'border border-red-100 text-red-700 hover:bg-red-50 focus-visible:ring-red-600'
+                : 'bg-green-700 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-slate-300',
+            ].join(' ')}
+            disabled={disabled && !selected}
+            type="button"
+            onClick={() => onToggle(profissional)}
+          >
+            {selected ? 'Remover' : 'Selecionar'}
+          </button>
+        </div>
       </div>
     </article>
   );

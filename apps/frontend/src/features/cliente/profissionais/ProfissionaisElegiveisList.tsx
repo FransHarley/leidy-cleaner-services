@@ -3,6 +3,7 @@ import type { ProfissionalDisponivel } from './types';
 
 type ProfissionaisElegiveisListProps = {
   maxSelectedReached: boolean;
+  onReadReviews: (profissional: ProfissionalDisponivel) => void;
   onToggle: (profissional: ProfissionalDisponivel) => void;
   profissionais: ProfissionalDisponivel[];
   selectedIds: number[];
@@ -10,6 +11,7 @@ type ProfissionaisElegiveisListProps = {
 
 export function ProfissionaisElegiveisList({
   maxSelectedReached,
+  onReadReviews,
   onToggle,
   profissionais,
   selectedIds,
@@ -27,6 +29,7 @@ export function ProfissionaisElegiveisList({
             profissional={profissional}
             selected={selected}
             selectionOrder={selected ? selectedIndex + 1 : undefined}
+            onReadReviews={onReadReviews}
             onToggle={onToggle}
           />
         );

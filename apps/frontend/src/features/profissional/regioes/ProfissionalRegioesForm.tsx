@@ -15,7 +15,7 @@ export function ProfissionalRegioesForm({
   isSubmitting = false,
   onSubmit,
 }: ProfissionalRegioesFormProps) {
-  const selectedIdsFromApi = useMemo(() => selectedRegioes.map((regiao) => regiao.id), [selectedRegioes]);
+  const selectedIdsFromApi = useMemo(() => uniqueIds(selectedRegioes.map((regiao) => regiao.id)), [selectedRegioes]);
   const [selectedIds, setSelectedIds] = useState<number[]>(selectedIdsFromApi);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
@@ -26,19 +26,22 @@ export function ProfissionalRegioesForm({
   function toggleRegion(regiaoId: number) {
     setValidationMessage(null);
     setSelectedIds((current) =>
-      current.includes(regiaoId) ? current.filter((id) => id !== regiaoId) : [...current, regiaoId],
+      current.includes(regiaoId) ? current.filter((id) => id !== regiaoId) : uniqueIds([...current, regiaoId]),
     );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (selectedIds.length === 0) {
+    const uniqueSelectedIds = uniqueIds(selectedIds);
+
+    if (uniqueSelectedIds.length === 0) {
       setValidationMessage('Selecione ao menos uma região para salvar.');
       return;
     }
 
-    await onSubmit(selectedIds);
+    setSelectedIds(uniqueSelectedIds);
+    await onSubmit(uniqueSelectedIds);
   }
 
   return (
@@ -87,4 +90,8 @@ export function ProfissionalRegioesForm({
       </div>
     </form>
   );
+}
+
+function uniqueIds(ids: number[]) {
+  return Array.from(new Set(ids));
 }

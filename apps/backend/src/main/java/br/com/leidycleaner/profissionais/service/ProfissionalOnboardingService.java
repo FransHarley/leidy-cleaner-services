@@ -2,6 +2,7 @@ package br.com.leidycleaner.profissionais.service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,21 @@ public class ProfissionalOnboardingService {
             throw new BusinessException("REGIAO_INVALIDA", "Uma ou mais regioes nao existem ou estao inativas", HttpStatus.BAD_REQUEST);
         }
 
-        profissionalRegiaoRepository.deleteByProfissionalId(perfil.getId());
-        regioes.forEach(regiao -> profissionalRegiaoRepository.save(new ProfissionalRegiao(perfil, regiao)));
+        List<ProfissionalRegiao> associacoesAtuais = profissionalRegiaoRepository.findByProfissionalIdOrderByRegiaoNomeAsc(perfil.getId());
+        Set<Long> idsAtuais = associacoesAtuais.stream()
+                .map(associacao -> associacao.getRegiao().getId())
+                .collect(Collectors.toSet());
+
+        List<ProfissionalRegiao> associacoesRemovidas = associacoesAtuais.stream()
+                .filter(associacao -> !regiaoIds.contains(associacao.getRegiao().getId()))
+                .toList();
+        profissionalRegiaoRepository.deleteAll(associacoesRemovidas);
+
+        var novasAssociacoes = regioes.stream()
+                .filter(regiao -> !idsAtuais.contains(regiao.getId()))
+                .map(regiao -> new ProfissionalRegiao(perfil, regiao))
+                .toList();
+        profissionalRegiaoRepository.saveAll(novasAssociacoes);
         return listarMinhasRegioes(usuarioId);
     }
 

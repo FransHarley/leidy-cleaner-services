@@ -119,7 +119,8 @@ export function ProfissionalOnboardingPage() {
 
   const saveRegionsMutation = useMutation({
     mutationFn: (regiaoIds: number[]) => definirMinhasRegioesProfissional(requireToken(token), { regiaoIds }),
-    onSuccess: async () => {
+    onSuccess: async (regioesSalvas) => {
+      queryClient.setQueryData(queryKeys.minhasRegioes, regioesSalvas);
       await queryClient.invalidateQueries({ queryKey: queryKeys.minhasRegioes });
       setFeedback({ tone: 'success', title: 'Regiões atualizadas', message: 'Suas regiões de atendimento foram salvas.' });
     },

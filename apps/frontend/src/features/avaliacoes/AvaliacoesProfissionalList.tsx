@@ -1,4 +1,4 @@
-import { formatNotaAvaliacao } from './avaliacaoLabels';
+import { formatAvaliacaoDateTime, formatNotaAvaliacao } from './avaliacaoLabels';
 import type { AvaliacaoProfissional } from './types';
 
 type AvaliacoesProfissionalListProps = {
@@ -27,8 +27,11 @@ export function AvaliacoesProfissionalList({ avaliacoes, currentAtendimentoId }:
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-black text-slate-900">Nota {formatNotaAvaliacao(avaliacao.nota)}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
+              {formatAvaliacaoDateTime(avaliacao.criadoEm)}
+            </p>
           </div>
-          {avaliacao.comentario && <p className="mt-3 text-sm leading-6 text-slate-700">{avaliacao.comentario}</p>}
+          {avaliacao.comentario && <p className="mt-3 break-words text-sm leading-6 text-slate-700">{avaliacao.comentario}</p>}
         </article>
       ))}
     </div>

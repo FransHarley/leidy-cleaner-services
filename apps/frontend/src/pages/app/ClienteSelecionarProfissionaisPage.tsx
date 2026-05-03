@@ -4,6 +4,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
 import { StateBox } from '../../components/ui/PageState';
+import { AvaliacoesProfissionalList } from '../../features/avaliacoes/AvaliacoesProfissionalList';
+import { listarAvaliacoesProfissional } from '../../features/avaliacoes/avaliacoesApi';
+import type { AvaliacaoProfissional } from '../../features/avaliacoes/types';
 import { useAuth } from '../../features/auth/useAuth';
 import { ProfissionaisElegiveisList } from '../../features/cliente/profissionais/ProfissionaisElegiveisList';
 import { SelecaoProfissionaisPanel } from '../../features/cliente/profissionais/SelecaoProfissionaisPanel';
@@ -27,6 +30,7 @@ const queryKeys = {
   solicitacoes: ['cliente', 'solicitacoes'],
   detalhe: (id: number) => ['cliente', 'solicitacoes', id],
   profissionais: (id: number) => ['cliente', 'solicitacoes', id, 'profissionais-disponiveis'],
+  avaliacoes: (profissionalId: number) => ['cliente', 'profissionais', profissionalId, 'avaliacoes'],
 };
 
 type Feedback = {
@@ -43,6 +47,7 @@ export function ClienteSelecionarProfissionaisPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [reviewsProfessional, setReviewsProfessional] = useState<ProfissionalDisponivel | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
@@ -62,12 +67,20 @@ export function ClienteSelecionarProfissionaisPage() {
     enabled: Boolean(token && validId && selectionAllowed),
   });
 
+  const avaliacoesQuery = useQuery({
+    queryKey: reviewsProfessional
+      ? queryKeys.avaliacoes(reviewsProfessional.profissionalId)
+      : ['cliente', 'profissionais', 'avaliacoes', 'sem-profissional'],
+    queryFn: () => listarAvaliacoesProfissional(requireToken(token), reviewsProfessional?.profissionalId ?? 0),
+    enabled: Boolean(token && reviewsProfessional),
+  });
+
   const protectedError = useMemo(
     () =>
-      [solicitacaoQuery.error, profissionaisQuery.error].find(
+      [solicitacaoQuery.error, profissionaisQuery.error, avaliacoesQuery.error].find(
         (error) => error instanceof ApiError && error.status === 401,
       ),
-    [profissionaisQuery.error, solicitacaoQuery.error],
+    [avaliacoesQuery.error, profissionaisQuery.error, solicitacaoQuery.error],
   );
 
   useEffect(() => {
@@ -218,6 +231,7 @@ export function ClienteSelecionarProfissionaisPage() {
                 maxSelectedReached={selectedIds.length >= 3}
                 profissionais={profissionais}
                 selectedIds={selectedIds}
+                onReadReviews={setReviewsProfessional}
                 onToggle={toggleProfessional}
               />
             )}
@@ -232,8 +246,85 @@ export function ClienteSelecionarProfissionaisPage() {
           />
         </div>
       )}
+
+      {reviewsProfessional && (
+        <AvaliacoesDialog
+          error={avaliacoesQuery.error}
+          isLoading={avaliacoesQuery.isLoading}
+          profissional={reviewsProfessional}
+          avaliacoes={avaliacoesQuery.data ?? []}
+          onClose={() => setReviewsProfessional(null)}
+        />
+      )}
     </div>
   );
+}
+
+function AvaliacoesDialog({
+  avaliacoes,
+  error,
+  isLoading,
+  onClose,
+  profissional,
+}: {
+  avaliacoes: AvaliacaoProfissional[];
+  error: unknown;
+  isLoading: boolean;
+  onClose: () => void;
+  profissional: ProfissionalDisponivel;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/40 p-3 sm:items-center sm:justify-center" role="presentation">
+      <section
+        aria-labelledby="avaliacoes-profissional-title"
+        className="max-h-[85vh] w-full overflow-y-auto rounded-lg bg-white p-5 shadow-xl sm:max-w-2xl md:p-6"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-green-700">Avaliações</p>
+            <h2 id="avaliacoes-profissional-title" className="mt-2 text-2xl font-black text-slate-900">
+              {profissional.nomeExibicao}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Nota {formatRating(profissional.notaMedia)} · {profissional.totalAvaliacoes} avaliação
+              {profissional.totalAvaliacoes === 1 ? '' : 'ões'}
+            </p>
+          </div>
+          <button
+            className="min-h-10 rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700"
+            type="button"
+            onClick={onClose}
+          >
+            Fechar
+          </button>
+        </div>
+
+        <div className="mt-5">
+          {isLoading && <StateBox tone="loading" title="Carregando avaliações" description="Buscando avaliações desta profissional." />}
+
+          {Boolean(error) && (
+            <FormAlert
+              tone="error"
+              title="Não foi possível carregar avaliações"
+              message={getApiErrorMessage(error)}
+              details={error instanceof ApiError ? error.errors : []}
+            />
+          )}
+
+          {!isLoading && !error && <AvaliacoesProfissionalList avaliacoes={avaliacoes} />}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function formatRating(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function RequestContextSection({
