@@ -25,6 +25,7 @@ As mudanças foram divididas em dois grupos:
    - Novo fluxo proposto: `solicita → paga → seleciona profissional → envia convite`.
    - Possibilidade de serviço pago virar crédito.
    - Esta mudança **não deve ser implementada diretamente sem redesenho financeiro**, pois altera regras centrais do produto.
+   - Nota de análise: análise técnica concluída; esta mudança exige PRD separado e não pode ser tratada como simples ajuste de UI. Requer novo modelo de reserva/crédito, alteração do vínculo atual entre `Pagamento` e `AtendimentoFaxina`, e regras explícitas de expiração, utilização e refund.
 
 ---
 
