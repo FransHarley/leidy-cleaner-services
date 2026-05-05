@@ -1423,6 +1423,180 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
+    void webhookPaymentConfirmedSemVinculoNaoConfirmaPagamentoCriadoPorCheckout() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.webhook-payment-sem-checkout", "75154233344");
+        mockarCheckoutAsaas("chk_m5a_payment_sem_checkout", "https://asaas.local/checkout/chk_m5a_payment_sem_checkout");
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "event": "PAYMENT_CONFIRMED",
+                                  "payment": {
+                                    "id": "pay_m5a_sem_checkout",
+                                    "status": "CONFIRMED"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getGatewayPaymentId()).isEqualTo("chk_m5a_payment_sem_checkout");
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PENDENTE");
+                    assertThat(pagamento.getRecebidoEm()).isNull();
+                    assertThat(pagamento.isWebhookProcessado()).isFalse();
+                });
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("AGUARDANDO_PAGAMENTO");
+    }
+
+    @Test
+    void webhookPaymentConfirmedComCheckoutSessionConfirmaPagamentoCriadoPorCheckout() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.webhook-payment-checkout-session", "75155233344");
+        String checkoutId = "57b3b176-9a57-4211-954f-checkout-session";
+        mockarCheckoutAsaas(checkoutId, "https://asaas.local/checkout/" + checkoutId);
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+
+        String payload = """
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "pay_7jcmkarih4a3yw5e",
+                    "status": "CONFIRMED",
+                    "checkoutSession": "%s"
+                  }
+                }
+                """.formatted(checkoutId);
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getGatewayPaymentId()).isEqualTo(checkoutId);
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PAGO");
+                    assertThat(pagamento.getRecebidoEm()).isNotNull();
+                    assertThat(pagamento.getPayloadResumo()).contains("pay_7jcmkarih4a3yw5e");
+                    assertThat(pagamento.getPayloadResumo()).contains(checkoutId);
+                    assertThat(pagamento.isWebhookProcessado()).isTrue();
+                });
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("CONFIRMADO");
+    }
+
+    @Test
+    void webhookPaymentCreatedComCheckoutSessionNaoConfirmaPagamentoCriadoPorCheckout() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.webhook-payment-created-checkout", "75156233344");
+        String checkoutId = "chk_m5a_payment_created_checkout";
+        mockarCheckoutAsaas(checkoutId, "https://asaas.local/checkout/" + checkoutId);
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "event": "PAYMENT_CREATED",
+                                  "payment": {
+                                    "id": "pay_m5a_created_checkout",
+                                    "status": "PENDING",
+                                    "checkoutSession": "%s"
+                                  }
+                                }
+                                """.formatted(checkoutId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getGatewayPaymentId()).isEqualTo(checkoutId);
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PENDENTE");
+                    assertThat(pagamento.getRecebidoEm()).isNull();
+                    assertThat(pagamento.isWebhookProcessado()).isFalse();
+                });
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("AGUARDANDO_PAGAMENTO");
+    }
+
+    @Test
+    void webhookPaymentConfirmedDeCheckoutLocalizaPagamentoPorExternalReferenceComIdempotencia() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.webhook-checkout-payment", "75153233344");
+        mockarCheckoutAsaas("chk_m5a_payment_confirmed", "https://asaas.local/checkout/chk_m5a_payment_confirmed");
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+
+        String payload = """
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "pay_m5a_payment_confirmed",
+                    "status": "CONFIRMED",
+                    "externalReference": "atendimento-%d"
+                  }
+                }
+                """.formatted(atendimento.atendimentoId());
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getGatewayPaymentId()).isEqualTo("chk_m5a_payment_confirmed");
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PAGO");
+                    assertThat(pagamento.getRecebidoEm()).isNotNull();
+                    assertThat(pagamento.getPayloadResumo()).contains("pay_m5a_payment_confirmed");
+                    assertThat(pagamento.isWebhookProcessado()).isTrue();
+                });
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("CONFIRMADO");
+    }
+
+    @Test
     void webhookPaymentConfirmedPorPaymentIdConfirmaPagamentoEAtendimentoSemJwt() throws Exception {
         AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5b.webhook-payment", "75157233344");
         mockarCriacaoAsaas("pay_m5b_confirmado", "PENDING", "https://asaas.local/pay_m5b_confirmado", null);
@@ -1459,7 +1633,7 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
-    void webhookComPagamentoDesconhecidoEhIgnoradoComRespostaEstavel() throws Exception {
+    void webhookComPagamentoEExternalReferenceDesconhecidosEhIgnoradoComRespostaEstavel() throws Exception {
         mockMvc.perform(post("/api/v1/webhooks/asaas")
                         .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -1468,7 +1642,8 @@ class SolicitacaoFaxinaIntegrationTest {
                                   "event": "PAYMENT_CONFIRMED",
                                   "payment": {
                                     "id": "pay_m5b_inexistente",
-                                    "status": "CONFIRMED"
+                                    "status": "CONFIRMED",
+                                    "externalReference": "atendimento-999999999"
                                   }
                                 }
                                 """))

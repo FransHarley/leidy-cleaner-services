@@ -111,12 +111,15 @@ Variaveis usadas pela integracao:
 ASAAS_BASE_URL
 ASAAS_API_KEY
 ASAAS_WEBHOOK_TOKEN
+ASAAS_CHECKOUT_BILLING_TYPES
 ASAAS_CHECKOUT_SUCCESS_URL
 ASAAS_CHECKOUT_CANCEL_URL
 ASAAS_CHECKOUT_EXPIRED_URL
 ```
 
 `ASAAS_DEFAULT_CUSTOMER_ID` existe somente para o endpoint legado `POST /api/v1/pagamentos`, que cria cobranca direta e nao e o caminho principal do checkout.
+
+Para pagamentos criados via Asaas Checkout, o backend armazena o identificador da sessao de checkout em `gateway_payment_id`. Eventos de cobranca como `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` podem reconciliar esse fluxo quando o payload inclui `payment.checkoutSession`. O evento `CHECKOUT_PAID` continua suportado se a configuracao do Asaas o emitir.
 
 Seguranca do webhook:
 

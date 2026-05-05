@@ -284,7 +284,8 @@ Recebe webhook do Asaas em `POST /api/v1/webhooks/asaas`. O endpoint:
 - aceita eventos sem JWT, mas exige o header `asaas-access-token`
 - compara `asaas-access-token` com `ASAAS_WEBHOOK_TOKEN` antes de processar o payload
 - rejeita chamadas sem token ou com token invalido com erro JSON 401
-- usa `event`, `payment.id` e, para checkout, `checkout.id` como identificadores principais
+- usa `event`, `payment.id`, `payment.checkoutSession` e, para checkout, `checkout.id` como identificadores principais
+- no caminho principal de Checkout, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` reconciliam o pagamento quando o payload traz `payment.checkoutSession`; `CHECKOUT_PAID` continua suportado se o Asaas o emitir
 - confirma `Pagamento = PAGO` e `AtendimentoFaxina = CONFIRMADO` apenas em eventos de sucesso suportados
 - e idempotente e ignora entregas duplicadas com resposta 2xx estavel
 - ignora eventos desconhecidos ou nao suportados com resposta 200 para evitar retry desnecessario do gateway
@@ -336,7 +337,9 @@ A rota de webhook deve:
 - validar `asaas-access-token` contra `ASAAS_WEBHOOK_TOKEN` antes de processar o payload
 - localizar o pagamento correto
 - ser idempotente
-- processar `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED_IN_CASH` e `CHECKOUT_PAID` como sucesso definitivo
+- processar `CHECKOUT_PAID` como sucesso definitivo para pagamentos criados via Asaas Checkout quando esse evento for recebido
+- processar `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED_IN_CASH` como sucesso definitivo quando o pagamento puder ser localizado por `payment.id`, `payment.checkoutSession`, `checkout.id` ou `externalReference`
+- manter `PAYMENT_CREATED` sem confirmacao de pagamento
 - ignorar eventos nao suportados com 200
 - mapear `PAYMENT_OVERDUE` para falha sem confirmar o atendimento
 - atualizar `Pagamento` para `PAGO`

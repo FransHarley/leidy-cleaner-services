@@ -165,8 +165,10 @@ Um profissional só pode aparecer como elegível se:
 - frontend nunca confirma pagamento por conta própria
 - webhook do Asaas atualiza `Pagamento`
 - o endpoint de webhook continua publico no JWT
-- o webhook usa `payment.id` e, no checkout, `checkout.id` para localizar o `Pagamento`
-- eventos suportados de sucesso: `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED_IN_CASH`, `CHECKOUT_PAID`
+- o webhook usa `payment.id`, `payment.checkoutSession` e, no checkout, `checkout.id` para localizar o `Pagamento`
+- no caminho principal de Checkout, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` podem reconciliar pelo campo `payment.checkoutSession`; `CHECKOUT_PAID` continua suportado se o Asaas o emitir
+- eventos suportados de sucesso: `CHECKOUT_PAID`, `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED_IN_CASH` quando o pagamento for localizado por `payment.id`, `payment.checkoutSession`, `checkout.id` ou `externalReference`
+- `PAYMENT_CREATED` nao confirma pagamento
 - `PAYMENT_OVERDUE` representa falha e nao confirma o atendimento
 - o webhook exige o header `asaas-access-token`, comparado com `ASAAS_WEBHOOK_TOKEN` antes de qualquer processamento do payload
 - chamadas sem token ou com token invalido retornam erro JSON e nao processam pagamento

@@ -77,32 +77,44 @@ public class WebhookService {
                 return;
             }
 
-            String gatewayPaymentId = extrairGatewayPaymentId(jsonNode, event);
-            if (gatewayPaymentId == null) {
-                LOGGER.warn("asaas_webhook_payload_ignored reason=missing_gateway_payment_id event={}", event);
+            AsaasWebhookIdentifiers identifiers = extrairIdentificadores(jsonNode);
+            if (!identifiers.temIdentificador()) {
+                LOGGER.warn(
+                        "asaas_webhook_payload_ignored reason=missing_payment_identifiers event={} paymentId={} checkoutSession={} checkoutId={} externalReference={}",
+                        event,
+                        identifiers.paymentId(),
+                        identifiers.checkoutSessionId(),
+                        identifiers.checkoutId(),
+                        identifiers.externalReference()
+                );
                 return;
             }
 
             StatusPagamento statusDestino = mapearStatusPagamento(jsonNode, event);
 
-            Optional<Pagamento> pagamentoOptional = pagamentoRepository.findByGatewayPaymentId(gatewayPaymentId);
-            if (pagamentoOptional.isEmpty()) {
+            Optional<PagamentoLocalizado> pagamentoLocalizadoOptional = localizarPagamento(identifiers);
+            if (pagamentoLocalizadoOptional.isEmpty()) {
                 LOGGER.warn(
-                        "asaas_webhook_pagamento_not_found event={} gatewayPaymentId={}",
+                        "asaas_webhook_pagamento_not_found event={} paymentId={} checkoutSession={} checkoutId={} externalReference={}",
                         event,
-                        gatewayPaymentId
+                        identifiers.paymentId(),
+                        identifiers.checkoutSessionId(),
+                        identifiers.checkoutId(),
+                        identifiers.externalReference()
                 );
                 return;
             }
 
-            Pagamento pagamento = pagamentoOptional.get();
+            PagamentoLocalizado pagamentoLocalizado = pagamentoLocalizadoOptional.get();
+            Pagamento pagamento = pagamentoLocalizado.pagamento();
+            String identificadorLog = pagamentoLocalizado.identificador();
             StatusPagamento statusAnterior = pagamento.getStatus();
             boolean mudou = pagamento.aplicarStatusWebhook(statusDestino, payload);
             if (!mudou) {
                 LOGGER.info(
                         "asaas_webhook_idempotent event={} gatewayPaymentId={} pagamentoId={} statusAtual={} webhookProcessado={}",
                         event,
-                        gatewayPaymentId,
+                        identificadorLog,
                         pagamento.getId(),
                         pagamento.getStatus(),
                         pagamento.isWebhookProcessado()
@@ -113,7 +125,7 @@ public class WebhookService {
             LOGGER.info(
                     "asaas_webhook_pagamento_updated event={} gatewayPaymentId={} pagamentoId={} statusAnterior={} statusAtual={} webhookProcessado={}",
                     event,
-                    gatewayPaymentId,
+                    identificadorLog,
                     pagamento.getId(),
                     statusAnterior,
                     pagamento.getStatus(),
@@ -123,10 +135,10 @@ public class WebhookService {
                 LOGGER.info(
                         "asaas_webhook_pagamento_confirmed event={} gatewayPaymentId={} pagamentoId={}",
                         event,
-                        gatewayPaymentId,
+                        identificadorLog,
                         pagamento.getId()
                 );
-                atualizarStatusAtendimento(pagamento.getAtendimento(), pagamento.getId(), gatewayPaymentId, event);
+                atualizarStatusAtendimento(pagamento.getAtendimento(), pagamento.getId(), identificadorLog, event);
             }
         } catch (BusinessException exception) {
             throw exception;
@@ -200,14 +212,73 @@ public class WebhookService {
         );
     }
 
-    private String extrairGatewayPaymentId(JsonNode jsonNode, String event) {
-        if ("CHECKOUT_PAID".equals(event)) {
-            String checkoutId = texto(jsonNode.path("checkout").path("id"));
-            if (checkoutId != null) {
-                return checkoutId;
+    private Optional<PagamentoLocalizado> localizarPagamento(AsaasWebhookIdentifiers identifiers) {
+        if (identifiers.paymentId() != null) {
+            Optional<Pagamento> pagamento = pagamentoRepository.findByGatewayPaymentId(identifiers.paymentId());
+            if (pagamento.isPresent()) {
+                return Optional.of(new PagamentoLocalizado(pagamento.get(), identifiers.paymentId()));
             }
         }
-        return texto(jsonNode.path("payment").path("id"));
+        if (identifiers.checkoutSessionId() != null) {
+            Optional<Pagamento> pagamento = pagamentoRepository.findByGatewayPaymentId(identifiers.checkoutSessionId());
+            if (pagamento.isPresent()) {
+                return Optional.of(new PagamentoLocalizado(pagamento.get(), identifiers.checkoutSessionId()));
+            }
+        }
+        if (identifiers.checkoutId() != null) {
+            Optional<Pagamento> pagamento = pagamentoRepository.findByGatewayPaymentId(identifiers.checkoutId());
+            if (pagamento.isPresent()) {
+                return Optional.of(new PagamentoLocalizado(pagamento.get(), identifiers.checkoutId()));
+            }
+        }
+        Long atendimentoId = extrairAtendimentoId(identifiers.externalReference());
+        if (atendimentoId != null) {
+            return pagamentoRepository.findByAtendimentoId(atendimentoId)
+                    .map(pagamento -> new PagamentoLocalizado(pagamento, identifiers.externalReference()));
+        }
+        return Optional.empty();
+    }
+
+    private AsaasWebhookIdentifiers extrairIdentificadores(JsonNode jsonNode) {
+        return new AsaasWebhookIdentifiers(
+                texto(jsonNode.path("checkout").path("id")),
+                primeiroTexto(
+                        jsonNode.path("payment").path("checkoutSession"),
+                        jsonNode.path("checkoutSession")
+                ),
+                texto(jsonNode.path("payment").path("id")),
+                primeiroTexto(
+                        jsonNode.path("externalReference"),
+                        jsonNode.path("checkout").path("externalReference"),
+                        jsonNode.path("payment").path("externalReference")
+                )
+        );
+    }
+
+    private Long extrairAtendimentoId(String externalReference) {
+        String prefixo = "atendimento-";
+        if (externalReference == null || !externalReference.startsWith(prefixo)) {
+            return null;
+        }
+        String valor = externalReference.substring(prefixo.length());
+        if (valor.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(valor);
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    private String primeiroTexto(JsonNode... nodes) {
+        for (JsonNode node : nodes) {
+            String valor = texto(node);
+            if (valor != null) {
+                return valor;
+            }
+        }
+        return null;
     }
 
     private StatusPagamento mapearStatusPagamento(JsonNode jsonNode, String event) {
@@ -250,5 +321,23 @@ public class WebhookService {
             return null;
         }
         return valor;
+    }
+
+    private record AsaasWebhookIdentifiers(
+            String checkoutId,
+            String checkoutSessionId,
+            String paymentId,
+            String externalReference
+    ) {
+
+        boolean temIdentificador() {
+            return checkoutId != null || checkoutSessionId != null || paymentId != null || externalReference != null;
+        }
+    }
+
+    private record PagamentoLocalizado(
+            Pagamento pagamento,
+            String identificador
+    ) {
     }
 }

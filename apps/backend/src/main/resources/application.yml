@@ -30,10 +30,13 @@ app:
     secret: ${JWT_SECRET:dev-secret-change-me-with-at-least-32-characters}
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
   asaas:
-    base-url: ${ASAAS_BASE_URL:https://sandbox.asaas.com/api}
+    base-url: ${ASAAS_BASE_URL:https://api-sandbox.asaas.com/v3}
     api-key: ${ASAAS_API_KEY:}
     webhook-token: ${ASAAS_WEBHOOK_TOKEN:}
     default-customer-id: ${ASAAS_DEFAULT_CUSTOMER_ID:}
+    # Checkout payments store the checkout session id. PAYMENT_CONFIRMED/PAYMENT_RECEIVED
+    # can reconcile through payment.checkoutSession; CHECKOUT_PAID remains supported if sent.
+    checkout-billing-types: ${ASAAS_CHECKOUT_BILLING_TYPES:CREDIT_CARD}
     checkout-success-url: ${ASAAS_CHECKOUT_SUCCESS_URL:http://localhost:5173/pagamento/sucesso}
     checkout-cancel-url: ${ASAAS_CHECKOUT_CANCEL_URL:http://localhost:5173/pagamento/cancelado}
     checkout-expired-url: ${ASAAS_CHECKOUT_EXPIRED_URL:http://localhost:5173/pagamento/expirado}
