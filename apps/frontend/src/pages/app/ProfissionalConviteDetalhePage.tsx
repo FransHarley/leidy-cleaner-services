@@ -6,9 +6,11 @@ import { FormAlert } from '../../components/ui/FormAlert';
 import { StateBox } from '../../components/ui/PageState';
 import { useAuth } from '../../features/auth/useAuth';
 import {
+  formatConviteProfissionalRating,
   formatCurrency,
   formatDateTime,
   formatInviteLocation,
+  getStatusConviteEfetivo,
   getTipoServicoLabel,
   isConviteAtivo,
 } from '../../features/profissional/convites/conviteLabels';
@@ -180,17 +182,21 @@ function ConviteDetail({
   pendingAction: ConviteAction | null;
 }) {
   const canRespond = isConviteAtivo(convite);
+  const statusEfetivo = getStatusConviteEfetivo(convite);
 
   return (
     <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-2xl font-black text-slate-900">Convite #{convite.conviteId}</h2>
-        <ConviteStatusBadge status={convite.status} />
+        <ConviteStatusBadge status={statusEfetivo} />
       </div>
 
       <dl className="mt-6 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-3">
         <DetailItem label="Solicitação" value={`#${convite.solicitacaoId}`} />
         <DetailItem label="Tipo de serviço" value={getTipoServicoLabel(convite.tipoServico)} />
+        {convite.profissionalNome && (
+          <DetailItem label="Profissional" value={`${convite.profissionalNome} · ${formatConviteProfissionalRating(convite)}`} />
+        )}
         <DetailItem label="Data e hora" value={formatDateTime(convite.dataHoraDesejada)} />
         <DetailItem label="Duração estimada" value={`${convite.duracaoEstimadaHoras} horas`} />
         <DetailItem
@@ -227,7 +233,14 @@ function ConviteDetail({
         </div>
       ) : (
         <div className="mt-6">
-          <FormAlert tone="info" message="Este convite não está mais disponível para resposta." />
+          <FormAlert
+            tone="info"
+            message={
+              statusEfetivo === 'EXPIRADO'
+                ? 'Este convite expirou e não está mais disponível para resposta.'
+                : 'Este convite não está mais disponível para resposta.'
+            }
+          />
         </div>
       )}
     </section>

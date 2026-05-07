@@ -42,10 +42,7 @@ export function ProfissionalElegivelCard({
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {profissional.experienciaAnos} ano{profissional.experienciaAnos === 1 ? '' : 's'} de experiência
             </p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Nota {formatRating(profissional.notaMedia)} · {profissional.totalAvaliacoes} avaliação
-              {profissional.totalAvaliacoes === 1 ? '' : 'ões'}
-            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">{formatRatingSummary(profissional)}</p>
           </div>
         </div>
 
@@ -83,4 +80,14 @@ function formatRating(value: number) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function formatRatingSummary(profissional: ProfissionalDisponivel) {
+  if (profissional.totalAvaliacoes <= 0) {
+    return 'Sem avaliações ainda';
+  }
+
+  return `Nota ${formatRating(profissional.notaMedia)} · ${profissional.totalAvaliacoes} avaliação${
+    profissional.totalAvaliacoes === 1 ? '' : 'ões'
+  }`;
 }

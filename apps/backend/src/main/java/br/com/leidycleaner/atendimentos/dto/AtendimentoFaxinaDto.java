@@ -3,6 +3,7 @@ package br.com.leidycleaner.atendimentos.dto;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
+import br.com.leidycleaner.avaliacoes.dto.AvaliacaoProfissionalDto;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.solicitacoes.entity.TipoServico;
 
@@ -13,6 +14,8 @@ public record AtendimentoFaxinaDto(
         Long profissionalId,
         String clienteNome,
         String profissionalNome,
+        BigDecimal profissionalNotaMedia,
+        int profissionalTotalAvaliacoes,
         String enderecoResumo,
         String bairro,
         String regiaoNome,
@@ -25,6 +28,7 @@ public record AtendimentoFaxinaDto(
         OffsetDateTime inicioRealEm,
         OffsetDateTime fimRealEm,
         OffsetDateTime criadoEm,
-        OffsetDateTime atualizadoEm
+        OffsetDateTime atualizadoEm,
+        AvaliacaoProfissionalDto avaliacao
 ) {
 }

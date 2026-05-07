@@ -1,11 +1,20 @@
 import { Link } from 'react-router-dom';
 
-import { formatCurrency, formatDateTime, formatInviteLocation, getTipoServicoLabel, isConviteAtivo } from './conviteLabels';
+import {
+  formatConviteProfissionalRating,
+  formatCurrency,
+  formatDateTime,
+  formatInviteLocation,
+  getStatusConviteEfetivo,
+  getTipoServicoLabel,
+  isConviteAtivo,
+} from './conviteLabels';
 import { ConviteStatusBadge } from './ConviteStatusBadge';
 import type { ConviteProfissional } from './types';
 
 export function ConviteCard({ convite }: { convite: ConviteProfissional }) {
   const isAtivo = isConviteAtivo(convite);
+  const statusEfetivo = getStatusConviteEfetivo(convite);
 
   return (
     <article className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm transition hover:border-cyan-100">
@@ -13,9 +22,14 @@ export function ConviteCard({ convite }: { convite: ConviteProfissional }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-black text-slate-900">Convite #{convite.conviteId}</h2>
-            <ConviteStatusBadge status={convite.status} />
+            <ConviteStatusBadge status={statusEfetivo} />
           </div>
           <p className="mt-2 text-sm font-semibold text-slate-700">{getTipoServicoLabel(convite.tipoServico)}</p>
+          {convite.profissionalNome && (
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              {convite.profissionalNome} · {formatConviteProfissionalRating(convite)}
+            </p>
+          )}
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {formatDateTime(convite.dataHoraDesejada)} · {convite.duracaoEstimadaHoras}h estimadas
           </p>

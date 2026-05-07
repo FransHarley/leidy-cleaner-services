@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { formatCurrency, formatDateTime, getTipoServicoAtendimentoLabel } from './atendimentoLabels';
-import { getAtendimentoRegiaoLabel } from './atendimentoDisplay';
+import { getAtendimentoProfissionalLabel, getAtendimentoProfissionalRatingLabel, getAtendimentoRegiaoLabel } from './atendimentoDisplay';
 import { AtendimentoStatusBadge } from './AtendimentoStatusBadge';
 import type { AtendimentoVisivel, AtendimentosProfile } from './types';
 
@@ -25,6 +25,11 @@ export function AtendimentoCard({ atendimento, profile }: AtendimentoCardProps) 
           </div>
           <p className="mt-2 text-sm font-semibold text-slate-700">{getTipoServicoAtendimentoLabel(atendimento.tipoServico)}</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">Previsto para {formatDateTime(atendimento.inicioPrevistoEm)}</p>
+          {profile === 'CLIENTE' && (
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              {getAtendimentoProfissionalLabel(atendimento)} · {getAtendimentoProfissionalRatingLabel(atendimento)}
+            </p>
+          )}
           <div className="mt-2">
             <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-700">{amountLabel}</p>
             <p className="mt-1 text-sm font-semibold text-slate-700">

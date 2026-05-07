@@ -1,5 +1,6 @@
 package br.com.leidycleaner.atendimentos.mapper;
 
+import br.com.leidycleaner.avaliacoes.dto.AvaliacaoProfissionalDto;
 import br.com.leidycleaner.atendimentos.dto.AtendimentoFaxinaDto;
 import br.com.leidycleaner.atendimentos.dto.AtendimentoFaxinaProfissionalDto;
 import br.com.leidycleaner.atendimentos.dto.CheckpointServicoDto;
@@ -12,6 +13,10 @@ public final class AtendimentoFaxinaMapper {
     }
 
     public static AtendimentoFaxinaDto paraDto(AtendimentoFaxina atendimento) {
+        return paraDto(atendimento, null);
+    }
+
+    public static AtendimentoFaxinaDto paraDto(AtendimentoFaxina atendimento, AvaliacaoProfissionalDto avaliacao) {
         return new AtendimentoFaxinaDto(
                 atendimento.getId(),
                 atendimento.getSolicitacao().getId(),
@@ -19,6 +24,8 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getProfissional().getId(),
                 atendimento.getCliente().getUsuario().getNomeCompleto(),
                 atendimento.getProfissional().getNomeExibicao(),
+                atendimento.getProfissional().getNotaMedia(),
+                atendimento.getProfissional().getTotalAvaliacoes(),
                 formatarEndereco(atendimento),
                 atendimento.getSolicitacao().getEndereco().getBairro(),
                 atendimento.getSolicitacao().getRegiao().getNome(),
@@ -31,11 +38,16 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getInicioRealEm(),
                 atendimento.getFimRealEm(),
                 atendimento.getCriadoEm(),
-                atendimento.getAtualizadoEm()
+                atendimento.getAtualizadoEm(),
+                avaliacao
         );
     }
 
     public static AtendimentoFaxinaProfissionalDto paraProfissionalDto(AtendimentoFaxina atendimento) {
+        return paraProfissionalDto(atendimento, null);
+    }
+
+    public static AtendimentoFaxinaProfissionalDto paraProfissionalDto(AtendimentoFaxina atendimento, AvaliacaoProfissionalDto avaliacao) {
         return new AtendimentoFaxinaProfissionalDto(
                 atendimento.getId(),
                 atendimento.getSolicitacao().getId(),
@@ -43,6 +55,8 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getProfissional().getId(),
                 atendimento.getCliente().getUsuario().getNomeCompleto(),
                 atendimento.getProfissional().getNomeExibicao(),
+                atendimento.getProfissional().getNotaMedia(),
+                atendimento.getProfissional().getTotalAvaliacoes(),
                 formatarEndereco(atendimento),
                 atendimento.getSolicitacao().getEndereco().getBairro(),
                 atendimento.getSolicitacao().getRegiao().getNome(),
@@ -53,7 +67,8 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getInicioRealEm(),
                 atendimento.getFimRealEm(),
                 atendimento.getCriadoEm(),
-                atendimento.getAtualizadoEm()
+                atendimento.getAtualizadoEm(),
+                avaliacao
         );
     }
 
@@ -78,6 +93,7 @@ public final class AtendimentoFaxinaMapper {
                 checkpoint.getAtendimento().getId(),
                 checkpoint.getTipo(),
                 checkpoint.getRegistradoPor().getId(),
+                checkpoint.getRegistradoPor().getNomeCompleto(),
                 checkpoint.getLatitude(),
                 checkpoint.getLongitude(),
                 checkpoint.getFotoComprovacaoUrl(),

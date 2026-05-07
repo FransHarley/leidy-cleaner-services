@@ -20,9 +20,13 @@ export function CheckpointsList({ checkpoints }: { checkpoints: CheckpointServic
           </div>
           <dl className="mt-4 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
             <DetailItem label="Registrado em" value={formatDateTime(checkpoint.registradoEm)} />
-            <DetailItem label="Usuário" value={`#${checkpoint.registradoPorUsuarioId}`} />
-            <DetailItem label="Latitude" value={formatCoordinate(checkpoint.latitude)} />
-            <DetailItem label="Longitude" value={formatCoordinate(checkpoint.longitude)} />
+            <DetailItem label="Registrado por" value={checkpoint.registradoPorNome || 'Usuário não identificado'} />
+            {checkpoint.latitude !== null && checkpoint.latitude !== undefined && (
+              <DetailItem label="Latitude" value={formatCoordinate(checkpoint.latitude)} />
+            )}
+            {checkpoint.longitude !== null && checkpoint.longitude !== undefined && (
+              <DetailItem label="Longitude" value={formatCoordinate(checkpoint.longitude)} />
+            )}
             {checkpoint.fotoComprovacaoUrl && <DetailItem label="Evidência" value={checkpoint.fotoComprovacaoUrl} />}
             {checkpoint.observacao && <DetailItem label="Observação" value={checkpoint.observacao} />}
           </dl>

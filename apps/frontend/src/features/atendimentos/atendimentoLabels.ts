@@ -53,18 +53,6 @@ export function canFinishAtendimento(status: StatusAtendimento) {
   return status === 'EM_EXECUCAO';
 }
 
-export function getPaymentRelationLabel(status: StatusAtendimento) {
-  if (status === 'AGUARDANDO_PAGAMENTO') {
-    return 'Pagamento ainda aguardando confirmação.';
-  }
-
-  if (['CONFIRMADO', 'EM_EXECUCAO', 'FINALIZADO'].includes(status)) {
-    return 'Atendimento liberado após confirmação de pagamento pelo backend.';
-  }
-
-  return 'Sem relação de pagamento ativa para este status.';
-}
-
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) {
     return 'Não informado';

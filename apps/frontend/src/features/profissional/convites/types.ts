@@ -31,6 +31,9 @@ export type ConviteProfissional = {
   dataHoraDesejada: string;
   duracaoEstimadaHoras: number;
   tipoServico: TipoServico;
+  profissionalNome?: string | null;
+  profissionalNotaMedia?: number | null;
+  profissionalTotalAvaliacoes?: number | null;
   bairro: string;
   cidade: string;
   estado: string;

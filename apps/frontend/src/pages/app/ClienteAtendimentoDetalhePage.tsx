@@ -64,8 +64,12 @@ export function ClienteAtendimentoDetalhePage() {
   });
 
   const avaliacaoExistente = useMemo(
-    () => submittedAvaliacao ?? avaliacoesQuery.data?.find((avaliacao) => avaliacao.atendimentoId === atendimentoId) ?? null,
-    [avaliacoesQuery.data, atendimentoId, submittedAvaliacao],
+    () =>
+      submittedAvaliacao ??
+      atendimento?.avaliacao ??
+      avaliacoesQuery.data?.find((avaliacao) => avaliacao.atendimentoId === atendimentoId) ??
+      null,
+    [avaliacoesQuery.data, atendimento?.avaliacao, atendimentoId, submittedAvaliacao],
   );
 
   const createAvaliacaoMutation = useMutation({
@@ -78,7 +82,10 @@ export function ClienteAtendimentoDetalhePage() {
         title: 'Avaliação enviada',
         message: 'Sua avaliação foi registrada para este atendimento.',
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.avaliacoesProfissional(avaliacao.profissionalId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.detalhe(atendimentoId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.avaliacoesProfissional(avaliacao.profissionalId) }),
+      ]);
     },
     onError: async (error) => {
       if (error instanceof ApiError && error.status === 401) {

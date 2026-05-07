@@ -1,3 +1,5 @@
+import type { AvaliacaoProfissional } from '../avaliacoes/types';
+
 export type StatusAtendimento =
   | 'AGUARDANDO_PAGAMENTO'
   | 'CONFIRMADO'
@@ -21,6 +23,8 @@ export type AtendimentoBase = {
   profissionalId: number;
   clienteNome?: string | null;
   profissionalNome?: string | null;
+  profissionalNotaMedia?: number | null;
+  profissionalTotalAvaliacoes?: number | null;
   enderecoResumo?: string | null;
   bairro?: string | null;
   regiaoNome?: string | null;
@@ -31,6 +35,7 @@ export type AtendimentoBase = {
   fimRealEm: string | null;
   criadoEm: string;
   atualizadoEm: string;
+  avaliacao?: AvaliacaoProfissional | null;
 };
 
 export type AtendimentoFaxina = AtendimentoBase & {
@@ -50,6 +55,7 @@ export type CheckpointServico = {
   atendimentoId: number;
   tipo: TipoCheckpointServico;
   registradoPorUsuarioId: number;
+  registradoPorNome?: string | null;
   latitude: number | null;
   longitude: number | null;
   fotoComprovacaoUrl: string | null;

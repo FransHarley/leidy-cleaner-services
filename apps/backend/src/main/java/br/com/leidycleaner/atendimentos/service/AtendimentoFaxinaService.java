@@ -8,6 +8,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.leidycleaner.avaliacoes.dto.AvaliacaoProfissionalDto;
+import br.com.leidycleaner.avaliacoes.mapper.AvaliacaoProfissionalMapper;
+import br.com.leidycleaner.avaliacoes.repository.AvaliacaoProfissionalRepository;
 import br.com.leidycleaner.atendimentos.dto.AtendimentoFaxinaDto;
 import br.com.leidycleaner.atendimentos.dto.CheckpointServicoDto;
 import br.com.leidycleaner.atendimentos.dto.CheckpointServicoRequest;
@@ -29,15 +32,18 @@ public class AtendimentoFaxinaService {
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
     private final CheckpointServicoRepository checkpointServicoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AvaliacaoProfissionalRepository avaliacaoProfissionalRepository;
 
     public AtendimentoFaxinaService(
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             CheckpointServicoRepository checkpointServicoRepository,
-            UsuarioRepository usuarioRepository
+            UsuarioRepository usuarioRepository,
+            AvaliacaoProfissionalRepository avaliacaoProfissionalRepository
     ) {
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.checkpointServicoRepository = checkpointServicoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.avaliacaoProfissionalRepository = avaliacaoProfissionalRepository;
     }
 
     @Transactional(readOnly = true)
@@ -196,11 +202,22 @@ public class AtendimentoFaxinaService {
     }
 
     private Object paraDtoPorPerfil(AtendimentoFaxina atendimento, Usuario usuario) {
+        AvaliacaoProfissionalDto avaliacao = buscarAvaliacao(atendimento);
         if (usuario.getTipoUsuario() == TipoUsuario.PROFISSIONAL) {
-            return AtendimentoFaxinaMapper.paraProfissionalDto(atendimento);
+            return AtendimentoFaxinaMapper.paraProfissionalDto(atendimento, avaliacao);
         }
 
-        return AtendimentoFaxinaMapper.paraDto(atendimento);
+        return AtendimentoFaxinaMapper.paraDto(atendimento, avaliacao);
+    }
+
+    private AvaliacaoProfissionalDto buscarAvaliacao(AtendimentoFaxina atendimento) {
+        if (atendimento.getStatus() != StatusAtendimento.FINALIZADO) {
+            return null;
+        }
+
+        return avaliacaoProfissionalRepository.findByAtendimentoId(atendimento.getId())
+                .map(AvaliacaoProfissionalMapper::paraDto)
+                .orElse(null);
     }
 
     private boolean isAdmin(Usuario usuario) {

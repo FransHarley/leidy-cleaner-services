@@ -40,13 +40,36 @@ export function canRespondToConvite(status: StatusConvite) {
   return status === 'ENVIADO' || status === 'VISUALIZADO';
 }
 
+export function getStatusConviteEfetivo(convite: ConviteProfissional): StatusConvite {
+  if (canRespondToConvite(convite.status) && isConviteExpirado(convite.expiraEm)) {
+    return 'EXPIRADO';
+  }
+
+  return convite.status;
+}
+
 export function isConviteExpirado(expiraEm: string) {
   const timestamp = new Date(expiraEm).getTime();
   return Number.isFinite(timestamp) && timestamp <= Date.now();
 }
 
 export function isConviteAtivo(convite: ConviteProfissional) {
-  return canRespondToConvite(convite.status) && !isConviteExpirado(convite.expiraEm);
+  return canRespondToConvite(getStatusConviteEfetivo(convite)) && !isConviteExpirado(convite.expiraEm);
+}
+
+export function formatConviteProfissionalRating(convite: ConviteProfissional) {
+  const totalAvaliacoes = convite.profissionalTotalAvaliacoes ?? 0;
+
+  if (totalAvaliacoes <= 0) {
+    return 'Sem avaliações ainda';
+  }
+
+  const nota = new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  }).format(Number(convite.profissionalNotaMedia ?? 0));
+
+  return `${nota} · ${totalAvaliacoes} avaliação${totalAvaliacoes === 1 ? '' : 'ões'}`;
 }
 
 export function formatDateTime(value: string) {

@@ -10,6 +10,7 @@ public record CheckpointServicoDto(
         Long atendimentoId,
         TipoCheckpointServico tipo,
         Long registradoPorUsuarioId,
+        String registradoPorNome,
         BigDecimal latitude,
         BigDecimal longitude,
         String fotoComprovacaoUrl,

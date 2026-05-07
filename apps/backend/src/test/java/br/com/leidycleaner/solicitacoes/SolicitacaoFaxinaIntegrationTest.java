@@ -929,6 +929,9 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.data[0].status").value("ENVIADO"))
                 .andExpect(jsonPath("$.data[0].tipoServico").value("FAXINA_RESIDENCIAL"))
                 .andExpect(jsonPath("$.data[0].bairro").value("Centro Histórico"))
+                .andExpect(jsonPath("$.data[0].profissionalNome").value("Profissional Convite Gerado"))
+                .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data[0].valorEstimadoProfissional").value(144.00))
                 .andExpect(jsonPath("$.data[0].valorServico").doesNotExist())
                 .andExpect(jsonPath("$.data[0].percentualComissaoAgencia").doesNotExist())
@@ -983,6 +986,9 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.data.solicitacaoId").value(solicitacaoId))
                 .andExpect(jsonPath("$.data.status").value("ENVIADO"))
                 .andExpect(jsonPath("$.data.dataHoraDesejada").exists())
+                .andExpect(jsonPath("$.data.profissionalNome").value("Profissional Convidada"))
+                .andExpect(jsonPath("$.data.profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data.profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data.valorEstimadoProfissional").value(144.00))
                 .andExpect(jsonPath("$.data.valorServico").doesNotExist())
                 .andExpect(jsonPath("$.data.percentualComissaoAgencia").doesNotExist());
@@ -1129,6 +1135,21 @@ class SolicitacaoFaxinaIntegrationTest {
         ReflectionTestUtils.setField(convite, "enviadoEm", OffsetDateTime.now().minusDays(2));
         ReflectionTestUtils.setField(convite, "expiraEm", OffsetDateTime.now().minusDays(1));
         conviteProfissionalRepository.saveAndFlush(convite);
+
+        mockMvc.perform(get("/api/v1/convites/{id}", conviteId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + profissional.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("EXPIRADO"));
+
+        mockMvc.perform(get("/api/v1/convites/meus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + profissional.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].status").value("EXPIRADO"));
 
         mockMvc.perform(post("/api/v1/convites/{id}/aceitar", conviteId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + profissional.tokenProfissional()))
@@ -2262,7 +2283,9 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
-                .andExpect(jsonPath("$.data[0].status").value("CONFIRMADO"));
+                .andExpect(jsonPath("$.data[0].status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0));
 
         mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
@@ -2270,7 +2293,10 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
-                .andExpect(jsonPath("$.data.status").value("CONFIRMADO"));
+                .andExpect(jsonPath("$.data.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data.profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data.profissionalTotalAvaliacoes").value(0))
+                .andExpect(jsonPath("$.data.avaliacao").doesNotExist());
     }
 
     @Test
@@ -2285,6 +2311,8 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data[0].status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data[0].valorEstimadoProfissional").value(144.00))
                 .andExpect(jsonPath("$.data[0].valorServico").doesNotExist())
                 .andExpect(jsonPath("$.data[0].percentualComissaoAgencia").doesNotExist());
@@ -2296,6 +2324,8 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data.profissionalNotaMedia").exists())
+                .andExpect(jsonPath("$.data.profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data.valorEstimadoProfissional").value(144.00))
                 .andExpect(jsonPath("$.data.valorServico").doesNotExist())
                 .andExpect(jsonPath("$.data.percentualComissaoAgencia").doesNotExist());
@@ -2424,7 +2454,8 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].atendimentoId").value(atendimento.atendimentoId()))
-                .andExpect(jsonPath("$.data[0].tipo").value("INICIO"));
+                .andExpect(jsonPath("$.data[0].tipo").value("INICIO"))
+                .andExpect(jsonPath("$.data[0].registradoPorNome").isNotEmpty());
     }
 
     @Test
@@ -2511,6 +2542,26 @@ class SolicitacaoFaxinaIntegrationTest {
         assertThat(objectMapper.readTree(perfilResponse).path("data").path("notaMedia").decimalValue())
                 .isEqualByComparingTo("5.00");
 
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.avaliacao.avaliacaoId").value(avaliacaoId))
+                .andExpect(jsonPath("$.data.avaliacao.nota").value(5))
+                .andExpect(jsonPath("$.data.avaliacao.comentario").value("Atendimento excelente"));
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.avaliacao.avaliacaoId").value(avaliacaoId))
+                .andExpect(jsonPath("$.data.avaliacao.nota").value(5))
+                .andExpect(jsonPath("$.data.avaliacao.comentario").value("Atendimento excelente"));
+
         mockMvc.perform(get("/api/v1/profissionais/{id}/avaliacoes", profissionalId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
                 .andExpect(status().isOk())
@@ -2541,6 +2592,25 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
+    void clienteNaoAvaliaAtendimentoEmExecucao() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoConfirmado("m8.em-execucao", "77153333344", "chk_m8_em_execucao");
+        iniciarAtendimento(atendimento);
+
+        mockMvc.perform(post("/api/v1/avaliacoes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(avaliacaoJson(atendimento.atendimentoId(), 5, "Ainda em execucao")))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("ATENDIMENTO_NAO_FINALIZADO"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        Long profissionalId = buscarMeuPerfilProfissionalId(atendimento.tokenProfissional());
+        assertThat(avaliacaoProfissionalRepository.countByProfissionalId(profissionalId)).isZero();
+    }
+
+    @Test
     void clienteNaoAvaliaAtendimentoDeOutraCliente() throws Exception {
         AtendimentoCriado atendimento = criarAtendimentoFinalizado("m8.outra-cliente", "77154233344", "chk_m8_outra_cliente");
         String tokenOutraCliente = criarClienteELogar("m8.outra-cliente-nao-dona@example.com");
@@ -2554,6 +2624,45 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("ATENDIMENTO_NOT_FOUND"))
                 .andExpect(jsonPath("$.errors").isArray());
+    }
+
+    @Test
+    void profissionalNaoCriaAvaliacao() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoFinalizado("m8.profissional-nao-avalia", "77154333344", "chk_m8_profissional_nao_avalia");
+
+        mockMvc.perform(post("/api/v1/avaliacoes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenProfissional())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(avaliacaoJson(atendimento.atendimentoId(), 5, "Profissional nao avalia cliente")))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("WWW-Authenticate"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        Long profissionalId = buscarMeuPerfilProfissionalId(atendimento.tokenProfissional());
+        assertThat(avaliacaoProfissionalRepository.countByProfissionalId(profissionalId)).isZero();
+    }
+
+    @Test
+    void adminNaoCriaAvaliacaoNoLugarDaCliente() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoFinalizado("m8.admin-nao-avalia", "77154433344", "chk_m8_admin_nao_avalia");
+        String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
+
+        mockMvc.perform(post("/api/v1/avaliacoes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(avaliacaoJson(atendimento.atendimentoId(), 5, "Admin nao avalia pela cliente")))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("WWW-Authenticate"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        Long profissionalId = buscarMeuPerfilProfissionalId(atendimento.tokenProfissional());
+        assertThat(avaliacaoProfissionalRepository.countByProfissionalId(profissionalId)).isZero();
     }
 
     @Test
@@ -2583,6 +2692,24 @@ class SolicitacaoFaxinaIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(avaliacaoJson(atendimento.atendimentoId(), 6, "Nota invalida")))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        Long profissionalId = buscarMeuPerfilProfissionalId(atendimento.tokenProfissional());
+        assertThat(avaliacaoProfissionalRepository.countByProfissionalId(profissionalId)).isZero();
+    }
+
+    @Test
+    void notaMenorQueUmERejeitadaEmJson() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoFinalizado("m8.nota-baixa-invalida", "77156333344", "chk_m8_nota_baixa_invalida");
+
+        mockMvc.perform(post("/api/v1/avaliacoes")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(avaliacaoJson(atendimento.atendimentoId(), 0, "Nota invalida")))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))

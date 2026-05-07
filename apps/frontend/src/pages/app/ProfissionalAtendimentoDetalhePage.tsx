@@ -15,6 +15,7 @@ import { canFinishAtendimento, canStartAtendimento } from '../../features/atendi
 import { CheckpointActionForm } from '../../features/atendimentos/CheckpointActionForm';
 import { CheckpointsList } from '../../features/atendimentos/CheckpointsList';
 import type { CheckpointServicoRequest } from '../../features/atendimentos/types';
+import { AvaliacaoResumo } from '../../features/avaliacoes/AvaliacaoResumo';
 import { useAuth } from '../../features/auth/useAuth';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
@@ -171,6 +172,21 @@ export function ProfissionalAtendimentoDetalhePage() {
       )}
 
       {atendimento && <AtendimentoInfoPanel atendimento={atendimento} financialView="professional" />}
+
+      {atendimento?.status === 'FINALIZADO' && (
+        <section className="grid gap-4">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">Avaliação</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Feedback da cliente para este atendimento finalizado.</p>
+          </div>
+
+          {atendimento.avaliacao ? (
+            <AvaliacaoResumo avaliacao={atendimento.avaliacao} title="Avaliação recebida" />
+          ) : (
+            <FormAlert tone="info" message="Cliente ainda não avaliou este atendimento." />
+          )}
+        </section>
+      )}
 
       {atendimento && (
         <section className="grid gap-4">

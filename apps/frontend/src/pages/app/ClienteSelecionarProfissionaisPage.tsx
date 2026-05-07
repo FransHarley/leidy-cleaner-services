@@ -287,10 +287,7 @@ function AvaliacoesDialog({
             <h2 id="avaliacoes-profissional-title" className="mt-2 text-2xl font-black text-slate-900">
               {profissional.nomeExibicao}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Nota {formatRating(profissional.notaMedia)} · {profissional.totalAvaliacoes} avaliação
-              {profissional.totalAvaliacoes === 1 ? '' : 'ões'}
-            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{formatRatingSummary(profissional)}</p>
           </div>
           <button
             className="min-h-10 rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
@@ -325,6 +322,16 @@ function formatRating(value: number) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function formatRatingSummary(profissional: ProfissionalDisponivel) {
+  if (profissional.totalAvaliacoes <= 0) {
+    return 'Sem avaliações ainda';
+  }
+
+  return `Nota ${formatRating(profissional.notaMedia)} · ${profissional.totalAvaliacoes} avaliação${
+    profissional.totalAvaliacoes === 1 ? '' : 'ões'
+  }`;
 }
 
 function RequestContextSection({

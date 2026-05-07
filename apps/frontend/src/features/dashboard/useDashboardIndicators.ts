@@ -9,7 +9,7 @@ import { listarMinhasSolicitacoes } from '../cliente/solicitacoes/solicitacaoApi
 import type { SolicitacaoFaxina, StatusSolicitacao } from '../cliente/solicitacoes/types';
 import { listarMinhasOcorrencias } from '../ocorrencias/ocorrenciasApi';
 import type { OcorrenciaAtendimento } from '../ocorrencias/types';
-import { canRespondToConvite } from '../profissional/convites/conviteLabels';
+import { isConviteAtivo } from '../profissional/convites/conviteLabels';
 import { listarMeusConvites } from '../profissional/convites/convitesApi';
 import type { ConviteProfissional } from '../profissional/convites/types';
 
@@ -131,7 +131,7 @@ function buildClienteIndicators(
 
 function buildProfissionalIndicators(convites: ConviteProfissional[], atendimentos: AtendimentoVisivel[]) {
   return {
-    convitesPendentes: convites.filter((convite) => canRespondToConvite(convite.status)).length,
+    convitesPendentes: convites.filter(isConviteAtivo).length,
     proximosAtendimentos: atendimentos.filter((atendimento) => atendimento.status === 'CONFIRMADO').length,
     atendimentosEmExecucao: atendimentos.filter((atendimento) => atendimento.status === 'EM_EXECUCAO').length,
   };

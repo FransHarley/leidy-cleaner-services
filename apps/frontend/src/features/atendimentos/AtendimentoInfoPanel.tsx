@@ -1,12 +1,12 @@
 import {
   formatCurrency,
   formatDateTime,
-  getPaymentRelationLabel,
   getTipoServicoAtendimentoLabel,
 } from './atendimentoLabels';
 import {
   getAtendimentoClienteLabel,
   getAtendimentoEnderecoLabel,
+  getAtendimentoProfissionalRatingLabel,
   getAtendimentoProfissionalLabel,
   getAtendimentoRegiaoLabel,
 } from './atendimentoDisplay';
@@ -44,9 +44,9 @@ export function AtendimentoInfoPanel({ atendimento, financialView = 'service-onl
         />
         <DetailItem label="Cliente" value={getAtendimentoClienteLabel(atendimento)} />
         <DetailItem label="Profissional" value={getAtendimentoProfissionalLabel(atendimento)} />
+        <DetailItem label="Avaliações da profissional" value={getAtendimentoProfissionalRatingLabel(atendimento)} />
         <DetailItem label="Endereço" value={getAtendimentoEnderecoLabel(atendimento)} />
         <DetailItem label="Bairro/região" value={getAtendimentoRegiaoLabel(atendimento)} />
-        <DetailItem label="Relação com pagamento" value={getPaymentRelationLabel(atendimento.status)} />
         <DetailItem label="Início real" value={formatDateTime(atendimento.inicioRealEm)} />
         <DetailItem label="Fim real" value={formatDateTime(atendimento.fimRealEm)} />
         {showInternalFinancials && 'percentualComissaoAgencia' in atendimento && (
