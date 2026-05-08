@@ -3,6 +3,7 @@ import type {
   AuthLoginRequest,
   AuthLoginResponse,
   CadastroClienteRequest,
+  CadastroProfissionalCompletoRequest,
   CadastroProfissionalRequest,
   CadastroUsuarioResponse,
   UsuarioAutenticado,
@@ -33,6 +34,14 @@ export function registerClienteRequest(payload: CadastroClienteRequest) {
 
 export function registerProfissionalRequest(payload: CadastroProfissionalRequest) {
   return apiRequest<CadastroUsuarioResponse>('/usuarios/profissionais', {
+    auth: false,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function registerProfissionalCompletoRequest(payload: CadastroProfissionalCompletoRequest) {
+  return apiRequest<CadastroUsuarioResponse>('/usuarios/profissionais/pre-cadastro-completo', {
     auth: false,
     method: 'POST',
     body: JSON.stringify(payload),

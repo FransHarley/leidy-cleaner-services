@@ -40,9 +40,11 @@ import { ProfissionalRegioesPage } from '../pages/app/ProfissionalRegioesPage';
 import { ProfissionalVerificacaoPage } from '../pages/app/ProfissionalVerificacaoPage';
 import { ClientRegistrationPage } from '../pages/public/ClientRegistrationPage';
 import { HomePage } from '../pages/public/HomePage';
+import { CodeOfConductPage, PrivacyPolicyPage, TermsOfUsePage } from '../pages/public/LegalPages';
 import { LoginPage } from '../pages/public/LoginPage';
 import { NotFoundPage } from '../pages/public/NotFoundPage';
 import { ProfessionalRegistrationPage } from '../pages/public/ProfessionalRegistrationPage';
+import { RegistrationChoicePage } from '../pages/public/RegistrationChoicePage';
 import { AppHomeRedirect } from '../routes/AppHomeRedirect';
 import { RequireAuth } from '../routes/RequireAuth';
 import { RequireProfile } from '../routes/RequireProfile';
@@ -52,13 +54,16 @@ export function App() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="termos-de-uso" element={<TermsOfUsePage />} />
+        <Route path="privacidade" element={<PrivacyPolicyPage />} />
+        <Route path="codigo-de-conduta" element={<CodeOfConductPage />} />
       </Route>
       <Route path="login" element={<Navigate to="/entrar" replace />} />
       <Route path="entrar" element={<LoginPage />} />
       <Route path="cadastro">
+        <Route index element={<RegistrationChoicePage />} />
         <Route path="cliente" element={<ClientRegistrationPage />} />
         <Route path="profissional" element={<ProfessionalRegistrationPage />} />
-        <Route index element={<Navigate to="/cadastro/cliente" replace />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route path="app" element={<AuthenticatedLayout />}>

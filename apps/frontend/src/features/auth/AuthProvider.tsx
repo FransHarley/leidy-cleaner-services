@@ -6,12 +6,14 @@ import {
   getCurrentUserRequest,
   loginRequest,
   registerClienteRequest,
+  registerProfissionalCompletoRequest,
   registerProfissionalRequest,
 } from './authApi';
 import { AUTH_STORAGE_KEYS, authStorage } from './authStorage';
 import type {
   AuthLoginRequest,
   CadastroClienteRequest,
+  CadastroProfissionalCompletoRequest,
   CadastroProfissionalRequest,
   CadastroUsuarioResponse,
   UsuarioAutenticado,
@@ -27,6 +29,7 @@ type AuthContextValue = {
   login: (payload: AuthLoginRequest) => Promise<UsuarioAutenticado>;
   registerCliente: (payload: CadastroClienteRequest) => Promise<CadastroUsuarioResponse>;
   registerProfissional: (payload: CadastroProfissionalRequest) => Promise<CadastroUsuarioResponse>;
+  registerProfissionalCompleto: (payload: CadastroProfissionalCompletoRequest) => Promise<CadastroUsuarioResponse>;
   refreshUser: () => Promise<UsuarioAutenticado | null>;
   logout: () => void;
 };
@@ -205,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       registerCliente: registerClienteRequest,
       registerProfissional: registerProfissionalRequest,
+      registerProfissionalCompleto: registerProfissionalCompletoRequest,
       refreshUser,
       logout: clearSession,
     }),

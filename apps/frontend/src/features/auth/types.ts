@@ -27,8 +27,12 @@ export type CadastroClienteRequest = {
   nomeCompleto: string;
   email: string;
   telefone: string;
+  cpf: string;
   senha: string;
   observacoesInternas?: string;
+  aceitarTermosUso: boolean;
+  aceitarPoliticaPrivacidade: boolean;
+  aceitarCodigoConduta: boolean;
 };
 
 export type CadastroProfissionalRequest = {
@@ -42,6 +46,27 @@ export type CadastroProfissionalRequest = {
   descricao?: string;
   fotoPerfilUrl?: string;
   experienciaAnos?: number;
+  aceitarTermosUso: boolean;
+  aceitarPoliticaPrivacidade: boolean;
+  aceitarCodigoConduta: boolean;
+};
+
+export type CadastroProfissionalCompletoRequest = CadastroProfissionalRequest & {
+  documento: {
+    tipoDocumento: string;
+    numeroDocumento: string;
+    documentoFrenteUrl?: string | null;
+    documentoVersoUrl?: string | null;
+    selfieUrl?: string | null;
+    comprovanteResidenciaUrl?: string | null;
+  };
+  regiaoIds: number[];
+  disponibilidades: Array<{
+    diaSemana: string;
+    horaInicio: string;
+    horaFim: string;
+    ativo?: boolean | null;
+  }>;
 };
 
 export type CadastroUsuarioResponse = {

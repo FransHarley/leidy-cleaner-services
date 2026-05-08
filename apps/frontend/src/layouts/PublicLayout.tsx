@@ -5,7 +5,7 @@ import { MailIcon, PhoneIcon, PinIcon, SparkleIcon } from '../components/public/
 import { PublicButton } from '../components/public/PublicButton';
 
 const navItems = [
-  { label: 'Início', href: '/#inicio' },
+  { label: 'Inicio', href: '/#inicio' },
   { label: 'Como funciona', href: '/#como-funciona' },
   { label: 'Profissionais', href: '/#profissionais' },
   { label: 'Entrar', to: '/entrar' },
@@ -13,9 +13,9 @@ const navItems = [
 
 const footerColumns = [
   {
-    title: 'Navegação',
+    title: 'Navegacao',
     items: [
-      { label: 'Início', href: '/#inicio' },
+      { label: 'Inicio', href: '/#inicio' },
       { label: 'Como funciona', href: '/#como-funciona' },
       { label: 'Profissionais', href: '/#profissionais' },
     ],
@@ -23,9 +23,10 @@ const footerColumns = [
   {
     title: 'Institucional',
     items: [
-      { label: 'Sobre nós', href: '/#sobre-nos' },
-      { label: 'Política de privacidade', href: '/#privacidade' },
-      { label: 'Termos de uso', href: '/#termos' },
+      { label: 'Sobre nos', href: '/#sobre-nos' },
+      { label: 'Politica de privacidade', to: '/privacidade' },
+      { label: 'Termos de uso', to: '/termos-de-uso' },
+      { label: 'Codigo de conduta', to: '/codigo-de-conduta' },
     ],
   },
   {
@@ -45,13 +46,13 @@ export function PublicLayout() {
         <header className="sticky top-0 z-20 bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-[980px] items-center justify-between gap-4 px-5 py-5 md:px-8">
             <BrandMark />
-            <nav className="hidden items-center gap-9 text-sm font-semibold text-slate-700 lg:flex" aria-label="Navegação pública">
+            <nav className="hidden items-center gap-9 text-sm font-semibold text-slate-700 lg:flex" aria-label="Navegacao publica">
               {navItems.map((item) => (
                 <PublicNavItem key={item.label} {...item} />
               ))}
             </nav>
-            <PublicButton href="/cadastro/cliente" className="hidden md:inline-flex">
-              Solicitar faxina
+            <PublicButton href="/cadastro" className="hidden md:inline-flex">
+              Cadastrar
               <SparkleIcon />
             </PublicButton>
           </div>
@@ -64,8 +65,8 @@ export function PublicLayout() {
             <Link to="/entrar" className="whitespace-nowrap">
               Entrar
             </Link>
-            <Link to="/cadastro/cliente" className="whitespace-nowrap text-cyan-500">
-              Solicitar faxina
+            <Link to="/cadastro" className="whitespace-nowrap text-cyan-500">
+              Cadastrar
             </Link>
           </nav>
         </header>
@@ -102,7 +103,7 @@ export function PublicLayout() {
                     </li>
                     <li className="flex items-start gap-3">
                       <PinIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
-                      <span>São Paulo - SP</span>
+                      <span>Sao Paulo - SP</span>
                     </li>
                   </ul>
                 </div>
@@ -110,7 +111,7 @@ export function PublicLayout() {
             </div>
 
             <p className="mt-10 border-t border-slate-200 pt-5 text-center text-xs text-slate-500">
-              © 2024 Leidy Cleaner Services. Todos os direitos reservados.
+              Copyright 2024 Leidy Cleaner Services. Todos os direitos reservados.
             </p>
           </div>
         </footer>
