@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { BrandMark } from '../components/public/BrandMark';
 import { MailIcon, PhoneIcon, PinIcon, SparkleIcon } from '../components/public/PublicIcons';
 import { PublicButton } from '../components/public/PublicButton';
+import { WhatsAppFloatingButton } from '../components/ui/WhatsAppFloatingButton';
 
 const navItems = [
   { label: 'Inicio', href: '/#inicio' },
@@ -105,6 +106,8 @@ export function PublicLayout() {
         </header>
 
         <Outlet />
+
+        <WhatsAppFloatingButton />
 
         <footer className="border-t border-slate-100 bg-slate-50/70 px-4 pb-8 pt-10 md:px-8 md:pt-12">
           <div className="mx-auto max-w-[980px]">

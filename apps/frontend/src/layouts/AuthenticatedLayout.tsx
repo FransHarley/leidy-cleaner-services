@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '../components/public/BrandMark';
 import { NotificationBadge, type NotificationBadgeTone } from '../components/ui/NotificationBadge';
+import { WhatsAppFloatingButton } from '../components/ui/WhatsAppFloatingButton';
 import { getFirstName, getProfileLabel, isAdminUser } from '../features/auth/session';
 import type { TipoUsuario } from '../features/auth/types';
 import { useAuth } from '../features/auth/useAuth';
@@ -195,6 +196,8 @@ export function AuthenticatedLayout() {
           <Outlet />
         </main>
       </div>
+
+      <WhatsAppFloatingButton />
     </div>
   );
 }
