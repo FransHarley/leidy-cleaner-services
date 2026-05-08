@@ -8,8 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import br.com.leidycleaner.ocorrencias.entity.OcorrenciaAtendimento;
+import br.com.leidycleaner.ocorrencias.entity.StatusOcorrencia;
 
 public interface OcorrenciaAtendimentoRepository extends JpaRepository<OcorrenciaAtendimento, Long> {
+
+    long countByStatus(StatusOcorrencia status);
 
     @Query("""
             select ocorrencia

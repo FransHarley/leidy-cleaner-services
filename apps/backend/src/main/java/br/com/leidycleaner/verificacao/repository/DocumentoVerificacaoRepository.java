@@ -1,5 +1,6 @@
 package br.com.leidycleaner.verificacao.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,8 @@ import br.com.leidycleaner.verificacao.entity.DocumentoVerificacao;
 import br.com.leidycleaner.verificacao.entity.StatusVerificacao;
 
 public interface DocumentoVerificacaoRepository extends JpaRepository<DocumentoVerificacao, Long> {
+
+    long countByStatusVerificacaoIn(Collection<StatusVerificacao> statuses);
 
     @Query("""
             select documento

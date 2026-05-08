@@ -20,6 +20,8 @@ public interface AtendimentoFaxinaRepository extends JpaRepository<AtendimentoFa
 
     boolean existsBySolicitacaoId(Long solicitacaoId);
 
+    long countByStatus(StatusAtendimento status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select a

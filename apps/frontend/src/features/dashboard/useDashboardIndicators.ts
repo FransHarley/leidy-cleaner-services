@@ -12,6 +12,7 @@ import type { OcorrenciaAtendimento } from '../ocorrencias/types';
 import { isConviteAtivo } from '../profissional/convites/conviteLabels';
 import { listarMeusConvites } from '../profissional/convites/convitesApi';
 import type { ConviteProfissional } from '../profissional/convites/types';
+import { buscarIndicadoresAdmin, type AdminDashboardIndicadores } from './dashboardApi';
 
 const activeSolicitacaoStatuses = new Set<StatusSolicitacao>([
   'CRIADA',
@@ -36,6 +37,7 @@ export type DashboardIndicators = {
     proximosAtendimentos: number;
     atendimentosEmExecucao: number;
   };
+  admin: AdminDashboardIndicadores;
 };
 
 export const emptyDashboardIndicators: DashboardIndicators = {
@@ -51,11 +53,24 @@ export const emptyDashboardIndicators: DashboardIndicators = {
     proximosAtendimentos: 0,
     atendimentosEmExecucao: 0,
   },
+  admin: {
+    verificacoesPendentes: 0,
+    profissionaisPendentes: 0,
+    ocorrenciasAbertas: 0,
+    ocorrenciasEmAnalise: 0,
+    pagamentosPendentes: 0,
+    pagamentosAguardandoConfirmacao: 0,
+    pagamentosFalhos: 0,
+    atendimentosEmAnalise: 0,
+    solicitacoesAbertas: 0,
+    usuariosTotal: 0,
+  },
 };
 
 export function useDashboardIndicators(profile: TipoUsuario, token: string | null) {
   const isCliente = profile === 'CLIENTE';
   const isProfissional = profile === 'PROFISSIONAL';
+  const isAdmin = profile === 'ADMIN';
 
   const clientePagamentosQuery = useQuery({
     queryKey: ['cliente', 'pagamentos', 'atendimentos'],
@@ -93,6 +108,13 @@ export function useDashboardIndicators(profile: TipoUsuario, token: string | nul
     enabled: isProfissional && Boolean(token),
   });
 
+  const adminDashboardQuery = useQuery({
+    queryKey: ['admin', 'dashboard', 'indicadores'],
+    queryFn: () => buscarIndicadoresAdmin(requireToken(token)),
+    enabled: isAdmin && Boolean(token),
+    staleTime: 60_000,
+  });
+
   const atendimentosPagamento = clientePagamentosQuery.data ?? [];
   const clienteAtendimentos = clienteAtendimentosQuery.data ?? [];
   const solicitacoes = clienteSolicitacoesQuery.data ?? [];
@@ -103,13 +125,17 @@ export function useDashboardIndicators(profile: TipoUsuario, token: string | nul
   return {
     cliente: buildClienteIndicators(atendimentosPagamento, clienteAtendimentos, solicitacoes, ocorrencias),
     profissional: buildProfissionalIndicators(convites, profissionalAtendimentos),
+    admin: adminDashboardQuery.data ?? emptyDashboardIndicators.admin,
     isLoading:
       clientePagamentosQuery.isLoading ||
       clienteAtendimentosQuery.isLoading ||
       clienteSolicitacoesQuery.isLoading ||
       ocorrenciasQuery.isLoading ||
       profissionalConvitesQuery.isLoading ||
-      profissionalAtendimentosQuery.isLoading,
+      profissionalAtendimentosQuery.isLoading ||
+      adminDashboardQuery.isLoading,
+    isError: adminDashboardQuery.isError,
+    error: adminDashboardQuery.error,
   };
 }
 

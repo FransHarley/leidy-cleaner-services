@@ -16,6 +16,8 @@ import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
 
 public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
 
+    long countByStatus(StatusPagamento status);
+
     @Query("""
             select p
             from Pagamento p

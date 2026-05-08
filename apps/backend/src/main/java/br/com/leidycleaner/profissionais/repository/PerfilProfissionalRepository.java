@@ -25,6 +25,8 @@ public interface PerfilProfissionalRepository extends JpaRepository<PerfilProfis
 
     List<PerfilProfissional> findByIdIn(Collection<Long> ids);
 
+    long countByStatusAprovacaoIn(Collection<StatusAprovacaoProfissional> statuses);
+
     @Query("""
             select perfil
             from PerfilProfissional perfil

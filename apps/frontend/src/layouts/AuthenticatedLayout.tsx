@@ -143,6 +143,61 @@ function SidebarBadge({
 }
 
 function getSidebarBadge(profile: TipoUsuario, label: string, indicators: ReturnType<typeof useDashboardIndicators>) {
+  if (profile === 'ADMIN' && label === 'Verificações') {
+    return {
+      count: indicators.admin.verificacoesPendentes,
+      label: `${indicators.admin.verificacoesPendentes} verificações pendentes`,
+      tone: 'red' as NotificationBadgeTone,
+    };
+  }
+
+  if (profile === 'ADMIN' && label === 'Profissionais') {
+    return {
+      count: indicators.admin.profissionaisPendentes,
+      label: `${indicators.admin.profissionaisPendentes} profissionais pendentes`,
+      tone: 'red' as NotificationBadgeTone,
+    };
+  }
+
+  if (profile === 'ADMIN' && label === 'Solicitações') {
+    return {
+      count: indicators.admin.solicitacoesAbertas,
+      label: `${indicators.admin.solicitacoesAbertas} solicitações abertas`,
+      tone: 'yellow' as NotificationBadgeTone,
+    };
+  }
+
+  if (profile === 'ADMIN' && label === 'Atendimentos') {
+    return {
+      count: indicators.admin.atendimentosEmAnalise,
+      label: `${indicators.admin.atendimentosEmAnalise} atendimentos em análise`,
+      tone: 'yellow' as NotificationBadgeTone,
+    };
+  }
+
+  if (profile === 'ADMIN' && label === 'Pagamentos') {
+    const count =
+      indicators.admin.pagamentosPendentes +
+      indicators.admin.pagamentosAguardandoConfirmacao +
+      indicators.admin.pagamentosFalhos;
+
+    return {
+      count,
+      label: `${count} pagamentos exigem atenção`,
+      tone: indicators.admin.pagamentosFalhos > 0 ? ('red' as NotificationBadgeTone) : ('yellow' as NotificationBadgeTone),
+    };
+  }
+
+  if (profile === 'ADMIN' && label === 'Ocorrências') {
+    const count = indicators.admin.ocorrenciasAbertas + indicators.admin.ocorrenciasEmAnalise;
+
+    return {
+      count,
+      label: `${count} ocorrências abertas ou em análise`,
+      tone: 'red' as NotificationBadgeTone,
+    };
+  }
+
   if (profile === 'CLIENTE' && label === 'Pagamentos') {
     return {
       count: indicators.cliente.pagamentosPendentes,
