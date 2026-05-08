@@ -9,9 +9,12 @@ import {
   analisarVerificacaoAdmin,
   buscarVerificacaoAdmin,
 } from '../../features/admin/verificacoes/adminVerificacoesApi';
+import type {
+  AnalisarDocumentoVerificacaoRequest,
+  DocumentoVerificacaoAdmin,
+} from '../../features/admin/verificacoes/types';
 import { formatAdminDateTime, formatOptionalText } from '../../features/admin/verificacoes/verificacaoLabels';
 import { VerificacaoStatusBadge } from '../../features/admin/verificacoes/VerificacaoStatusBadge';
-import type { AnalisarDocumentoVerificacaoRequest, DocumentoVerificacaoAdmin } from '../../features/admin/verificacoes/types';
 import { useAuth } from '../../features/auth/useAuth';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
@@ -110,7 +113,7 @@ export function AdminVerificacaoDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administração</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe da verificação</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Consulte os campos retornados pelo backend e registre a análise documental.
+              Consulte os documentos enviados e registre a análise documental.
             </p>
           </div>
           <Link
@@ -167,35 +170,94 @@ function VerificacaoInfoPanel({ verificacao }: { verificacao: DocumentoVerificac
       </dl>
 
       <div className="mt-6 grid gap-3 md:grid-cols-2">
-        <DocumentReference label="Documento frente" value={verificacao.documentoFrenteUrl} />
-        <DocumentReference label="Documento verso" value={verificacao.documentoVersoUrl} />
-        <DocumentReference label="Selfie" value={verificacao.selfieUrl} />
-        <DocumentReference label="Comprovante de residência" value={verificacao.comprovanteResidenciaUrl} />
+        <DocumentPreview label="Documento frente" value={verificacao.documentoFrenteUrl} />
+        <DocumentPreview
+          label="Documento verso"
+          value={verificacao.documentoVersoUrl}
+          helperText={
+            isSameDocumentFile(verificacao.documentoFrenteUrl, verificacao.documentoVersoUrl)
+              ? 'Mesmo arquivo usado como frente e verso.'
+              : undefined
+          }
+        />
+        <DocumentPreview label="Selfie" value={verificacao.selfieUrl} />
+        <DocumentPreview label="Comprovante de residência" value={verificacao.comprovanteResidenciaUrl} />
       </div>
     </section>
   );
 }
 
-function DocumentReference({ label, value }: { label: string; value: string | null }) {
+function DocumentPreview({
+  label,
+  value,
+  helperText,
+}: {
+  label: string;
+  value: string | null;
+  helperText?: string;
+}) {
+  const [openUrl, setOpenUrl] = useState<string | null>(null);
+  const canPreviewImage = isImageReference(value);
+  const needsBlobUrl = isDataImageReference(value);
+  const actionLabel = canPreviewImage ? 'Abrir em nova aba' : 'Abrir documento';
+
+  useEffect(() => {
+    if (!needsBlobUrl || !value) {
+      setOpenUrl(null);
+      return;
+    }
+
+    const blobUrl = createBlobUrlFromDataUrl(value);
+    setOpenUrl(blobUrl);
+
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [needsBlobUrl, value]);
+
+  const linkHref = openUrl ?? (!needsBlobUrl ? value : null);
+
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
       <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
       {value ? (
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <span className="text-sm font-semibold text-slate-800">Referência registrada</span>
-          {isExternalUrl(value) && (
-            <a
-              className="text-sm font-black text-cyan-700 hover:text-cyan-800"
-              href={value}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Abrir
-            </a>
+        <div className="mt-3 grid gap-3">
+          {canPreviewImage ? (
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <img
+                alt={label}
+                className="h-56 w-full bg-slate-100 object-contain"
+                loading="lazy"
+                src={value}
+              />
+            </div>
+          ) : (
+            <p className="text-sm font-semibold text-slate-700">Documento registrado para consulta.</p>
           )}
+
+          {helperText && <p className="text-xs font-semibold text-slate-500">{helperText}</p>}
+
+          <div>
+            {linkHref ? (
+              <a
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-cyan-100 bg-white px-4 text-sm font-black text-cyan-700 transition hover:bg-cyan-50"
+                href={linkHref}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {actionLabel}
+              </a>
+            ) : (
+              <span className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-400">
+                Preparando visualização...
+              </span>
+            )}
+          </div>
         </div>
       ) : (
-        <p className="mt-2 text-sm font-semibold text-slate-500">Não informado</p>
+        <p className="mt-2 text-sm font-semibold text-slate-500">Não enviado</p>
       )}
     </div>
   );
@@ -210,9 +272,54 @@ function DetailItem({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+function isImageReference(value: string | null) {
+  if (!value) {
+    return false;
+  }
 
-function isExternalUrl(value: string) {
-  return /^https?:\/\//i.test(value);
+  if (isDataImageReference(value)) {
+    return true;
+  }
+
+  return /\.(avif|bmp|gif|jpe?g|png|svg|webp)(\?.*)?$/i.test(value);
+}
+
+function isDataImageReference(value: string | null) {
+  return Boolean(value?.startsWith('data:image/'));
+}
+
+function isSameDocumentFile(first: string | null, second: string | null) {
+  if (!first || !second) {
+    return false;
+  }
+
+  return first === second;
+}
+
+function createBlobUrlFromDataUrl(dataUrl: string) {
+  const match = dataUrl.match(/^data:([^;,]+)(;base64)?,(.*)$/s);
+  if (!match) {
+    return null;
+  }
+
+  const [, mimeType, base64Marker, payload] = match;
+
+  try {
+    if (!base64Marker) {
+      return URL.createObjectURL(new Blob([decodeURIComponent(payload)], { type: mimeType }));
+    }
+
+    const binary = atob(payload);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  } catch {
+    return null;
+  }
 }
 
 function requireToken(token: string | null) {

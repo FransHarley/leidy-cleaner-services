@@ -8,17 +8,17 @@ import { RegistrationPageLayout } from '../../layouts/RegistrationPageLayout';
 const registrationOptions = [
   {
     title: 'Quero contratar uma faxina',
-    description: 'Crie sua conta de cliente, informe o endereco inicial e entre na area onde as solicitacoes sao acompanhadas.',
+    description: 'Crie sua conta de cliente, informe o endereço inicial e entre na área onde as solicitações são acompanhadas.',
     href: '/cadastro/cliente',
     icon: SparkleIcon,
-    benefits: ['Conta de cliente', 'Endereco inicial', 'Aceite dos documentos da plataforma'],
+    benefits: ['Conta de cliente', 'Endereço inicial', 'Aceite dos documentos da plataforma'],
   },
   {
     title: 'Quero trabalhar como profissional',
-    description: 'Envie o cadastro completo com documentos, regioes e disponibilidade para analise da equipe administrativa.',
+    description: 'Envie o cadastro completo com documentos, regiões e disponibilidade para análise da equipe administrativa.',
     href: '/cadastro/profissional',
     icon: UserIcon,
-    benefits: ['Perfil profissional', 'Verificacao documental', 'Regioes e agenda'],
+    benefits: ['Perfil profissional', 'Verificação documental', 'Regiões e agenda'],
   },
 ];
 
@@ -32,14 +32,14 @@ export function RegistrationChoicePage() {
   return (
     <RegistrationPageLayout
       eyebrow="Cadastro"
-      title="Escolha como voce quer entrar na operacao."
-      description="Cada jornada pede dados diferentes para manter o cadastro consistente, seguro e pronto para o proximo passo."
+      title="Escolha como você quer entrar na operação."
+      description="Cada jornada pede dados diferentes para manter o cadastro consistente, seguro e pronto para o próximo passo."
       aside={<RegistrationChoiceAside />}
     >
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:p-8">
         <h2 className="text-2xl font-black text-slate-900">Criar cadastro</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Selecione a opcao certa para seguir em uma pagina dedicada, com as etapas e validacoes esperadas para o seu perfil.
+          Selecione a opção certa para seguir em uma página dedicada, com as etapas e validações esperadas para o seu perfil.
         </p>
 
         <div className="mt-6 grid gap-4">
@@ -49,7 +49,7 @@ export function RegistrationChoicePage() {
         </div>
 
         <p className="mt-6 text-sm text-slate-600">
-          Ja tem conta?{' '}
+          Já tem conta?{' '}
           <Link className="font-black text-cyan-700 hover:text-cyan-800" to="/entrar">
             Entrar
           </Link>
@@ -65,18 +65,18 @@ function RegistrationChoiceAside() {
       <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-5">
         <h2 className="text-lg font-black text-slate-900">Uma entrada mais clara</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          O cadastro agora segue por paginas proprias. Isso deixa os dados mais organizados e reduz erros logo na primeira etapa.
+          O cadastro agora segue por páginas próprias. Isso deixa os dados mais organizados e reduz erros logo na primeira etapa.
         </p>
       </div>
 
       <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
         <div className="flex gap-3">
           <ShieldCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-700" />
-          <p>Termos, privacidade e conduta ficam visiveis e obrigatorios no proprio fluxo.</p>
+          <p>Termos, privacidade e conduta ficam visíveis e obrigatórios no próprio fluxo.</p>
         </div>
         <div className="flex gap-3">
           <ClipboardIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-700" />
-          <p>O cadastro profissional ja sai pronto para a analise administrativa, sem depender de login automatico.</p>
+          <p>O cadastro profissional já sai pronto para a análise administrativa, sem depender de login automático.</p>
         </div>
       </div>
     </div>
