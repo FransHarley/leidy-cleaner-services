@@ -17,6 +17,7 @@ import { CheckpointsList } from '../../features/atendimentos/CheckpointsList';
 import type { CheckpointServicoRequest } from '../../features/atendimentos/types';
 import { AvaliacaoResumo } from '../../features/avaliacoes/AvaliacaoResumo';
 import { useAuth } from '../../features/auth/useAuth';
+import { AtendimentoOcorrenciaPanel } from '../../features/ocorrencias/AtendimentoOcorrenciaPanel';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
 const queryKeys = {
@@ -178,6 +179,8 @@ export function ProfissionalAtendimentoDetalhePage() {
       {atendimentoCanceladoSemExecucao && (
         <FormAlert tone="info" message="Atendimento cancelado por falta de pagamento dentro do prazo." />
       )}
+
+      {atendimento && !atendimentoCanceladoSemExecucao && <AtendimentoOcorrenciaPanel atendimentoId={atendimento.id} />}
 
       {atendimento?.status === 'FINALIZADO' && (
         <section className="grid gap-4">

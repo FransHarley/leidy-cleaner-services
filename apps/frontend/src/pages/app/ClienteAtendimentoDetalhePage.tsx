@@ -13,6 +13,7 @@ import { AvaliacoesProfissionalList } from '../../features/avaliacoes/Avaliacoes
 import { criarAvaliacaoProfissional, listarAvaliacoesProfissional } from '../../features/avaliacoes/avaliacoesApi';
 import type { AvaliacaoProfissional, AvaliacaoProfissionalRequest } from '../../features/avaliacoes/types';
 import { useAuth } from '../../features/auth/useAuth';
+import { AtendimentoOcorrenciaPanel } from '../../features/ocorrencias/AtendimentoOcorrenciaPanel';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
 const queryKeys = {
@@ -191,6 +192,8 @@ export function ClienteAtendimentoDetalhePage() {
       {atendimentoCanceladoSemExecucao && (
         <FormAlert tone="info" message="Atendimento cancelado por falta de pagamento dentro do prazo." />
       )}
+
+      {atendimento && !atendimentoCanceladoSemExecucao && <AtendimentoOcorrenciaPanel atendimentoId={atendimento.id} />}
 
       {canShowAvaliacao && atendimento && (
         <section className="grid gap-4">
