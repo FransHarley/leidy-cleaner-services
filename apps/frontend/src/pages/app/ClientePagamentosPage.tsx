@@ -13,7 +13,12 @@ import {
   listarMeusAtendimentosParaPagamento,
   redirecionarParaPagamentoAsaas,
 } from '../../features/cliente/pagamentos/pagamentosApi';
-import type { AtendimentoPagamento, CheckoutPagamento, Pagamento } from '../../features/cliente/pagamentos/types';
+import type {
+  AtendimentoPagamento,
+  CheckoutPagamento,
+  MetodoPagamento,
+  Pagamento,
+} from '../../features/cliente/pagamentos/types';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
 const queryKeys = {
@@ -27,6 +32,7 @@ export function ClientePagamentosPage() {
   const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState<{ title: string; message: string; details?: string[] } | null>(null);
   const [openingAtendimentoId, setOpeningAtendimentoId] = useState<number | null>(null);
+  const [selectedMethods, setSelectedMethods] = useState<Record<number, MetodoPagamento>>({});
 
   const atendimentosQuery = useQuery({
     queryKey: queryKeys.atendimentos,
@@ -70,10 +76,26 @@ export function ClientePagamentosPage() {
   }, [logout, navigate, pagamentoProtectedError]);
 
   const checkoutMutation = useMutation({
-    mutationFn: (atendimentoId: number) => criarCheckoutPagamento(requireToken(token), { atendimentoId }),
+    mutationFn: ({ atendimentoId, metodoPagamento }: { atendimentoId: number; metodoPagamento: MetodoPagamento }) =>
+      criarCheckoutPagamento(requireToken(token), { atendimentoId, metodoPagamento }),
   });
 
-  async function handlePay(atendimento: AtendimentoPagamento, pagamento: Pagamento | null) {
+  function getSelectedMethod(atendimentoId: number) {
+    return selectedMethods[atendimentoId] ?? 'PIX';
+  }
+
+  function handleMetodoPagamentoChange(atendimentoId: number, metodoPagamento: MetodoPagamento) {
+    setSelectedMethods((current) => ({
+      ...current,
+      [atendimentoId]: metodoPagamento,
+    }));
+  }
+
+  async function handlePay(
+    atendimento: AtendimentoPagamento,
+    pagamento: Pagamento | null,
+    metodoPagamento: MetodoPagamento,
+  ) {
     setFeedback(null);
     setOpeningAtendimentoId(atendimento.id);
 
@@ -84,7 +106,10 @@ export function ClientePagamentosPage() {
         return;
       }
 
-      const checkout = await checkoutMutation.mutateAsync(atendimento.id);
+      const checkout = await checkoutMutation.mutateAsync({
+        atendimentoId: atendimento.id,
+        metodoPagamento,
+      });
       const paymentUrl = getCheckoutPaymentUrl(checkout);
       if (!paymentUrl) {
         throw new ApiError({
@@ -138,7 +163,7 @@ export function ClientePagamentosPage() {
         <div>
           <h2 className="text-2xl font-black text-slate-900">Atendimentos para pagamento</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Use o botao Pagar para abrir a cobranca diretamente no ambiente do Asaas.
+            Escolha Pix ou cartao de credito antes de abrir a cobranca no ambiente do Asaas.
           </p>
         </div>
 
@@ -182,6 +207,8 @@ export function ClientePagamentosPage() {
                   atendimento={atendimento}
                   isOpeningPayment={openingAtendimentoId === atendimento.id}
                   isPagamentoLoading={Boolean(pagamentoQuery?.isLoading)}
+                  metodoPagamentoSelecionado={getSelectedMethod(atendimento.id)}
+                  onMetodoPagamentoChange={handleMetodoPagamentoChange}
                   onPay={handlePay}
                   pagamento={pagamentoQuery?.data ?? null}
                 />

@@ -144,9 +144,11 @@ public class PagamentoService {
         if (pagamentoExistente.isPresent()) {
             return checkoutDtoParaPagamentoExistente(pagamentoExistente.get());
         }
+        MetodoPagamento metodoPagamento = validarMetodoPagamentoCheckout(request.metodoPagamento());
 
         AsaasCheckoutGatewayResponse gatewayResponse = asaasGatewayClient.criarCheckout(new AsaasCheckoutRequest(
                 atendimento.getId(),
+                metodoPagamento,
                 atendimento.getValorServico(),
                 "Leidy Cleaner Services - atendimento #" + atendimento.getId()
         ));
@@ -170,7 +172,9 @@ public class PagamentoService {
                 gatewayResponse.checkoutUrl(),
                 gatewayResponse.checkoutUrl(),
                 atendimento.getValorServico(),
-                "Leidy Cleaner Services - atendimento #" + atendimento.getId()
+                "Leidy Cleaner Services - atendimento #" + atendimento.getId(),
+                gatewayResponse.metodoPagamento(),
+                StatusPagamento.PENDENTE
         );
     }
 
@@ -181,8 +185,28 @@ public class PagamentoService {
                 pagamento.getUrlPagamento(),
                 pagamento.getUrlPagamento(),
                 pagamento.getValorBruto(),
-                "Leidy Cleaner Services - atendimento #" + pagamento.getAtendimento().getId()
+                "Leidy Cleaner Services - atendimento #" + pagamento.getAtendimento().getId(),
+                pagamento.getMetodoPagamento(),
+                pagamento.getStatus()
         );
+    }
+
+    private MetodoPagamento validarMetodoPagamentoCheckout(MetodoPagamento metodoPagamento) {
+        if (metodoPagamento == null) {
+            throw new BusinessException(
+                    "VALIDATION_ERROR",
+                    "Metodo de pagamento e obrigatorio para criar o checkout",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        if (metodoPagamento != MetodoPagamento.PIX && metodoPagamento != MetodoPagamento.CARTAO_CREDITO) {
+            throw new BusinessException(
+                    "METODO_PAGAMENTO_NAO_SUPORTADO",
+                    "Metodo de pagamento nao suportado para checkout",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        return metodoPagamento;
     }
 
     private void validarUrlPagamentoExistente(String urlPagamento) {

@@ -3,28 +3,28 @@ import type { MetodoPagamento, StatusAtendimentoPagamento, StatusPagamento, Tipo
 export const metodoPagamentoLabels: Record<MetodoPagamento, string> = {
   PIX: 'Pix',
   BOLETO: 'Boleto',
-  CARTAO_CREDITO: 'Cartão de crédito',
+  CARTAO_CREDITO: 'Cartao de credito',
 };
 
 export const tipoServicoPagamentoLabels: Record<TipoServicoPagamento, string> = {
   FAXINA_RESIDENCIAL: 'Faxina residencial',
   FAXINA_COMERCIAL: 'Faxina comercial',
-  FAXINA_CONDOMINIO: 'Faxina de condomínio',
+  FAXINA_CONDOMINIO: 'Faxina de condominio',
   FAXINA_EVENTO: 'Faxina para evento',
 };
 
 export const statusAtendimentoPagamentoLabels: Record<StatusAtendimentoPagamento, string> = {
   AGUARDANDO_PAGAMENTO: 'Aguardando pagamento',
   CONFIRMADO: 'Confirmado',
-  EM_EXECUCAO: 'Em execução',
+  EM_EXECUCAO: 'Em execucao',
   FINALIZADO: 'Finalizado',
   CANCELADO: 'Cancelado',
-  EM_ANALISE: 'Em análise',
+  EM_ANALISE: 'Em analise',
 };
 
 export const statusPagamentoLabels: Record<StatusPagamento, string> = {
   PENDENTE: 'Pendente',
-  AGUARDANDO_CONFIRMACAO: 'Aguardando confirmação',
+  AGUARDANDO_CONFIRMACAO: 'Aguardando confirmacao',
   PAGO: 'Pago',
   FALHOU: 'Falhou',
   CANCELADO: 'Cancelado',
@@ -73,8 +73,8 @@ export function getStatusPagamentoInfo(status: StatusPagamento) {
 
 export function getStatusPagamentoDescription(status: StatusPagamento) {
   const descriptions: Record<StatusPagamento, string> = {
-    PENDENTE: 'O checkout foi criado e ainda não há confirmação definitiva.',
-    AGUARDANDO_CONFIRMACAO: 'O gateway retornou indício de pagamento, mas a confirmação definitiva ainda depende do webhook.',
+    PENDENTE: 'O checkout foi criado e ainda nao ha confirmacao definitiva.',
+    AGUARDANDO_CONFIRMACAO: 'O gateway retornou indicio de pagamento, mas a confirmacao definitiva ainda depende do webhook.',
     PAGO: 'O backend confirmou o pagamento como pago.',
     FALHOU: 'O backend registrou falha no pagamento.',
     CANCELADO: 'O backend registrou o pagamento como cancelado.',
@@ -90,7 +90,7 @@ export function canRecheckPagamento(status: StatusPagamento) {
 
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) {
-    return 'Não informado';
+    return 'Nao informado';
   }
 
   return new Intl.NumberFormat('pt-BR', {
@@ -101,7 +101,7 @@ export function formatCurrency(value: number | null | undefined) {
 
 export function formatDateTime(value: string | null | undefined) {
   if (!value) {
-    return 'Não informado';
+    return 'Nao informado';
   }
 
   return new Intl.DateTimeFormat('pt-BR', {

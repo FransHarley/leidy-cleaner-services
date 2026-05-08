@@ -41,6 +41,7 @@ export type AtendimentoPagamento = {
 
 export type CheckoutPagamentoRequest = {
   atendimentoId: number;
+  metodoPagamento: MetodoPagamento;
 };
 
 export type CheckoutPagamento = {
@@ -49,6 +50,8 @@ export type CheckoutPagamento = {
   paymentUrl?: string | null;
   valor: number;
   descricao: string;
+  metodoPagamento: MetodoPagamento;
+  status: StatusPagamento;
 };
 
 export type Pagamento = {

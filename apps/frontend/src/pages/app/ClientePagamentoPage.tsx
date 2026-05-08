@@ -109,7 +109,7 @@ export function ClientePagamentoPage() {
         <FormAlert
           tone="info"
           title="Pagamento nao encontrado"
-          message="Ainda nao existe pagamento registrado para este atendimento. Volte para a lista e use o botao Pagar quando o atendimento estiver aguardando pagamento."
+          message="Ainda nao existe pagamento registrado para este atendimento. Volte para a lista e escolha Pix ou cartao de credito antes de continuar para o pagamento."
         />
       )}
 

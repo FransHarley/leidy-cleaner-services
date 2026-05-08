@@ -47,6 +47,7 @@ import br.com.leidycleaner.avaliacoes.repository.AvaliacaoProfissionalRepository
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.enderecos.repository.EnderecoRepository;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutGatewayResponse;
+import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasGatewayClient;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPagamentoGatewayResponse;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
@@ -1237,21 +1238,23 @@ class SolicitacaoFaxinaIntegrationTest {
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(atendimento.atendimentoId())))
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.atendimentoId").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data.checkoutUrl").value("https://asaas.local/invoice/pay_m5a_checkout_cria"))
                 .andExpect(jsonPath("$.data.paymentUrl").value("https://asaas.local/invoice/pay_m5a_checkout_cria"))
                 .andExpect(jsonPath("$.data.valor").value(180.00))
-                .andExpect(jsonPath("$.data.descricao").value("Leidy Cleaner Services - atendimento #" + atendimento.atendimentoId()));
+                .andExpect(jsonPath("$.data.descricao").value("Leidy Cleaner Services - atendimento #" + atendimento.atendimentoId()))
+                .andExpect(jsonPath("$.data.metodoPagamento").value("PIX"))
+                .andExpect(jsonPath("$.data.status").value("PENDENTE"));
 
         assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
                 .isPresent()
                 .get()
                 .satisfies(pagamento -> {
                     assertThat(pagamento.getGatewayPaymentId()).isEqualTo("pay_m5a_checkout_cria");
-                    assertThat(pagamento.getMetodoPagamento().name()).isEqualTo("CARTAO_CREDITO");
+                    assertThat(pagamento.getMetodoPagamento().name()).isEqualTo("PIX");
                     assertThat(pagamento.getStatus().name()).isEqualTo("PENDENTE");
                     assertThat(pagamento.getUrlPagamento()).isEqualTo("https://asaas.local/invoice/pay_m5a_checkout_cria");
                     assertThat(pagamento.isWebhookProcessado()).isFalse();
@@ -1262,27 +1265,45 @@ class SolicitacaoFaxinaIntegrationTest {
     void clienteReabrePagamentoExistenteSemCriarDuplicado() throws Exception {
         AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.reusa-checkout", "75133233344");
         mockarCheckoutAsaas("pay_m5a_reusa", "https://asaas.local/invoice/pay_m5a_reusa");
-        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId(), "CARTAO_CREDITO");
 
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(atendimento.atendimentoId())))
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.checkoutUrl").value("https://asaas.local/invoice/pay_m5a_reusa"))
-                .andExpect(jsonPath("$.data.paymentUrl").value("https://asaas.local/invoice/pay_m5a_reusa"));
+                .andExpect(jsonPath("$.data.paymentUrl").value("https://asaas.local/invoice/pay_m5a_reusa"))
+                .andExpect(jsonPath("$.data.metodoPagamento").value("CARTAO_CREDITO"))
+                .andExpect(jsonPath("$.data.status").value("PENDENTE"));
 
         assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
                 .isPresent()
                 .get()
                 .satisfies(pagamento -> {
                     assertThat(pagamento.getGatewayPaymentId()).isEqualTo("pay_m5a_reusa");
+                    assertThat(pagamento.getMetodoPagamento().name()).isEqualTo("CARTAO_CREDITO");
                     assertThat(pagamento.getUrlPagamento()).isEqualTo("https://asaas.local/invoice/pay_m5a_reusa");
                 });
         assertThat(pagamentoRepository.findAll().stream()
                 .filter(pagamento -> atendimento.atendimentoId().equals(pagamento.getAtendimento().getId()))
                 .count()).isEqualTo(1);
+    }
+
+    @Test
+    void clienteNaoCriaCheckoutSemMetodoQuandoPagamentoAindaNaoExiste() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.checkout-sem-metodo", "75134233344");
+
+        mockMvc.perform(post("/api/v1/pagamentos/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(checkoutJsonSemMetodo(atendimento.atendimentoId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Metodo de pagamento e obrigatorio para criar o checkout"));
     }
 
     @Test
@@ -1293,7 +1314,7 @@ class SolicitacaoFaxinaIntegrationTest {
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenOutraCliente)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(atendimento.atendimentoId())))
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
@@ -2521,7 +2542,7 @@ class SolicitacaoFaxinaIntegrationTest {
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(atendimento.atendimentoId())))
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("ATENDIMENTO_STATUS_INCOMPATIVEL"));
@@ -3499,7 +3520,7 @@ class SolicitacaoFaxinaIntegrationTest {
 
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(1L)))
+                        .content(checkoutJson(1L, "PIX")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().doesNotExist("WWW-Authenticate"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -4197,12 +4218,18 @@ class SolicitacaoFaxinaIntegrationTest {
 
     private void mockarCheckoutAsaas(String checkoutId, String checkoutUrl) {
         given(asaasGatewayClient.criarCheckout(any()))
-                .willReturn(new AsaasCheckoutGatewayResponse(
-                        checkoutId,
-                        checkoutUrl,
-                        MetodoPagamento.CARTAO_CREDITO,
-                        "{\"id\":\"%s\"}".formatted(checkoutId)
-                ));
+                .willAnswer(invocation -> {
+                    AsaasCheckoutRequest request = invocation.getArgument(0);
+                    MetodoPagamento metodoPagamento = request != null && request.metodoPagamento() != null
+                            ? request.metodoPagamento()
+                            : MetodoPagamento.CARTAO_CREDITO;
+                    return new AsaasCheckoutGatewayResponse(
+                            checkoutId,
+                            checkoutUrl,
+                            metodoPagamento,
+                            "{\"id\":\"%s\",\"billingType\":\"%s\"}".formatted(checkoutId, metodoPagamento)
+                    );
+                });
     }
 
     private void atualizarAgregadosProfissional(Long perfilId, String notaMedia, int totalAvaliacoes) {
@@ -4225,10 +4252,14 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     private void criarCheckout(String tokenCliente, Long atendimentoId) throws Exception {
+        criarCheckout(tokenCliente, atendimentoId, "CARTAO_CREDITO");
+    }
+
+    private void criarCheckout(String tokenCliente, Long atendimentoId, String metodoPagamento) throws Exception {
         mockMvc.perform(post("/api/v1/pagamentos/checkout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(checkoutJson(atendimentoId)))
+                        .content(checkoutJson(atendimentoId, metodoPagamento)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true));
     }
@@ -4288,7 +4319,16 @@ class SolicitacaoFaxinaIntegrationTest {
                 """.formatted(atendimentoId, metodoPagamento);
     }
 
-    private String checkoutJson(Long atendimentoId) {
+    private String checkoutJson(Long atendimentoId, String metodoPagamento) {
+        return """
+                {
+                  "atendimentoId": %d,
+                  "metodoPagamento": "%s"
+                }
+                """.formatted(atendimentoId, metodoPagamento);
+    }
+
+    private String checkoutJsonSemMetodo(Long atendimentoId) {
         return """
                 {
                   "atendimentoId": %d

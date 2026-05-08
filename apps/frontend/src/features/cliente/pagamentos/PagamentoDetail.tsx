@@ -16,6 +16,7 @@ type PagamentoDetailProps = {
 export function PagamentoDetail({ pagamento }: PagamentoDetailProps) {
   const isPaid = pagamento.status === 'PAGO';
   const isWaitingWebhook = pagamento.status === 'PENDENTE' || pagamento.status === 'AGUARDANDO_CONFIRMACAO';
+  const requiresSupport = pagamento.status === 'CANCELADO' || pagamento.status === 'FALHOU' || pagamento.status === 'ESTORNADO';
 
   return (
     <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6">
@@ -60,7 +61,13 @@ export function PagamentoDetail({ pagamento }: PagamentoDetailProps) {
           </div>
         )}
 
-        {pagamento.urlPagamento && !isPaid && (
+        {requiresSupport && (
+          <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900">
+            Esse pagamento nao pode ser recriado por aqui. Se voce ainda precisar concluir essa etapa, entre em contato com o suporte.
+          </div>
+        )}
+
+        {pagamento.urlPagamento && isWaitingWebhook && (
           <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-4">
             <h3 className="font-black text-cyan-900">Link de pagamento</h3>
             <p className="mt-2 break-all text-sm leading-6 text-cyan-800">{pagamento.urlPagamento}</p>

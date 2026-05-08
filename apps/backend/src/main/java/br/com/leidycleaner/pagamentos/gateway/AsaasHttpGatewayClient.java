@@ -79,7 +79,7 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
 
     @Override
     public AsaasCheckoutGatewayResponse criarCheckout(AsaasCheckoutRequest request) {
-        MetodoPagamento metodoPagamento = metodoPagamentoPadrao();
+        MetodoPagamento metodoPagamento = validarMetodoPagamentoCheckout(request.metodoPagamento());
         AsaasPagamentoGatewayResponse response = criarCobranca(new AsaasCobrancaRequest(
                 request.atendimentoId(),
                 metodoPagamento,
@@ -130,46 +130,22 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
         }
     }
 
-    private MetodoPagamento metodoPagamentoPadrao() {
-        String billingType = billingTypePagamentoConfigurado();
-        MetodoPagamento metodoPagamento = paraMetodoPagamento(billingType);
+    private MetodoPagamento validarMetodoPagamentoCheckout(MetodoPagamento metodoPagamento) {
+        if (metodoPagamento == null) {
+            throw new BusinessException(
+                    "VALIDATION_ERROR",
+                    "Metodo de pagamento e obrigatorio para criar o checkout",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
         if (!MVP_PAYMENT_BILLING_TYPES.contains(paraBillingType(metodoPagamento))) {
             throw new BusinessException(
-                    "ASAAS_CONFIG_INVALIDA",
-                    "ASAAS_PAYMENT_BILLING_TYPE nao suportado no MVP",
-                    HttpStatus.CONFLICT
+                    "METODO_PAGAMENTO_NAO_SUPORTADO",
+                    "Metodo de pagamento nao suportado para checkout",
+                    HttpStatus.BAD_REQUEST
             );
         }
         return metodoPagamento;
-    }
-
-    private String billingTypePagamentoConfigurado() {
-        String billingType = limparTexto(properties.getPaymentBillingType());
-        if (billingType == null && properties.getCheckoutBillingTypes() != null) {
-            billingType = properties.getCheckoutBillingTypes()
-                    .stream()
-                    .filter(tipo -> tipo != null && !tipo.isBlank())
-                    .map(tipo -> tipo.trim().toUpperCase())
-                    .findFirst()
-                    .orElse(null);
-        }
-        if (billingType == null) {
-            billingType = "CREDIT_CARD";
-        }
-        return billingType.trim().toUpperCase();
-    }
-
-    private MetodoPagamento paraMetodoPagamento(String billingType) {
-        return switch (billingType) {
-            case "CREDIT_CARD", "CARTAO_CREDITO" -> MetodoPagamento.CARTAO_CREDITO;
-            case "PIX" -> MetodoPagamento.PIX;
-            case "BOLETO" -> MetodoPagamento.BOLETO;
-            default -> throw new BusinessException(
-                    "ASAAS_CONFIG_INVALIDA",
-                    "ASAAS_PAYMENT_BILLING_TYPE invalido",
-                    HttpStatus.CONFLICT
-            );
-        };
     }
 
     private Map<String, Object> callbackPagamento(Long atendimentoId) {
