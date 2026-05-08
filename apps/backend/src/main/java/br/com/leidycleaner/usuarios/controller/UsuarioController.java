@@ -19,6 +19,7 @@ import br.com.leidycleaner.core.dto.ApiResponse;
 import br.com.leidycleaner.usuarios.dto.AdminUsuarioResponse;
 import br.com.leidycleaner.usuarios.dto.AlterarStatusUsuarioRequest;
 import br.com.leidycleaner.usuarios.dto.CadastroClienteRequest;
+import br.com.leidycleaner.usuarios.dto.CadastroProfissionalCompletoRequest;
 import br.com.leidycleaner.usuarios.dto.CadastroProfissionalRequest;
 import br.com.leidycleaner.usuarios.dto.CadastroUsuarioResponse;
 import br.com.leidycleaner.usuarios.dto.UsuarioResumoDto;
@@ -26,6 +27,7 @@ import br.com.leidycleaner.usuarios.entity.StatusConta;
 import br.com.leidycleaner.usuarios.entity.TipoUsuario;
 import br.com.leidycleaner.usuarios.service.CadastroUsuarioService;
 import br.com.leidycleaner.usuarios.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -43,17 +45,40 @@ public class UsuarioController {
     @PostMapping("/clientes")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CadastroUsuarioResponse> cadastrarCliente(
-            @Valid @RequestBody CadastroClienteRequest request
+            @Valid @RequestBody CadastroClienteRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return ApiResponse.success(cadastroUsuarioService.cadastrarCliente(request));
+        return ApiResponse.success(cadastroUsuarioService.cadastrarCliente(
+                request,
+                resolverIpOrigem(httpRequest),
+                resolverUserAgent(httpRequest)
+        ));
     }
 
     @PostMapping("/profissionais")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CadastroUsuarioResponse> cadastrarProfissional(
-            @Valid @RequestBody CadastroProfissionalRequest request
+            @Valid @RequestBody CadastroProfissionalRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return ApiResponse.success(cadastroUsuarioService.cadastrarProfissional(request));
+        return ApiResponse.success(cadastroUsuarioService.cadastrarProfissional(
+                request,
+                resolverIpOrigem(httpRequest),
+                resolverUserAgent(httpRequest)
+        ));
+    }
+
+    @PostMapping("/profissionais/pre-cadastro-completo")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<CadastroUsuarioResponse> cadastrarProfissionalCompleto(
+            @Valid @RequestBody CadastroProfissionalCompletoRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return ApiResponse.success(cadastroUsuarioService.cadastrarProfissionalCompleto(
+                request,
+                resolverIpOrigem(httpRequest),
+                resolverUserAgent(httpRequest)
+        ));
     }
 
     @GetMapping
@@ -79,5 +104,23 @@ public class UsuarioController {
             @Valid @RequestBody AlterarStatusUsuarioRequest request
     ) {
         return ApiResponse.success(usuarioService.alterarStatus(id, request));
+    }
+
+    private String resolverIpOrigem(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
+    }
+
+    private String resolverUserAgent(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null || userAgent.isBlank()) {
+            return null;
+        }
+
+        return userAgent.length() > 500 ? userAgent.substring(0, 500) : userAgent;
     }
 }

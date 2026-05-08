@@ -37,6 +37,9 @@ public class Usuario {
     @Column(name = "telefone", nullable = false, length = 30)
     private String telefone;
 
+    @Column(name = "cpf", length = 11, unique = true)
+    private String cpf;
+
     @Column(name = "senha_hash", nullable = false)
     private String senhaHash;
 
@@ -82,9 +85,22 @@ public class Usuario {
             TipoUsuario tipoUsuario,
             StatusConta statusConta
     ) {
+        this(nomeCompleto, email, telefone, null, senhaHash, tipoUsuario, statusConta);
+    }
+
+    public Usuario(
+            String nomeCompleto,
+            String email,
+            String telefone,
+            String cpf,
+            String senhaHash,
+            TipoUsuario tipoUsuario,
+            StatusConta statusConta
+    ) {
         this.nomeCompleto = nomeCompleto;
         this.email = email;
         this.telefone = telefone;
+        this.cpf = cpf;
         this.senhaHash = senhaHash;
         this.tipoUsuario = tipoUsuario;
         this.statusConta = statusConta;
@@ -116,6 +132,10 @@ public class Usuario {
 
     public String getTelefone() {
         return telefone;
+    }
+
+    public String getCpf() {
+        return cpf;
     }
 
     public String getSenhaHash() {

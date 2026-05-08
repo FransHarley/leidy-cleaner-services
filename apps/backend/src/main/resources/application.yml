@@ -26,6 +26,7 @@ app:
       - /api/v1/regioes
       - /api/v1/usuarios/clientes
       - /api/v1/usuarios/profissionais
+      - /api/v1/usuarios/profissionais/pre-cadastro-completo
       - /api/v1/webhooks/**
   jwt:
     secret: ${JWT_SECRET:dev-secret-change-me-with-at-least-32-characters}

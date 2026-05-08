@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static br.com.leidycleaner.support.TestAceites.camposAceiteJson;
+import static br.com.leidycleaner.support.TestCpf.proximoCpf;
 
 import java.math.BigDecimal;
 
@@ -192,9 +194,11 @@ class ConfiguracaoPrecoIntegrationTest {
                                   "nomeCompleto": "Cliente Precificação",
                                   "email": "%s",
                                   "telefone": "+5551999997777",
-                                  "senha": "senha-segura-123"
+                                  "cpf": "%s",
+                                  "senha": "senha-segura-123",
+                                  %s
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, proximoCpf(), camposAceiteJson())))
                 .andExpect(status().isCreated());
 
         return login(email, "senha-segura-123");

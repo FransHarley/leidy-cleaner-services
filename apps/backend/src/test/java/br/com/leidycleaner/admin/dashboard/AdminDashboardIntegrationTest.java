@@ -4,6 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static br.com.leidycleaner.support.TestAceites.camposAceiteJson;
+import static br.com.leidycleaner.support.TestCpf.cpfComPrefixo;
+import static br.com.leidycleaner.support.TestCpf.proximoCpf;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -372,15 +375,18 @@ class AdminDashboardIntegrationTest {
                                   "nomeCompleto": "Cliente Dashboard",
                                   "email": "%s",
                                   "telefone": "+5551998887777",
-                                  "senha": "senha-segura-123"
+                                  "cpf": "%s",
+                                  "senha": "senha-segura-123",
+                                  %s
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, proximoCpf(), camposAceiteJson())))
                 .andExpect(status().isCreated());
 
         return login(email, "senha-segura-123");
     }
 
     private String criarProfissionalELogar(String email, String cpf) throws Exception {
+        String cpfNormalizado = cpfComPrefixo(cpf);
         mockMvc.perform(post("/api/v1/usuarios/profissionais")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -391,12 +397,34 @@ class AdminDashboardIntegrationTest {
                                   "senha": "senha-segura-123",
                                   "nomeExibicao": "Profissional Dashboard",
                                   "cpf": "%s",
-                                  "dataNascimento": "1990-01-20"
+                                  "dataNascimento": "1990-01-20",
+                                  %s
                                 }
-                                """.formatted(email, cpf)))
+                                """.formatted(email, cpfNormalizado, camposAceiteJson())))
                 .andExpect(status().isCreated());
 
+        liberarProfissionalParaLogin(cpfNormalizado);
         return login(email, "senha-segura-123");
+    }
+
+    private void liberarProfissionalParaLogin(String cpf) {
+        Usuario admin = usuarioRepository.findByEmail("admin@leidycleaner.local").orElseThrow();
+        PerfilProfissional perfil = perfilProfissionalRepository.findByCpf(cpf).orElseThrow();
+        perfil.alterarStatusAprovacao(StatusAprovacaoProfissional.APROVADO);
+        perfil.getUsuario().alterarStatusConta(StatusConta.ATIVA);
+        usuarioRepository.saveAndFlush(perfil.getUsuario());
+        DocumentoVerificacao documento = new DocumentoVerificacao(
+                perfil.getUsuario(),
+                "CPF",
+                cpf,
+                "local/documentos/frente.png",
+                "local/documentos/verso.png",
+                "local/documentos/selfie.png",
+                "local/documentos/comprovante.png"
+        );
+        documento.analisar(StatusVerificacao.APROVADO, "Liberado para teste", admin);
+        documentoVerificacaoRepository.save(documento);
+        perfilProfissionalRepository.saveAndFlush(perfil);
     }
 
     private String login(String email, String senha) throws Exception {

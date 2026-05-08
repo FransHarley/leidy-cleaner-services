@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static br.com.leidycleaner.support.TestAceites.camposAceiteJson;
+import static br.com.leidycleaner.support.TestCpf.cpfComPrefixo;
 
 import java.util.List;
 import java.util.Set;
@@ -29,8 +31,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
+import br.com.leidycleaner.profissionais.entity.StatusAprovacaoProfissional;
 import br.com.leidycleaner.regioes.entity.RegiaoAtendimento;
 import br.com.leidycleaner.regioes.repository.RegiaoAtendimentoRepository;
+import br.com.leidycleaner.usuarios.entity.StatusConta;
+import br.com.leidycleaner.usuarios.entity.Usuario;
+import br.com.leidycleaner.usuarios.repository.UsuarioRepository;
+import br.com.leidycleaner.verificacao.entity.DocumentoVerificacao;
+import br.com.leidycleaner.verificacao.entity.StatusVerificacao;
 import br.com.leidycleaner.verificacao.repository.DocumentoVerificacaoRepository;
 
 @SpringBootTest
@@ -43,6 +51,7 @@ class ProfissionalOnboardingIntegrationTest {
     private final RegiaoAtendimentoRepository regiaoAtendimentoRepository;
     private final PerfilProfissionalRepository perfilProfissionalRepository;
     private final DocumentoVerificacaoRepository documentoVerificacaoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Autowired
     ProfissionalOnboardingIntegrationTest(
@@ -50,13 +59,15 @@ class ProfissionalOnboardingIntegrationTest {
             ObjectMapper objectMapper,
             RegiaoAtendimentoRepository regiaoAtendimentoRepository,
             PerfilProfissionalRepository perfilProfissionalRepository,
-            DocumentoVerificacaoRepository documentoVerificacaoRepository
+            DocumentoVerificacaoRepository documentoVerificacaoRepository,
+            UsuarioRepository usuarioRepository
     ) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
         this.regiaoAtendimentoRepository = regiaoAtendimentoRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
         this.documentoVerificacaoRepository = documentoVerificacaoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Test
@@ -302,8 +313,8 @@ class ProfissionalOnboardingIntegrationTest {
     @Test
     void adminAprovaProfissional() throws Exception {
         String email = "m2a.aprovacao@example.com";
-        criarProfissionalELogar(email, "50622233344");
-        Long perfilId = perfilProfissionalRepository.findByCpf("50622233344").orElseThrow().getId();
+        String cpf = criarProfissional(email, "50622233344");
+        Long perfilId = perfilProfissionalRepository.findByCpf(cpf).orElseThrow().getId();
         String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
 
         mockMvc.perform(patch("/api/v1/profissionais/{id}/aprovacao", perfilId)
@@ -323,8 +334,8 @@ class ProfissionalOnboardingIntegrationTest {
     @Test
     void adminListaProfissionaisComDadosDeUsuarioSemSenhaHash() throws Exception {
         String email = "m2a.lista-admin@example.com";
-        criarProfissionalELogar(email, "50922233344");
-        Long perfilId = perfilProfissionalRepository.findByCpf("50922233344").orElseThrow().getId();
+        String cpf = criarProfissional(email, "50922233344");
+        Long perfilId = perfilProfissionalRepository.findByCpf(cpf).orElseThrow().getId();
         String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
 
         String response = mockMvc.perform(get("/api/v1/profissionais")
@@ -350,10 +361,10 @@ class ProfissionalOnboardingIntegrationTest {
     void adminFiltraProfissionaisPorStatusESearch() throws Exception {
         String emailAprovada = "m2a.lista-filtro-aprovada@example.com";
         String emailPendente = "m2a.lista-filtro-pendente@example.com";
-        criarProfissionalELogar(emailAprovada, "51022233344");
-        criarProfissionalELogar(emailPendente, "51122233344");
-        Long perfilAprovadoId = perfilProfissionalRepository.findByCpf("51022233344").orElseThrow().getId();
-        Long perfilPendenteId = perfilProfissionalRepository.findByCpf("51122233344").orElseThrow().getId();
+        String cpfAprovada = criarProfissional(emailAprovada, "51022233344");
+        String cpfPendente = criarProfissional(emailPendente, "51122233344");
+        Long perfilAprovadoId = perfilProfissionalRepository.findByCpf(cpfAprovada).orElseThrow().getId();
+        Long perfilPendenteId = perfilProfissionalRepository.findByCpf(cpfPendente).orElseThrow().getId();
         String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
 
         mockMvc.perform(patch("/api/v1/profissionais/{id}/aprovacao", perfilAprovadoId)
@@ -443,6 +454,13 @@ class ProfissionalOnboardingIntegrationTest {
     }
 
     private String criarProfissionalELogar(String email, String cpf) throws Exception {
+        String cpfNormalizado = criarProfissional(email, cpf);
+        liberarProfissionalParaLogin(cpfNormalizado);
+        return login(email, "senha-segura-123");
+    }
+
+    private String criarProfissional(String email, String cpf) throws Exception {
+        String cpfNormalizado = cpfComPrefixo(cpf);
         mockMvc.perform(post("/api/v1/usuarios/profissionais")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -455,12 +473,33 @@ class ProfissionalOnboardingIntegrationTest {
                                   "cpf": "%s",
                                   "dataNascimento": "1990-03-20",
                                   "descricao": "Atendimento residencial",
-                                  "experienciaAnos": 3
+                                  "experienciaAnos": 3,
+                                  %s
                                 }
-                                """.formatted(email, cpf)))
+                                """.formatted(email, cpfNormalizado, camposAceiteJson())))
                 .andExpect(status().isCreated());
 
-        return login(email, "senha-segura-123");
+        return cpfNormalizado;
+    }
+
+    private void liberarProfissionalParaLogin(String cpf) {
+        Usuario admin = usuarioRepository.findByEmail("admin@leidycleaner.local").orElseThrow();
+        var perfil = perfilProfissionalRepository.findByCpf(cpf).orElseThrow();
+        perfil.alterarStatusAprovacao(StatusAprovacaoProfissional.APROVADO);
+        perfil.getUsuario().alterarStatusConta(StatusConta.ATIVA);
+        usuarioRepository.saveAndFlush(perfil.getUsuario());
+        DocumentoVerificacao documento = new DocumentoVerificacao(
+                perfil.getUsuario(),
+                "CPF",
+                cpf,
+                "local/documentos/frente.png",
+                "local/documentos/verso.png",
+                "local/documentos/selfie.png",
+                "local/documentos/comprovante.png"
+        );
+        documento.analisar(StatusVerificacao.APROVADO, "Liberado para teste", admin);
+        documentoVerificacaoRepository.save(documento);
+        perfilProfissionalRepository.saveAndFlush(perfil);
     }
 
     private String login(String email, String senha) throws Exception {

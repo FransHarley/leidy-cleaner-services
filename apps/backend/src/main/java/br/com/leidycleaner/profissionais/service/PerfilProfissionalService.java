@@ -16,6 +16,7 @@ import br.com.leidycleaner.profissionais.entity.PerfilProfissional;
 import br.com.leidycleaner.profissionais.entity.StatusAprovacaoProfissional;
 import br.com.leidycleaner.profissionais.mapper.PerfilProfissionalMapper;
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
+import br.com.leidycleaner.usuarios.entity.StatusConta;
 
 @Service
 public class PerfilProfissionalService {
@@ -86,6 +87,11 @@ public class PerfilProfissionalService {
                 ));
 
         perfil.alterarStatusAprovacao(request.statusAprovacao());
+        if (request.statusAprovacao() == StatusAprovacaoProfissional.APROVADO) {
+            perfil.getUsuario().alterarStatusConta(StatusConta.ATIVA);
+        } else {
+            perfil.getUsuario().alterarStatusConta(StatusConta.PENDENTE_VERIFICACAO);
+        }
 
         perfilProfissionalRepository.flush();
         return PerfilProfissionalMapper.paraResumo(perfil);

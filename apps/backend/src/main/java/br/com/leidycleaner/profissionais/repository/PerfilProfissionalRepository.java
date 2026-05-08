@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +20,7 @@ public interface PerfilProfissionalRepository extends JpaRepository<PerfilProfis
 
     Optional<PerfilProfissional> findByUsuarioId(Long usuarioId);
 
+    @EntityGraph(attributePaths = "usuario")
     Optional<PerfilProfissional> findByCpf(String cpf);
 
     boolean existsByCpf(String cpf);

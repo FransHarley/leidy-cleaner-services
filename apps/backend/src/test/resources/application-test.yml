@@ -19,6 +19,7 @@ app:
       - /api/v1/regioes
       - /api/v1/usuarios/clientes
       - /api/v1/usuarios/profissionais
+      - /api/v1/usuarios/profissionais/pre-cadastro-completo
       - /api/v1/webhooks/**
   asaas:
     webhook-token: test-webhook-token

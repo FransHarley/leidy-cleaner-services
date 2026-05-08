@@ -1,16 +1,22 @@
 package br.com.leidycleaner.usuarios.dto;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
+import br.com.leidycleaner.profissionais.dto.DisponibilidadeProfissionalRequest;
+import br.com.leidycleaner.verificacao.dto.DocumentoVerificacaoRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
-public record CadastroProfissionalRequest(
+public record CadastroProfissionalCompletoRequest(
         @NotBlank(message = "nomeCompleto e obrigatorio")
         @Size(max = 160, message = "nomeCompleto deve ter no maximo 160 caracteres")
         String nomeCompleto,
@@ -47,6 +53,16 @@ public record CadastroProfissionalRequest(
 
         @PositiveOrZero(message = "experienciaAnos deve ser maior ou igual a zero")
         Integer experienciaAnos,
+
+        @NotNull(message = "documento e obrigatorio")
+        @Valid
+        DocumentoVerificacaoRequest documento,
+
+        @NotEmpty(message = "regiaoIds deve conter ao menos uma regiao")
+        Set<@NotNull(message = "regiaoIds nao pode conter valores nulos") Long> regiaoIds,
+
+        @NotEmpty(message = "disponibilidades deve conter ao menos um horario")
+        List<@Valid DisponibilidadeProfissionalRequest> disponibilidades,
 
         @NotNull(message = "aceitarTermosUso e obrigatorio")
         @AssertTrue(message = "Termos de Uso devem ser aceitos")

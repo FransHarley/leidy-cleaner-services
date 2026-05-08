@@ -12,6 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static br.com.leidycleaner.support.TestAceites.camposAceiteJson;
+import static br.com.leidycleaner.support.TestCpf.cpfComPrefixo;
+import static br.com.leidycleaner.support.TestCpf.proximoCpf;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -51,8 +54,15 @@ import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.pagamentos.repository.WebhookEventRepository;
 import br.com.leidycleaner.ocorrencias.repository.OcorrenciaAtendimentoRepository;
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
+import br.com.leidycleaner.profissionais.entity.StatusAprovacaoProfissional;
 import br.com.leidycleaner.regioes.repository.RegiaoAtendimentoRepository;
 import br.com.leidycleaner.solicitacoes.repository.SolicitacaoProfissionalSelecionadoRepository;
+import br.com.leidycleaner.usuarios.entity.StatusConta;
+import br.com.leidycleaner.usuarios.entity.Usuario;
+import br.com.leidycleaner.usuarios.repository.UsuarioRepository;
+import br.com.leidycleaner.verificacao.entity.DocumentoVerificacao;
+import br.com.leidycleaner.verificacao.entity.StatusVerificacao;
+import br.com.leidycleaner.verificacao.repository.DocumentoVerificacaoRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -74,6 +84,8 @@ class SolicitacaoFaxinaIntegrationTest {
     private final PagamentoRepository pagamentoRepository;
     private final WebhookEventRepository webhookEventRepository;
     private final PerfilProfissionalRepository perfilProfissionalRepository;
+    private final DocumentoVerificacaoRepository documentoVerificacaoRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PlatformTransactionManager transactionManager;
 
     @MockBean
@@ -100,6 +112,8 @@ class SolicitacaoFaxinaIntegrationTest {
             PagamentoRepository pagamentoRepository,
             WebhookEventRepository webhookEventRepository,
             PerfilProfissionalRepository perfilProfissionalRepository,
+            DocumentoVerificacaoRepository documentoVerificacaoRepository,
+            UsuarioRepository usuarioRepository,
             PlatformTransactionManager transactionManager
     ) {
         this.mockMvc = mockMvc;
@@ -115,6 +129,8 @@ class SolicitacaoFaxinaIntegrationTest {
         this.pagamentoRepository = pagamentoRepository;
         this.webhookEventRepository = webhookEventRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
+        this.documentoVerificacaoRepository = documentoVerificacaoRepository;
+        this.usuarioRepository = usuarioRepository;
         this.transactionManager = transactionManager;
     }
 
@@ -3720,15 +3736,18 @@ class SolicitacaoFaxinaIntegrationTest {
                                   "nomeCompleto": "Cliente Solicitacao",
                                   "email": "%s",
                                   "telefone": "+5551999998888",
-                                  "senha": "senha-segura-123"
+                                  "cpf": "%s",
+                                  "senha": "senha-segura-123",
+                                  %s
                                 }
-                                """.formatted(email)))
+                                """.formatted(email, proximoCpf(), camposAceiteJson())))
                 .andExpect(status().isCreated());
 
         return login(email, "senha-segura-123");
     }
 
     private String criarProfissionalELogar(String email, String cpf) throws Exception {
+        String cpfNormalizado = cpfComPrefixo(cpf);
         mockMvc.perform(post("/api/v1/usuarios/profissionais")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -3739,11 +3758,13 @@ class SolicitacaoFaxinaIntegrationTest {
                                   "senha": "senha-segura-123",
                                   "nomeExibicao": "Profissional Solicitacao",
                                   "cpf": "%s",
-                                  "dataNascimento": "1990-03-20"
+                                  "dataNascimento": "1990-03-20",
+                                  %s
                                 }
-                                """.formatted(email, cpf)))
+                                """.formatted(email, cpfNormalizado, camposAceiteJson())))
                 .andExpect(status().isCreated());
 
+        liberarProfissionalParaLogin(cpfNormalizado);
         return login(email, "senha-segura-123");
     }
 
@@ -3865,6 +3886,7 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     private String cadastrarProfissional(String email, String cpf, String nomeExibicao) throws Exception {
+        String cpfNormalizado = cpfComPrefixo(cpf);
         mockMvc.perform(post("/api/v1/usuarios/profissionais")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -3875,11 +3897,33 @@ class SolicitacaoFaxinaIntegrationTest {
                                   "senha": "senha-segura-123",
                                   "nomeExibicao": "%s",
                                   "cpf": "%s",
-                                  "dataNascimento": "1990-03-20"
+                                  "dataNascimento": "1990-03-20",
+                                  %s
                                 }
-                                """.formatted(nomeExibicao, email, nomeExibicao, cpf)))
+                                """.formatted(nomeExibicao, email, nomeExibicao, cpfNormalizado, camposAceiteJson())))
                 .andExpect(status().isCreated());
+        liberarProfissionalParaLogin(cpfNormalizado);
         return login(email, "senha-segura-123");
+    }
+
+    private void liberarProfissionalParaLogin(String cpf) {
+        Usuario admin = usuarioRepository.findByEmail("admin@leidycleaner.local").orElseThrow();
+        var perfil = perfilProfissionalRepository.findByCpf(cpf).orElseThrow();
+        perfil.alterarStatusAprovacao(StatusAprovacaoProfissional.APROVADO);
+        perfil.getUsuario().alterarStatusConta(StatusConta.ATIVA);
+        usuarioRepository.saveAndFlush(perfil.getUsuario());
+        DocumentoVerificacao documento = new DocumentoVerificacao(
+                perfil.getUsuario(),
+                "CPF",
+                cpf,
+                "local/documentos/frente.png",
+                "local/documentos/verso.png",
+                "local/documentos/selfie.png",
+                "local/documentos/comprovante.png"
+        );
+        documento.analisar(StatusVerificacao.APROVADO, "Liberado para teste", admin);
+        documentoVerificacaoRepository.save(documento);
+        perfilProfissionalRepository.saveAndFlush(perfil);
     }
 
     private Long buscarMeuPerfilProfissionalId(String tokenProfissional) throws Exception {
