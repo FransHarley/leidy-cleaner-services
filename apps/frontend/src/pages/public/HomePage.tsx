@@ -9,8 +9,8 @@ import {
   UserIcon,
 } from '../../components/public/PublicIcons';
 import { PublicButton } from '../../components/public/PublicButton';
-import { HomeSparkPlaceholder } from '../../components/public/PlaceholderVisuals';
 import faxineiraHeroUrl from '../../assets/images/faxineira-hero.png';
+import iconeCasaUrl from '../../assets/images/icone_casa.png';
 import profissionalCtaUrl from '../../assets/images/prof_peq.png';
 
 const trustItems = [
@@ -71,6 +71,10 @@ export function HomePage() {
 
     <p className="mt-5 max-w-[560px] text-xl leading-8 text-slate-600">
       Faxina residencial com praticidade, confiança e cuidado em cada detalhe.
+    </p>
+
+    <p className="mt-4 inline-flex max-w-[560px] rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold leading-6 text-slate-700">
+      Atendemos em Porto Alegre, Tramandaí, Capão da Canoa e Xangri-lá.
     </p>
 
     <div id="solicitar" className="mt-7 flex flex-col gap-4 sm:flex-row">
@@ -161,7 +165,9 @@ export function HomePage() {
 
       <section id="cadastro" className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
         <div className="grid items-center gap-5 rounded-lg border border-slate-100 bg-white px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] md:grid-cols-[180px_1fr_auto] md:px-8">
-          <HomeSparkPlaceholder />
+          <div className="flex h-24 w-28 items-center justify-center rounded-lg bg-cyan-50">
+            <img src={iconeCasaUrl} alt="Ícone de casa" className="h-16 w-16 object-contain" />
+          </div>
           <h2 className="text-2xl font-black leading-tight text-cyan-500 md:text-3xl">
             Transforme sua rotina com mais tempo e tranquilidade.
           </h2>

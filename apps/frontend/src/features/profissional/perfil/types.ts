@@ -29,7 +29,7 @@ export type AtualizarPerfilProfissionalRequest = {
   ativoParaReceberChamados?: boolean | null;
 };
 
-export type TipoRegiaoAtendimento = 'BAIRRO';
+export type TipoRegiaoAtendimento = 'BAIRRO' | 'CIDADE';
 
 export type RegiaoAtendimento = {
   id: number;

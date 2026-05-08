@@ -16,6 +16,7 @@ app:
     public-endpoints:
       - /api/v1/health
       - /api/v1/auth/login
+      - /api/v1/regioes
       - /api/v1/usuarios/clientes
       - /api/v1/usuarios/profissionais
       - /api/v1/webhooks/**
