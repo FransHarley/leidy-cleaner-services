@@ -11,7 +11,11 @@ export function BrandMark({ compact = false }: BrandMarkProps) {
         src={logoUrl}
         alt=""
         aria-hidden="true"
-        className={`${compact ? 'h-14 max-w-[180px]' : 'h-[84px] max-w-[280px]'} w-auto object-contain`}
+        className={`${
+          compact
+            ? 'h-11 max-w-[140px] sm:h-14 sm:max-w-[180px]'
+            : 'h-14 max-w-[190px] sm:h-[84px] sm:max-w-[280px]'
+        } w-auto object-contain`}
       />
     </a>
   );

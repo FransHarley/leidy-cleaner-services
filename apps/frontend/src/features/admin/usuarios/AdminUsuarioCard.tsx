@@ -20,7 +20,7 @@ export function AdminUsuarioCard({ usuario }: { usuario: AdminUsuario }) {
         </div>
 
         <Link
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+          className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 sm:w-auto"
           to={`/app/admin/usuarios/${usuario.usuarioId}`}
         >
           Ver detalhes

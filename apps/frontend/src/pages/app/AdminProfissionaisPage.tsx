@@ -136,10 +136,10 @@ export function AdminProfissionaisPage() {
         </div>
 
         <form
-          className="flex min-w-0 flex-wrap items-end gap-3 rounded-lg border border-slate-100 bg-white p-4 shadow-sm"
+          className="flex min-w-0 flex-col items-stretch gap-3 rounded-lg border border-slate-100 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-end"
           onSubmit={handleFilterSubmit}
         >
-          <label className="grid min-w-[min(100%,13rem)] flex-1 gap-2 text-sm font-bold text-slate-700">
+          <label className="grid w-full gap-2 text-sm font-bold text-slate-700 sm:min-w-[min(100%,13rem)] sm:flex-1">
             Status
             <select
               className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
@@ -155,7 +155,7 @@ export function AdminProfissionaisPage() {
             </select>
           </label>
 
-          <label className="grid min-w-[min(100%,16rem)] flex-[2_1_16rem] gap-2 text-sm font-bold text-slate-700">
+          <label className="grid w-full gap-2 text-sm font-bold text-slate-700 sm:min-w-[min(100%,16rem)] sm:flex-[2_1_16rem]">
             Busca
             <input
               className="min-h-11 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"

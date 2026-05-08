@@ -56,7 +56,7 @@ export function AnaliseVerificacaoForm({ initialStatus, isSubmitting, onSubmit }
       </label>
 
       <button
-        className="min-h-11 rounded-lg bg-cyan-700 px-5 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="min-h-11 w-full rounded-lg bg-cyan-700 px-5 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
         disabled={isSubmitting}
         type="submit"
       >

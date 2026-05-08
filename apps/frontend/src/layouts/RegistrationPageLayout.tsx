@@ -23,9 +23,9 @@ export function RegistrationPageLayout({
   const isStacked = contentLayout === 'stacked';
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(103,232,249,0.22),_transparent_26%),linear-gradient(180deg,_#f8fafc_0%,_#eef6f7_100%)] px-4 py-6 text-slate-900 md:px-6 md:py-8">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col rounded-lg border border-white/80 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
-        <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5 md:px-8">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(103,232,249,0.22),_transparent_26%),linear-gradient(180deg,_#f8fafc_0%,_#eef6f7_100%)] px-4 py-4 text-slate-900 md:px-6 md:py-8">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col rounded-lg border border-white/80 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:min-h-[calc(100vh-3rem)]">
+        <header className="flex flex-col items-start justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-5 md:px-8">
           <BrandMark />
           <Link className="text-sm font-bold text-cyan-700 transition hover:text-cyan-800" to="/">
             Voltar ao inicio
@@ -33,7 +33,7 @@ export function RegistrationPageLayout({
         </header>
 
         {isStacked ? (
-          <div className="flex flex-1 flex-col gap-8 px-5 py-8 md:px-8 lg:gap-10 lg:py-12">
+          <div className="flex flex-1 flex-col gap-6 px-4 py-6 sm:px-5 md:px-8 md:py-8 lg:gap-10 lg:py-12">
             <section className="grid gap-6">
               <div className="space-y-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">{eyebrow}</p>
@@ -46,7 +46,7 @@ export function RegistrationPageLayout({
             <section className="w-full">{children}</section>
           </div>
         ) : (
-          <div className="grid flex-1 gap-10 px-5 py-8 md:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-start lg:gap-12 lg:py-12">
+          <div className="grid flex-1 gap-8 px-4 py-6 sm:px-5 md:px-8 md:py-8 xl:grid-cols-[0.88fr_1.12fr] xl:items-start xl:gap-12 xl:py-12">
             <section className="grid content-start gap-6">
               <div className="space-y-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-700">{eyebrow}</p>

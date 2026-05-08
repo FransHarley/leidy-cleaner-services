@@ -46,10 +46,10 @@ export function ProfissionalElegivelCard({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="grid shrink-0 gap-2 sm:flex sm:flex-wrap">
           {profissional.totalAvaliacoes > 0 && (
             <button
-              className="min-h-10 rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+              className="min-h-10 w-full rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 sm:w-auto"
               type="button"
               onClick={() => onReadReviews(profissional)}
             >
@@ -62,6 +62,7 @@ export function ProfissionalElegivelCard({
               selected
                 ? 'border border-red-100 text-red-700 hover:bg-red-50 focus-visible:ring-red-600'
                 : 'bg-cyan-700 text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-300',
+              'w-full sm:w-auto',
             ].join(' ')}
             disabled={disabled && !selected}
             type="button"

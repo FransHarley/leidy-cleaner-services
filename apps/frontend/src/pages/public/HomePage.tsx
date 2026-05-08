@@ -58,18 +58,18 @@ const benefits = [
 export function HomePage() {
   return (
     <main id="inicio">
-      <section className="mx-auto grid max-w-[1180px] items-center gap-8 px-6 pb-8 pt-6 md:grid-cols-[1fr_1.08fr] md:px-10 md:pb-4 md:pt-8">
+      <section className="mx-auto grid max-w-[1180px] items-center gap-8 px-4 pb-8 pt-5 sm:px-5 lg:grid-cols-[1fr_1.08fr] lg:px-10 lg:pb-4 lg:pt-8">
   <div className="z-10">
     <div className="inline-flex items-center gap-2 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-500">
       <ShieldCheckIcon className="h-5 w-5" />
       Profissionais verificadas
     </div>
 
-    <h1 className="mt-7 max-w-[620px] text-5xl font-bold leading-[1.08] tracking-[-0.02em] text-slate-900 md:text-[60px]">
+    <h1 className="mt-6 max-w-[620px] text-4xl font-bold leading-[1.08] tracking-[-0.02em] text-slate-900 sm:text-5xl md:text-[60px]">
       Sua casa limpa, <span className="text-cyan-500">seu tempo leve.</span>
     </h1>
 
-    <p className="mt-5 max-w-[560px] text-xl leading-8 text-slate-600">
+    <p className="mt-4 max-w-[560px] text-lg leading-7 text-slate-600 sm:mt-5 sm:text-xl sm:leading-8">
       Faxina residencial com praticidade, confiança e cuidado em cada detalhe.
     </p>
 
@@ -78,12 +78,12 @@ export function HomePage() {
     </p>
 
     <div id="solicitar" className="mt-7 flex flex-col gap-4 sm:flex-row">
-      <PublicButton href="/cadastro/cliente">
+      <PublicButton href="/cadastro/cliente" className="w-full sm:w-auto">
         Solicitar faxina
         <SparkleIcon />
       </PublicButton>
 
-      <PublicButton href="/cadastro/profissional" variant="secondary">
+      <PublicButton href="/cadastro/profissional" variant="secondary" className="w-full sm:w-auto">
         <UserIcon className="h-5 w-5" />
         Quero ser profissional
       </PublicButton>
@@ -101,16 +101,16 @@ export function HomePage() {
     </div>
   </div>
 
-  <div className="relative min-h-[550px] overflow-hidden rounded-bl-[72px] md:-mt-8 md:min-h-[450px]">
+  <div className="relative min-h-[320px] overflow-hidden rounded-3xl bg-slate-50 sm:min-h-[380px] lg:-mt-8 lg:min-h-[450px] lg:rounded-bl-[72px]">
   <img
     src={faxineiraHeroUrl}
     alt="Profissional de limpeza Leidy Cleaner Services com materiais de faxina"
-    className="absolute bottom-0 right-[-38px] h-[125%] w-[125%] object-contain object-bottom"
+    className="absolute bottom-0 right-[-18px] h-[115%] w-[115%] object-contain object-bottom sm:right-[-24px] sm:h-[120%] sm:w-[120%] lg:right-[-38px] lg:h-[125%] lg:w-[125%]"
   />
 </div>
 </section>
 
-      <section className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
+      <section className="mx-auto max-w-[980px] px-4 py-3 sm:px-5 md:px-8">
         <div className="grid gap-4 rounded-lg border border-slate-100 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] md:grid-cols-3 md:p-6">
           {benefits.map((benefit) => (
             <div key={benefit.title} className="flex gap-4">
@@ -126,7 +126,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="como-funciona" className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
+      <section id="como-funciona" className="mx-auto max-w-[980px] px-4 py-3 sm:px-5 md:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Como funciona</h2>
           <p className="mt-4 text-lg text-slate-600">
@@ -140,8 +140,8 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="profissionais" className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
-        <div className="grid items-center gap-5 overflow-hidden rounded-lg bg-cyan-600 px-5 py-5 text-white md:grid-cols-[180px_1fr_auto] md:px-8 md:py-0">
+      <section id="profissionais" className="mx-auto max-w-[980px] px-4 py-3 sm:px-5 md:px-8">
+        <div className="grid items-center gap-5 overflow-hidden rounded-lg bg-cyan-600 px-5 py-5 text-white md:px-8 lg:grid-cols-[180px_1fr_auto] lg:py-0">
           <div className="hidden self-end md:block">
             <img
               src={profissionalCtaUrl}
@@ -156,29 +156,29 @@ export function HomePage() {
               Cadastre-se na Leidy Cleaner Services e tenha mais oportunidades de trabalho.
             </p>
           </div>
-          <PublicButton href="/cadastro/profissional" variant="light" className="w-full md:w-auto">
+          <PublicButton href="/cadastro/profissional" variant="light" className="w-full lg:w-auto">
             <UserIcon className="h-5 w-5" />
             Quero me cadastrar
           </PublicButton>
         </div>
       </section>
 
-      <section id="cadastro" className="mx-auto max-w-[980px] px-5 py-3 md:px-8">
-        <div className="grid items-center gap-5 rounded-lg border border-slate-100 bg-white px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] md:grid-cols-[180px_1fr_auto] md:px-8">
+      <section id="cadastro" className="mx-auto max-w-[980px] px-4 py-3 sm:px-5 md:px-8">
+        <div className="grid items-center gap-5 rounded-lg border border-slate-100 bg-white px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] md:px-8 lg:grid-cols-[180px_1fr_auto]">
           <div className="flex h-24 w-28 items-center justify-center rounded-lg bg-cyan-50">
             <img src={iconeCasaUrl} alt="Ícone de casa" className="h-16 w-16 object-contain" />
           </div>
           <h2 className="text-2xl font-black leading-tight text-cyan-500 md:text-3xl">
             Transforme sua rotina com mais tempo e tranquilidade.
           </h2>
-          <PublicButton href="/cadastro/cliente" className="w-full md:w-auto">
+          <PublicButton href="/cadastro/cliente" className="w-full lg:w-auto">
             Solicitar faxina
             <SparkleIcon />
           </PublicButton>
         </div>
       </section>
 
-      <section id="entrar" className="mx-auto max-w-[980px] px-5 pb-8 pt-3 md:px-8">
+      <section id="entrar" className="mx-auto max-w-[980px] px-4 pb-8 pt-3 sm:px-5 md:px-8">
         <div className="grid gap-4 md:grid-cols-2">
           <AudienceCta
             title="Sou cliente"

@@ -143,7 +143,7 @@ export function SolicitacaoForm({ enderecos, regioes, isSubmitting = false, onSu
         {regiaoError && <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{regiaoError}</p>}
       </div>
 
-      <div className="grid gap-5 md:grid-cols-[1fr_1fr_0.7fr]">
+      <div className="grid gap-5 lg:grid-cols-[1fr_1fr_0.7fr]">
         <label className="block" htmlFor="tipoServico">
           <span className="text-sm font-black text-slate-800">Tipo de serviço</span>
           <select
@@ -189,7 +189,7 @@ export function SolicitacaoForm({ enderecos, regioes, isSubmitting = false, onSu
 
       <div className="flex justify-end">
         <button
-          className="min-h-11 rounded-lg bg-cyan-700 px-5 text-sm font-black text-white shadow-[0_14px_28px_rgba(14,138,141,0.18)] transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+          className="min-h-11 w-full rounded-lg bg-cyan-700 px-5 text-sm font-black text-white shadow-[0_14px_28px_rgba(14,138,141,0.18)] transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none sm:w-auto"
           disabled={isSubmitting || enderecos.length === 0 || regioes.length === 0 || selectedUnsupportedRegion}
           type="submit"
         >

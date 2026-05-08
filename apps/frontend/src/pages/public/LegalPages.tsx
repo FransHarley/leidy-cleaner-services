@@ -10,17 +10,17 @@ function LegalDocumentLayout({
   sections: Array<{ title: string; paragraphs: string[] }>;
 }) {
   return (
-    <main className="px-5 py-10 md:px-8 md:py-14">
+    <main className="px-4 py-8 sm:px-5 md:px-8 md:py-14">
       <div className="mx-auto max-w-4xl">
-        <div className="rounded-lg border border-slate-100 bg-white p-6 shadow-sm md:p-8">
+        <div className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Documento publico</p>
-          <h1 className="mt-3 text-3xl font-black text-slate-900 md:text-4xl">{title}</h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">{subtitle}</p>
+          <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl md:text-4xl">{title}</h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">{subtitle}</p>
 
           <div className="mt-8 grid gap-8">
             {sections.map((section) => (
               <section key={section.title} className="grid gap-3">
-                <h2 className="text-xl font-black text-slate-900">{section.title}</h2>
+                <h2 className="text-lg font-black text-slate-900 md:text-xl">{section.title}</h2>
                 {section.paragraphs.map((paragraph) => (
                   <p key={paragraph} className="text-sm leading-7 text-slate-600 md:text-base">
                     {paragraph}
@@ -30,11 +30,11 @@ function LegalDocumentLayout({
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap gap-3 border-t border-slate-100 pt-6 text-sm font-bold">
-            <Link className="rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50" to="/cadastro/cliente">
+          <div className="mt-10 flex flex-col gap-3 border-t border-slate-100 pt-6 text-sm font-bold sm:flex-row sm:flex-wrap">
+            <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50 sm:w-auto" to="/cadastro/cliente">
               Cadastro de cliente
             </Link>
-            <Link className="rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50" to="/cadastro/profissional">
+            <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50 sm:w-auto" to="/cadastro/profissional">
               Cadastro profissional
             </Link>
           </div>

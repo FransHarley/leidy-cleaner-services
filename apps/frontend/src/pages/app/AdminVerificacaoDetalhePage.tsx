@@ -228,7 +228,7 @@ function DocumentPreview({
             <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
               <img
                 alt={label}
-                className="h-56 w-full bg-slate-100 object-contain"
+                className="h-44 w-full bg-slate-100 object-contain sm:h-56"
                 loading="lazy"
                 src={value}
               />
@@ -242,7 +242,7 @@ function DocumentPreview({
           <div>
             {linkHref ? (
               <a
-                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-cyan-100 bg-white px-4 text-sm font-black text-cyan-700 transition hover:bg-cyan-50"
+                className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-cyan-100 bg-white px-4 text-sm font-black text-cyan-700 transition hover:bg-cyan-50 sm:w-auto"
                 href={linkHref}
                 rel="noreferrer"
                 target="_blank"
@@ -250,7 +250,7 @@ function DocumentPreview({
                 {actionLabel}
               </a>
             ) : (
-              <span className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-400">
+              <span className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-400 sm:w-auto">
                 Preparando visualização...
               </span>
             )}

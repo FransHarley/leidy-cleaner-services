@@ -97,7 +97,7 @@ export function DashboardActionAlert({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-red-900">{description}</p>
         </div>
         <Link
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-black text-white transition hover:bg-red-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-black text-white transition hover:bg-red-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 md:w-auto"
           to={href}
         >
           {cta}
