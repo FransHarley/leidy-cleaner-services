@@ -69,6 +69,13 @@ export type CadastroProfissionalCompletoRequest = CadastroProfissionalRequest & 
   }>;
 };
 
+export type RegiaoAtendimentoPublica = {
+  id: number;
+  nome: string;
+  tipo: 'BAIRRO' | 'CIDADE';
+  ativo: boolean;
+};
+
 export type CadastroUsuarioResponse = {
   usuario: UsuarioAutenticado;
   perfilId: number;

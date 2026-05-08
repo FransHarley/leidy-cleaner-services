@@ -6,6 +6,7 @@ import type {
   CadastroProfissionalCompletoRequest,
   CadastroProfissionalRequest,
   CadastroUsuarioResponse,
+  RegiaoAtendimentoPublica,
   UsuarioAutenticado,
 } from './types';
 
@@ -45,5 +46,12 @@ export function registerProfissionalCompletoRequest(payload: CadastroProfissiona
     auth: false,
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export function listPublicRegioesRequest() {
+  return apiRequest<RegiaoAtendimentoPublica[]>('/regioes', {
+    auth: false,
+    method: 'GET',
   });
 }

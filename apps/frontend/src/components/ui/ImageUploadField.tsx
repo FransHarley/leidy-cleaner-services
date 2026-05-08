@@ -4,6 +4,8 @@ type ImageUploadFieldProps = {
   label: string;
   error?: string;
   helperText?: string;
+  fileButtonLabel?: string;
+  cameraButtonLabel?: string;
   allowCamera?: boolean;
   capture?: 'user' | 'environment';
   onChange: (value: string | null) => void;
@@ -14,6 +16,8 @@ export function ImageUploadField({
   label,
   error,
   helperText,
+  fileButtonLabel = 'Selecionar arquivo',
+  cameraButtonLabel = 'Usar camera',
   allowCamera = false,
   capture,
   onChange,
@@ -30,28 +34,26 @@ export function ImageUploadField({
 
     setIsCameraSupported(
       typeof navigator !== 'undefined' &&
-      !!navigator.mediaDevices &&
-      typeof navigator.mediaDevices.getUserMedia === 'function',
+        Boolean(navigator.mediaDevices) &&
+        typeof navigator.mediaDevices.getUserMedia === 'function',
     );
   }, []);
 
-
   const handleFileSelect = async (file: File) => {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Por favor, selecione um arquivo de imagem.');
       return;
     }
 
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 2MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Arquivo muito grande. O tamanho maximo permitido e 10 MB.');
       return;
     }
 
-    // Convert to Base64
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
@@ -63,91 +65,81 @@ export function ImageUploadField({
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleFileSelect(file);
+      void handleFileSelect(file);
     }
   };
 
   const handleCameraCapture = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleFileSelect(file);
+      void handleFileSelect(file);
     }
   };
 
   const removeImage = () => {
     onChange(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
+    }
   };
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-slate-700">
-        {label}
-      </label>
+      <label className="block text-sm font-medium text-slate-700">{label}</label>
 
       {value && (
         <div className="relative">
-          <img
-            src={value}
-            alt="Preview"
-            className="max-w-full h-32 object-cover rounded-lg border"
-          />
+          <img alt="Preview" className="h-32 max-w-full rounded-lg border object-cover" src={value} />
           <button
             type="button"
             onClick={removeImage}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-sm font-black text-white hover:bg-red-600"
           >
-            ×
+            x
           </button>
         </div>
       )}
 
       {!value && (
-        <div className="space-y-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+        <div className="flex flex-wrap gap-3">
+          <input ref={fileInputRef} accept="image/*" className="hidden" type="file" onChange={handleFileChange} />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50"
           >
-            Selecionar arquivo
+            {fileButtonLabel}
           </button>
 
           {allowCamera && isCameraSupported && (
             <>
               <input
                 ref={cameraInputRef}
-                type="file"
                 accept="image/*"
                 capture={capture}
-                onChange={handleCameraCapture}
                 className="hidden"
+                type="file"
+                onChange={handleCameraCapture}
               />
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="ml-2 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 text-sm"
+                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-black text-white transition hover:bg-cyan-700"
               >
-                Tirar foto
+                {cameraButtonLabel}
               </button>
             </>
           )}
         </div>
       )}
 
-      {helperText && !error && (
-        <p className="text-sm text-slate-500">{helperText}</p>
-      )}
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+      {helperText && !error && <p className="text-sm text-slate-500">{helperText}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }
