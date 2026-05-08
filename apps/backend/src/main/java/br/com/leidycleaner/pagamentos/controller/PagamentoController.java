@@ -21,6 +21,7 @@ import br.com.leidycleaner.pagamentos.dto.CheckoutDto;
 import br.com.leidycleaner.pagamentos.dto.CheckoutRequest;
 import br.com.leidycleaner.pagamentos.dto.PagamentoDto;
 import br.com.leidycleaner.pagamentos.dto.PagamentoRequest;
+import br.com.leidycleaner.pagamentos.dto.PixQrCodeDto;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
 import br.com.leidycleaner.pagamentos.service.PagamentoService;
@@ -70,6 +71,14 @@ public class PagamentoController {
             @PathVariable Long id
     ) {
         return ApiResponse.success(pagamentoService.buscarPorId(principal.getId(), id));
+    }
+
+    @GetMapping("/{id}/pix-qrcode")
+    public ApiResponse<PixQrCodeDto> buscarPixQrCode(
+            @AuthenticationPrincipal UsuarioPrincipal principal,
+            @PathVariable Long id
+    ) {
+        return ApiResponse.success(pagamentoService.buscarPixQrCode(principal.getId(), id));
     }
 
     @PostMapping("/{id}/consultar-status")

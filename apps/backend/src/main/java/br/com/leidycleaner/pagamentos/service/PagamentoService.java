@@ -16,6 +16,7 @@ import br.com.leidycleaner.pagamentos.dto.CheckoutDto;
 import br.com.leidycleaner.pagamentos.dto.CheckoutRequest;
 import br.com.leidycleaner.pagamentos.dto.PagamentoDto;
 import br.com.leidycleaner.pagamentos.dto.PagamentoRequest;
+import br.com.leidycleaner.pagamentos.dto.PixQrCodeDto;
 import br.com.leidycleaner.pagamentos.entity.GatewayPagamento;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 import br.com.leidycleaner.pagamentos.entity.Pagamento;
@@ -25,6 +26,7 @@ import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCobrancaRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasGatewayClient;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPagamentoGatewayResponse;
+import br.com.leidycleaner.pagamentos.gateway.AsaasPixQrCodeGatewayResponse;
 import br.com.leidycleaner.pagamentos.mapper.PagamentoMapper;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.usuarios.entity.TipoUsuario;
@@ -135,6 +137,22 @@ public class PagamentoService {
         return PagamentoMapper.paraDto(pagamento);
     }
 
+    @Transactional(readOnly = true)
+    public PixQrCodeDto buscarPixQrCode(Long usuarioId, Long pagamentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
+        Pagamento pagamento = pagamentoRepository.findByIdWithAtendimentoCliente(pagamentoId)
+                .orElseThrow(() -> new BusinessException("PAGAMENTO_NOT_FOUND", "Pagamento nao encontrado", HttpStatus.NOT_FOUND));
+        validarClienteOuAdminDoPagamento(usuarioId, pagamento);
+        validarPagamentoPixComGatewayPaymentId(pagamento);
+
+        AsaasPixQrCodeGatewayResponse qrCode = asaasGatewayClient.consultarPixQrCode(pagamento.getGatewayPaymentId());
+        return new PixQrCodeDto(
+                qrCode.encodedImage(),
+                qrCode.payload(),
+                qrCode.expirationDate()
+        );
+    }
+
     @Transactional
     public CheckoutDto criarCheckout(Long usuarioId, CheckoutRequest request) {
         atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
@@ -207,6 +225,24 @@ public class PagamentoService {
             );
         }
         return metodoPagamento;
+    }
+
+    private void validarPagamentoPixComGatewayPaymentId(Pagamento pagamento) {
+        if (pagamento.getMetodoPagamento() != MetodoPagamento.PIX) {
+            throw new BusinessException(
+                    "PAGAMENTO_METODO_INCOMPATIVEL",
+                    "QR Code Pix disponivel apenas para pagamentos Pix",
+                    HttpStatus.CONFLICT
+            );
+        }
+        String gatewayPaymentId = pagamento.getGatewayPaymentId();
+        if (gatewayPaymentId == null || !gatewayPaymentId.startsWith("pay_")) {
+            throw new BusinessException(
+                    "PAGAMENTO_QRCODE_INDISPONIVEL",
+                    "Pagamento Pix sem identificador compativel para consultar o QR Code",
+                    HttpStatus.CONFLICT
+            );
+        }
     }
 
     private void validarUrlPagamentoExistente(String urlPagamento) {

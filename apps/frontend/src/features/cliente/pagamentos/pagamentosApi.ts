@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from '../../../services/apiClient';
-import type { AtendimentoPagamento, CheckoutPagamento, CheckoutPagamentoRequest, Pagamento } from './types';
+import type { AtendimentoPagamento, CheckoutPagamento, CheckoutPagamentoRequest, Pagamento, PixQrCodePagamento } from './types';
 
 export function listarMeusAtendimentosParaPagamento(token: string) {
   return apiRequest<AtendimentoPagamento[]>('/atendimentos/meus', {
@@ -25,6 +25,13 @@ export function criarCheckoutPagamento(token: string, payload: CheckoutPagamento
 
 export function buscarPagamento(token: string, pagamentoId: number) {
   return apiRequest<Pagamento>(`/pagamentos/${pagamentoId}`, {
+    method: 'GET',
+    token,
+  });
+}
+
+export function buscarPixQrCodePagamento(token: string, pagamentoId: number) {
+  return apiRequest<PixQrCodePagamento>(`/pagamentos/${pagamentoId}/pix-qrcode`, {
     method: 'GET',
     token,
   });

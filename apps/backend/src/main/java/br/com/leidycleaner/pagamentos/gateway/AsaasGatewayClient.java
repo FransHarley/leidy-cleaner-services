@@ -7,4 +7,6 @@ public interface AsaasGatewayClient {
     AsaasPagamentoGatewayResponse consultarPagamento(String gatewayPaymentId);
 
     AsaasCheckoutGatewayResponse criarCheckout(AsaasCheckoutRequest request);
+
+    AsaasPixQrCodeGatewayResponse consultarPixQrCode(String gatewayPaymentId);
 }

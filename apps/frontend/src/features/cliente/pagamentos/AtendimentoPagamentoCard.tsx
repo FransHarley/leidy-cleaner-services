@@ -33,10 +33,13 @@ export function AtendimentoPagamentoCard({
   const statusInfo = getStatusAtendimentoPagamentoInfo(atendimento.status);
   const pagamentoStatus = pagamento?.status ?? 'PENDENTE';
   const isPaid = pagamentoStatus === 'PAGO';
+  const isPix = pagamento?.metodoPagamento === 'PIX';
   const isExistingPaymentBlocked =
     pagamentoStatus === 'CANCELADO' || pagamentoStatus === 'FALHOU' || pagamentoStatus === 'ESTORNADO';
-  const canOpenExistingPayment =
-    Boolean(pagamento?.urlPagamento) && !isPaid && !isExistingPaymentBlocked && atendimento.status !== 'CANCELADO';
+  const canViewExistingPix =
+    Boolean(pagamento) && isPix && !isPaid && !isExistingPaymentBlocked && atendimento.status !== 'CANCELADO';
+  const canOpenExistingCardPayment =
+    Boolean(pagamento?.urlPagamento) && !isPix && !isPaid && !isExistingPaymentBlocked && atendimento.status !== 'CANCELADO';
   const isCanceled = atendimento.status === 'CANCELADO';
   const hasExistingPayment = Boolean(pagamento);
   const isPayDisabled = isCanceled || isOpeningPayment || isPagamentoLoading;
@@ -121,7 +124,16 @@ export function AtendimentoPagamentoCard({
           >
             Ver status
           </Link>
-        ) : canOpenExistingPayment ? (
+        ) : canViewExistingPix ? (
+          <button
+            className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 sm:w-auto"
+            disabled={isPayDisabled}
+            type="button"
+            onClick={() => onPay?.(atendimento, pagamento ?? null, metodoPagamentoSelecionado)}
+          >
+            {isOpeningPayment ? 'Abrindo...' : 'Ver QR Code Pix'}
+          </button>
+        ) : canOpenExistingCardPayment ? (
           <button
             className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 sm:w-auto"
             disabled={isPayDisabled}

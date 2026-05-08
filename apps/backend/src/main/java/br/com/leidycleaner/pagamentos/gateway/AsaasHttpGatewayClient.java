@@ -28,6 +28,7 @@ import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 public class AsaasHttpGatewayClient implements AsaasGatewayClient {
 
     private static final String PAYMENT_ENDPOINT = "/payments";
+    private static final String PIX_QR_CODE_ENDPOINT = "/payments/{id}/pixQrCode";
     private static final List<String> MVP_PAYMENT_BILLING_TYPES = List.of("CREDIT_CARD", "PIX");
     private static final int ASAAS_ERROR_TEXT_MAX_LENGTH = 240;
     private static final Logger LOGGER = LoggerFactory.getLogger(AsaasHttpGatewayClient.class);
@@ -61,6 +62,16 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
         if (callback != null) {
             body.put("callback", callback);
         }
+        LOGGER.info(
+                "asaas_payment_create_request endpoint={} atendimentoId={} billingType={} value={} dueDate={} externalReference={} callbackEnabled={}",
+                PAYMENT_ENDPOINT,
+                request.atendimentoId(),
+                body.get("billingType"),
+                body.get("value"),
+                body.get("dueDate"),
+                body.get("externalReference"),
+                callback != null
+        );
 
         JsonNode response = executarRequisicaoAsaas(
                 () -> restClient.post()
@@ -107,6 +118,21 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
                 "/payments/{id}"
         );
         return paraGatewayResponse(response);
+    }
+
+    @Override
+    public AsaasPixQrCodeGatewayResponse consultarPixQrCode(String gatewayPaymentId) {
+        validarConfiguracaoApi();
+        JsonNode response = executarRequisicaoAsaas(
+                () -> restClient.get()
+                        .uri(PIX_QR_CODE_ENDPOINT, gatewayPaymentId)
+                        .header("access_token", properties.getApiKey())
+                        .retrieve()
+                        .body(JsonNode.class),
+                "Nao foi possivel consultar QR Code Pix no Asaas",
+                PIX_QR_CODE_ENDPOINT
+        );
+        return paraPixQrCodeResponse(response);
     }
 
     private void validarConfiguracaoCobranca() {
@@ -198,6 +224,30 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
                 textoOuNull(response.path("invoiceUrl")),
                 textoOuNull(response.path("pixTransaction").path("payload")),
                 response.toString()
+        );
+    }
+
+    private AsaasPixQrCodeGatewayResponse paraPixQrCodeResponse(JsonNode response) {
+        if (response == null) {
+            throw new BusinessException(
+                    "ASAAS_RESPONSE_INVALIDA",
+                    "Resposta invalida do Asaas para QR Code Pix",
+                    HttpStatus.BAD_GATEWAY
+            );
+        }
+        String encodedImage = textoOuNull(response.path("encodedImage"));
+        String payload = textoOuNull(response.path("payload"));
+        if (encodedImage == null && payload == null) {
+            throw new BusinessException(
+                    "ASAAS_RESPONSE_INVALIDA",
+                    "QR Code Pix nao retornado pelo Asaas",
+                    HttpStatus.BAD_GATEWAY
+            );
+        }
+        return new AsaasPixQrCodeGatewayResponse(
+                encodedImage,
+                payload,
+                textoOuNull(response.path("expirationDate"))
         );
     }
 
@@ -307,7 +357,24 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
         if (detalhes == null) {
             return mensagemErro;
         }
+        if (isErroPixNaoHabilitado(detalhes)) {
+            return mensagemErro + ": " + removerPontuacaoFinal(detalhes)
+                    + ". A cobranca foi criada, mas a conta/sandbox do Asaas nao esta habilitada para Pix nessa cobranca.";
+        }
         return mensagemErro + ": " + detalhes;
+    }
+
+    private boolean isErroPixNaoHabilitado(String detalhes) {
+        String normalizado = detalhes == null ? "" : detalhes.toLowerCase();
+        return normalizado.contains("nao permite pagamentos via pix")
+                || normalizado.contains("não permite pagamentos via pix");
+    }
+
+    private String removerPontuacaoFinal(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        return texto.replaceFirst("[.!?]+$", "");
     }
 
     private String limitarErroAsaas(String texto) {

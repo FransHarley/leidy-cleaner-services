@@ -71,3 +71,9 @@ export type Pagamento = {
   criadoEm: string;
   atualizadoEm: string;
 };
+
+export type PixQrCodePagamento = {
+  encodedImage: string | null;
+  payload: string | null;
+  expirationDate: string | null;
+};

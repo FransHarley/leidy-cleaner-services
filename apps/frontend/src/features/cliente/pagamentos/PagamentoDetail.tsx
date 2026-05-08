@@ -1,22 +1,51 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
-  formatCurrency,
   formatDateTime,
+  formatCurrency,
   getMetodoPagamentoLabel,
   getStatusPagamentoDescription,
 } from './pagamentoLabels';
 import { PagamentoStatusBadge } from './PagamentoStatusBadge';
-import type { Pagamento } from './types';
+import type { Pagamento, PixQrCodePagamento } from './types';
 
 type PagamentoDetailProps = {
+  isPixQrCodeLoading?: boolean;
   pagamento: Pagamento;
+  pixQrCode?: PixQrCodePagamento | null;
+  pixQrCodeErrorMessage?: string | null;
 };
 
-export function PagamentoDetail({ pagamento }: PagamentoDetailProps) {
+export function PagamentoDetail({
+  isPixQrCodeLoading = false,
+  pagamento,
+  pixQrCode = null,
+  pixQrCodeErrorMessage = null,
+}: PagamentoDetailProps) {
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const isPaid = pagamento.status === 'PAGO';
+  const isPix = pagamento.metodoPagamento === 'PIX';
   const isWaitingWebhook = pagamento.status === 'PENDENTE' || pagamento.status === 'AGUARDANDO_CONFIRMACAO';
   const requiresSupport = pagamento.status === 'CANCELADO' || pagamento.status === 'FALHOU' || pagamento.status === 'ESTORNADO';
+  const pixPayload = pixQrCode?.payload ?? pagamento.pixCopiaECola ?? null;
+  const pixImageSrc = getPixQrCodeImageSrc(pixQrCode?.encodedImage ?? null);
+
+  async function handleCopyPixCode() {
+    if (!pixPayload) {
+      return;
+    }
+
+    try {
+      if (!navigator.clipboard) {
+        throw new Error('clipboard-unavailable');
+      }
+      await navigator.clipboard.writeText(pixPayload);
+      setCopyFeedback('Codigo Pix copiado.');
+    } catch {
+      setCopyFeedback('Nao foi possivel copiar automaticamente. Copie o codigo manualmente.');
+    }
+  }
 
   return (
     <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6">
@@ -46,6 +75,7 @@ export function PagamentoDetail({ pagamento }: PagamentoDetailProps) {
         <DetailItem label="Valor" value={formatCurrency(pagamento.valorBruto)} />
         <DetailItem label="Criado em" value={formatDateTime(pagamento.criadoEm)} />
         <DetailItem label="Recebido em" value={formatDateTime(pagamento.recebidoEm)} />
+        {pixQrCode?.expirationDate && <DetailItem label="Expira em" value={formatDateTime(pixQrCode.expirationDate)} />}
       </dl>
 
       <div className="mt-6 grid gap-4">
@@ -67,15 +97,82 @@ export function PagamentoDetail({ pagamento }: PagamentoDetailProps) {
           </div>
         )}
 
-        {pagamento.urlPagamento && isWaitingWebhook && (
+        {isPix && !isPaid && (
+          <section className="grid gap-4 rounded-lg border border-cyan-100 bg-cyan-50 p-4">
+            <div>
+              <h3 className="font-black text-cyan-900">Pagamento Pix</h3>
+              <p className="mt-2 text-sm leading-6 text-cyan-900">
+                Use o QR Code abaixo ou copie o codigo Pix. A confirmacao definitiva continua dependendo do webhook.
+              </p>
+            </div>
+
+            {isPixQrCodeLoading && (
+              <div className="rounded-lg border border-cyan-200 bg-white/80 p-4 text-sm font-semibold text-cyan-900">
+                Carregando QR Code Pix...
+              </div>
+            )}
+
+            {!isPixQrCodeLoading && pixQrCodeErrorMessage && (
+              <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm leading-6 text-red-800">
+                Nao foi possivel carregar o QR Code Pix agora. {pixQrCodeErrorMessage}
+              </div>
+            )}
+
+            {!isPixQrCodeLoading && pixImageSrc && (
+              <div className="flex justify-center rounded-lg border border-cyan-200 bg-white p-4">
+                <img
+                  alt="QR Code Pix para pagamento"
+                  className="h-auto w-full max-w-64 rounded-lg"
+                  src={pixImageSrc}
+                />
+              </div>
+            )}
+
+            {pixPayload && (
+              <div className="rounded-lg border border-cyan-200 bg-white p-4">
+                <h4 className="text-sm font-black text-cyan-900">Pix copia e cola</h4>
+                <p className="mt-2 break-all text-sm leading-6 text-slate-700">{pixPayload}</p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+                    type="button"
+                    onClick={handleCopyPixCode}
+                  >
+                    Copiar codigo Pix
+                  </button>
+                  {copyFeedback && <span className="text-sm font-semibold text-cyan-900">{copyFeedback}</span>}
+                </div>
+              </div>
+            )}
+
+            {pagamento.urlPagamento && (
+              <div className="rounded-lg border border-cyan-200 bg-white p-4">
+                <h4 className="text-sm font-black text-cyan-900">Fatura Asaas</h4>
+                <p className="mt-2 break-all text-sm leading-6 text-slate-700">{pagamento.urlPagamento}</p>
+                <a
+                  className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-cyan-300 px-4 text-sm font-black text-cyan-800 transition hover:bg-cyan-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+                  href={pagamento.urlPagamento}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Abrir fatura Asaas
+                </a>
+              </div>
+            )}
+          </section>
+        )}
+
+        {!isPix && pagamento.urlPagamento && isWaitingWebhook && (
           <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-4">
             <h3 className="font-black text-cyan-900">Link de pagamento</h3>
             <p className="mt-2 break-all text-sm leading-6 text-cyan-800">{pagamento.urlPagamento}</p>
             <a
               className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
               href={pagamento.urlPagamento}
+              rel="noreferrer"
+              target="_blank"
             >
-              Abrir pagamento novamente
+              Abrir fatura Asaas
             </a>
           </div>
         )}
@@ -100,4 +197,16 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 font-semibold leading-6 text-slate-800">{value}</dd>
     </div>
   );
+}
+
+function getPixQrCodeImageSrc(encodedImage: string | null) {
+  if (!encodedImage) {
+    return null;
+  }
+
+  if (encodedImage.startsWith('data:image')) {
+    return encodedImage;
+  }
+
+  return `data:image/png;base64,${encodedImage}`;
 }

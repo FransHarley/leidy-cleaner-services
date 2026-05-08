@@ -100,16 +100,32 @@ export function ClientePagamentosPage() {
     setOpeningAtendimentoId(atendimento.id);
 
     try {
-      const urlExistente = pagamento?.status !== 'PAGO' ? pagamento?.urlPagamento : null;
-      if (urlExistente) {
-        redirecionarParaPagamentoAsaas(urlExistente);
-        return;
+      if (pagamento && pagamento.status !== 'PAGO') {
+        if (pagamento.metodoPagamento === 'PIX') {
+          navigate(`/app/cliente/pagamentos/atendimento/${atendimento.id}`);
+          return;
+        }
+
+        if (pagamento.urlPagamento) {
+          redirecionarParaPagamentoAsaas(pagamento.urlPagamento);
+          return;
+        }
       }
 
       const checkout = await checkoutMutation.mutateAsync({
         atendimentoId: atendimento.id,
         metodoPagamento,
       });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.pagamentoPorAtendimento(atendimento.id) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.atendimentos }),
+      ]);
+
+      if (checkout.metodoPagamento === 'PIX') {
+        navigate(`/app/cliente/pagamentos/atendimento/${atendimento.id}`);
+        return;
+      }
       const paymentUrl = getCheckoutPaymentUrl(checkout);
       if (!paymentUrl) {
         throw new ApiError({
@@ -119,10 +135,6 @@ export function ClientePagamentosPage() {
         });
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.pagamentoPorAtendimento(atendimento.id) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.atendimentos }),
-      ]);
       redirecionarParaPagamentoAsaas(paymentUrl);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -132,9 +144,13 @@ export function ClientePagamentosPage() {
       }
 
       if (error instanceof ApiError && error.code === 'PAGAMENTO_JA_EXISTE') {
-        const existingUrl = await buscarUrlPagamentoExistente(token, atendimento.id);
-        if (existingUrl) {
-          redirecionarParaPagamentoAsaas(existingUrl);
+        const pagamentoExistente = await buscarPagamentoExistente(token, atendimento.id);
+        if (pagamentoExistente?.metodoPagamento === 'PIX') {
+          navigate(`/app/cliente/pagamentos/atendimento/${atendimento.id}`);
+          return;
+        }
+        if (pagamentoExistente?.urlPagamento) {
+          redirecionarParaPagamentoAsaas(pagamentoExistente.urlPagamento);
           return;
         }
       }
@@ -242,10 +258,9 @@ function getCheckoutPaymentUrl(checkout: CheckoutPagamento) {
   return checkout.paymentUrl || checkout.checkoutUrl || null;
 }
 
-async function buscarUrlPagamentoExistente(token: string | null, atendimentoId: number) {
+async function buscarPagamentoExistente(token: string | null, atendimentoId: number) {
   try {
-    const pagamento = await buscarPagamentoPorAtendimento(requireToken(token), atendimentoId);
-    return pagamento.urlPagamento;
+    return await buscarPagamentoPorAtendimento(requireToken(token), atendimentoId);
   } catch {
     return null;
   }

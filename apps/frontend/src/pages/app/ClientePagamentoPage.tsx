@@ -9,12 +9,14 @@ import { PagamentoDetail } from '../../features/cliente/pagamentos/PagamentoDeta
 import {
   buscarAtendimentoParaPagamento,
   buscarPagamentoPorAtendimento,
+  buscarPixQrCodePagamento,
 } from '../../features/cliente/pagamentos/pagamentosApi';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
 const queryKeys = {
   atendimento: (id: number) => ['cliente', 'pagamentos', 'atendimento', id],
   pagamentoPorAtendimento: (id: number) => ['cliente', 'pagamentos', 'atendimento', id, 'pagamento'],
+  pixQrCode: (id: number) => ['cliente', 'pagamentos', 'pix-qrcode', id],
 };
 
 export function ClientePagamentoPage() {
@@ -40,12 +42,20 @@ export function ClientePagamentoPage() {
     retry: false,
   });
 
+  const pagamento = pagamentoQuery.data ?? null;
+  const shouldLoadPixQrCode = Boolean(pagamento && pagamento.metodoPagamento === 'PIX' && pagamento.status !== 'PAGO');
+  const pixQrCodeQuery = useQuery({
+    queryKey: pagamento ? queryKeys.pixQrCode(pagamento.id) : ['cliente', 'pagamentos', 'pix-qrcode', 'invalid'],
+    queryFn: () => buscarPixQrCodePagamento(requireToken(token), pagamento!.id),
+    enabled: Boolean(token && shouldLoadPixQrCode),
+    retry: false,
+  });
   const protectedError = useMemo(
     () =>
-      [atendimentoQuery.error, pagamentoQuery.error].find(
+      [atendimentoQuery.error, pagamentoQuery.error, pixQrCodeQuery.error].find(
         (error) => error instanceof ApiError && error.status === 401,
       ),
-    [atendimentoQuery.error, pagamentoQuery.error],
+    [atendimentoQuery.error, pagamentoQuery.error, pixQrCodeQuery.error],
   );
 
   useEffect(() => {
@@ -103,7 +113,14 @@ export function ClientePagamentoPage() {
         <StateBox tone="loading" title="Carregando pagamento" description="Buscando o pagamento vinculado ao atendimento." />
       )}
 
-      {pagamentoQuery.data && <PagamentoDetail pagamento={pagamentoQuery.data} />}
+      {pagamento && (
+        <PagamentoDetail
+          isPixQrCodeLoading={pixQrCodeQuery.isLoading}
+          pagamento={pagamento}
+          pixQrCode={pixQrCodeQuery.data ?? null}
+          pixQrCodeErrorMessage={pixQrCodeQuery.isError ? getApiErrorMessage(pixQrCodeQuery.error) : null}
+        />
+      )}
 
       {pagamentoNotFound && (
         <FormAlert

@@ -50,6 +50,7 @@ import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutGatewayResponse;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasGatewayClient;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPagamentoGatewayResponse;
+import br.com.leidycleaner.pagamentos.gateway.AsaasPixQrCodeGatewayResponse;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.pagamentos.repository.WebhookEventRepository;
@@ -3350,6 +3351,52 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
+    void clienteConsultaPixQrCodeDoProprioPagamento() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.pix-qrcode", "75532233344");
+        mockarCriacaoAsaas("pay_m5a_pix_qrcode", "PENDING", "https://asaas.local/pay_m5a_pix_qrcode", "pix-copia-e-cola");
+        Long pagamentoId = criarPagamento(atendimento.tokenCliente(), atendimento.atendimentoId(), "PIX");
+        mockarPixQrCodeAsaas("pay_m5a_pix_qrcode", "base64-image", "pix-copia-e-cola", "2026-05-09T10:00:00-03:00");
+
+        mockMvc.perform(get("/api/v1/pagamentos/{id}/pix-qrcode", pagamentoId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.encodedImage").value("base64-image"))
+                .andExpect(jsonPath("$.data.payload").value("pix-copia-e-cola"))
+                .andExpect(jsonPath("$.data.expirationDate").value("2026-05-09T10:00:00-03:00"));
+    }
+
+    @Test
+    void endpointPixQrCodeBloqueiaPagamentoNaoPix() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.pix-qrcode-bloqueio", "75542233344");
+        mockarCriacaoAsaas("pay_m5a_nao_pix", "PENDING", "https://asaas.local/pay_m5a_nao_pix", null);
+        Long pagamentoId = criarPagamento(atendimento.tokenCliente(), atendimento.atendimentoId(), "BOLETO");
+
+        mockMvc.perform(get("/api/v1/pagamentos/{id}/pix-qrcode", pagamentoId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("PAGAMENTO_METODO_INCOMPATIVEL"));
+    }
+
+    @Test
+    void endpointPixQrCodeBloqueiaClienteSemPermissao() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.pix-qrcode-sem-permissao", "75552233344");
+        String tokenOutraCliente = criarClienteELogar("m5a.pix-qrcode-outra@example.com");
+        mockarCriacaoAsaas("pay_m5a_pix_sem_permissao", "PENDING", "https://asaas.local/pay_m5a_pix_sem_permissao", "pix-copia");
+        Long pagamentoId = criarPagamento(atendimento.tokenCliente(), atendimento.atendimentoId(), "PIX");
+
+        mockMvc.perform(get("/api/v1/pagamentos/{id}/pix-qrcode", pagamentoId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenOutraCliente))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.errors").isArray());
+    }
+
+    @Test
     void adminListaPagamentosComFiltros() throws Exception {
         AtendimentoCriado atendimentoPix = criarAtendimentoAguardandoPagamento("m7.admin-lista-pix", "78222233344");
         mockarCriacaoAsaas("pay_m7_admin_lista_pix", "PENDING", "https://asaas.local/pay_m7_admin_lista_pix", "pix-admin");
@@ -4213,6 +4260,20 @@ class SolicitacaoFaxinaIntegrationTest {
                         urlPagamento,
                         pixCopiaECola,
                         "{\"id\":\"%s\",\"status\":\"%s\"}".formatted(gatewayPaymentId, status)
+                ));
+    }
+
+    private void mockarPixQrCodeAsaas(
+            String gatewayPaymentId,
+            String encodedImage,
+            String payload,
+            String expirationDate
+    ) {
+        given(asaasGatewayClient.consultarPixQrCode(gatewayPaymentId))
+                .willReturn(new AsaasPixQrCodeGatewayResponse(
+                        encodedImage,
+                        payload,
+                        expirationDate
                 ));
     }
 

@@ -109,6 +109,79 @@ class AsaasHttpGatewayClientTest {
     }
 
     @Test
+    void criarCheckoutPixRegistraPayloadSeguroSemToken(CapturedOutput output) throws Exception {
+        iniciarServidor(200, """
+                {
+                  "id": "pay_test_pix_logged",
+                  "status": "PENDING",
+                  "invoiceUrl": "https://sandbox.asaas.com/i/pay_test_pix_logged"
+                }
+                """);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties());
+
+        client.criarCheckout(new AsaasCheckoutRequest(
+                654L,
+                MetodoPagamento.PIX,
+                new BigDecimal("199.90"),
+                "Pagamento Pix com log"
+        ));
+
+        assertThat(output)
+                .contains("asaas_payment_create_request")
+                .contains("endpoint=/payments")
+                .contains("atendimentoId=654")
+                .contains("billingType=PIX")
+                .contains("externalReference=atendimento-654")
+                .doesNotContain("test-api-key")
+                .doesNotContain("access_token");
+    }
+
+    @Test
+    void consultarPixQrCodeBuscaDadosNoEndpointCorreto() throws Exception {
+        iniciarServidor(200, """
+                {
+                  "encodedImage": "base64-image",
+                  "payload": "pix-copia-e-cola",
+                  "expirationDate": "2026-05-09T10:00:00-03:00"
+                }
+                """);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties());
+
+        AsaasPixQrCodeGatewayResponse response = client.consultarPixQrCode("pay_test_pix_qrcode");
+
+        assertThat(response.encodedImage()).isEqualTo("base64-image");
+        assertThat(response.payload()).isEqualTo("pix-copia-e-cola");
+        assertThat(response.expirationDate()).isEqualTo("2026-05-09T10:00:00-03:00");
+        assertThat(capturedRequest.method()).isEqualTo("GET");
+        assertThat(capturedRequest.path()).isEqualTo("/payments/pay_test_pix_qrcode/pixQrCode");
+        assertThat(capturedRequest.accessToken()).isEqualTo("test-api-key");
+    }
+
+    @Test
+    void consultarPixQrCodeComPixNaoHabilitadoRetornaMensagemMaisClara() throws Exception {
+        iniciarServidor(400, """
+                {
+                  "errors": [
+                    {
+                      "description": "Esta cobrança não permite pagamentos via Pix."
+                    }
+                  ]
+                }
+                """);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties());
+
+        assertThatThrownBy(() -> client.consultarPixQrCode("pay_test_pix_qrcode"))
+                .isInstanceOfSatisfying(BusinessException.class, exception -> {
+                    assertThat(exception.getCode()).isEqualTo("ASAAS_REQUEST_FAILED");
+                    assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY);
+                    assertThat(exception.getMessage()).isEqualTo(
+                            "Nao foi possivel consultar QR Code Pix no Asaas: Esta cobrança não permite pagamentos via Pix. "
+                                    + "A cobranca foi criada, mas a conta/sandbox do Asaas nao esta habilitada para Pix nessa cobranca."
+                    );
+                });
+    }
+
+    @Test
     void criarCheckoutNaoEnviaCallbackQuandoCallbackDesabilitadoMesmoComSuccessUrlConfigurada() throws Exception {
         iniciarServidor(200, """
                 {
@@ -325,7 +398,7 @@ class AsaasHttpGatewayClientTest {
                 exchange.getRequestMethod(),
                 exchange.getRequestURI().getPath(),
                 exchange.getRequestHeaders().getFirst("access_token"),
-                objectMapper.readTree(exchange.getRequestBody())
+                parseRequestBody(exchange)
         );
 
         byte[] responseBytes = responseBody.getBytes(StandardCharsets.UTF_8);
@@ -333,6 +406,14 @@ class AsaasHttpGatewayClientTest {
         exchange.sendResponseHeaders(status, responseBytes.length);
         exchange.getResponseBody().write(responseBytes);
         exchange.close();
+    }
+
+    private JsonNode parseRequestBody(HttpExchange exchange) throws IOException {
+        byte[] requestBytes = exchange.getRequestBody().readAllBytes();
+        if (requestBytes.length == 0) {
+            return objectMapper.nullNode();
+        }
+        return objectMapper.readTree(requestBytes);
     }
 
     private AsaasProperties properties() {
