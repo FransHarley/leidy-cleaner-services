@@ -16,6 +16,7 @@ export function ProfissionalRegioesForm({
   onSubmit,
 }: ProfissionalRegioesFormProps) {
   const selectedIdsFromApi = useMemo(() => uniqueIds(selectedRegioes.map((regiao) => regiao.id)), [selectedRegioes]);
+  const groupedRegioes = useMemo(() => groupRegioes(regioes), [regioes]);
   const [selectedIds, setSelectedIds] = useState<number[]>(selectedIdsFromApi);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
@@ -55,26 +56,44 @@ export function ProfissionalRegioesForm({
           Nenhuma região ativa foi retornada pela API.
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {regioes.map((regiao) => (
-            <label
-              key={regiao.id}
-              className={[
-                'flex items-start gap-3 rounded-lg border px-4 py-3 text-sm transition',
-                selectedIds.includes(regiao.id) ? 'border-cyan-200 bg-cyan-50' : 'border-slate-100 bg-white hover:bg-slate-50',
-              ].join(' ')}
-            >
-              <input
-                checked={selectedIds.includes(regiao.id)}
-                className="mt-1 h-4 w-4 rounded border-cyan-300 text-cyan-700 focus:ring-cyan-700"
-                type="checkbox"
-                onChange={() => toggleRegion(regiao.id)}
-              />
-              <span>
-                <span className="block font-black text-slate-900">{regiao.nome}</span>
-                <span className="mt-1 block text-slate-500">{regiao.tipo === 'BAIRRO' ? 'Bairro' : regiao.tipo}</span>
-              </span>
-            </label>
+        <div className="grid gap-7">
+          {groupedRegioes.map((group) => (
+            <section key={group.title} className="grid gap-3">
+              <div className="flex flex-col gap-1 border-b border-slate-100 pb-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">{group.title}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{group.description}</p>
+                </div>
+                <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">
+                  {group.regioes.length} {group.regioes.length === 1 ? 'opção' : 'opções'}
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {group.regioes.map((regiao) => (
+                  <label
+                    key={regiao.id}
+                    className={[
+                      'flex items-start gap-3 rounded-lg border px-4 py-3 text-sm transition',
+                      selectedIds.includes(regiao.id)
+                        ? 'border-cyan-200 bg-cyan-50'
+                        : 'border-slate-100 bg-white hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    <input
+                      checked={selectedIds.includes(regiao.id)}
+                      className="mt-1 h-4 w-4 rounded border-cyan-300 text-cyan-700 focus:ring-cyan-700"
+                      type="checkbox"
+                      onChange={() => toggleRegion(regiao.id)}
+                    />
+                    <span>
+                      <span className="block font-black text-slate-900">{regiao.nome}</span>
+                      <span className="mt-1 block text-slate-500">{regiao.tipo === 'BAIRRO' ? 'Bairro' : 'Cidade'}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
@@ -94,4 +113,23 @@ export function ProfissionalRegioesForm({
 
 function uniqueIds(ids: number[]) {
   return Array.from(new Set(ids));
+}
+
+function groupRegioes(regioes: RegiaoAtendimento[]) {
+  const sortedRegioes = [...regioes].sort((first, second) =>
+    first.nome.localeCompare(second.nome, 'pt-BR', { sensitivity: 'base' }),
+  );
+
+  return [
+    {
+      title: 'Porto Alegre',
+      description: 'Bairros',
+      regioes: sortedRegioes.filter((regiao) => regiao.tipo === 'BAIRRO'),
+    },
+    {
+      title: 'Litoral',
+      description: 'Cidades',
+      regioes: sortedRegioes.filter((regiao) => regiao.tipo === 'CIDADE'),
+    },
+  ].filter((group) => group.regioes.length > 0);
 }

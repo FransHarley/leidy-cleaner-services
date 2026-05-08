@@ -72,38 +72,47 @@ export function PublicLayout() {
 
         <Outlet />
 
-        <footer className="border-t border-slate-100 px-5 pb-8 pt-8 md:px-8">
-          <div className="mx-auto grid max-w-[980px] gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-            <div>
-              <BrandMark />
-              <p className="mt-4 max-w-xs text-sm leading-6 text-slate-600">
-                Plataforma operacional para conectar clientes a profissionais de limpeza verificadas.
-              </p>
+        <footer className="border-t border-slate-100 bg-slate-50/70 px-5 pb-8 pt-10 md:px-8 md:pt-12">
+          <div className="mx-auto max-w-[980px]">
+            <div className="grid gap-9 lg:grid-cols-[1fr_2fr]">
+              <div className="max-w-sm">
+                <BrandMark compact />
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  Plataforma operacional para conectar clientes a profissionais de limpeza verificadas.
+                </p>
+              </div>
+
+              <div className="grid gap-8">
+                <div className="grid gap-7 sm:grid-cols-3">
+                  {footerColumns.map((column) => (
+                    <FooterColumn key={column.title} {...column} />
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-200 pt-6">
+                  <h2 className="text-sm font-bold text-slate-900">Contato</h2>
+                  <ul className="mt-4 grid gap-4 text-sm text-slate-600 sm:grid-cols-3">
+                    <li className="flex items-start gap-3">
+                      <PhoneIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
+                      <span>(11) 99999-9999</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <MailIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
+                      <span className="break-all">contato@leidycleaner.com.br</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <PinIcon className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
+                      <span>São Paulo - SP</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
-            {footerColumns.map((column) => (
-              <FooterColumn key={column.title} {...column} />
-            ))}
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">Contato</h2>
-              <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                <li className="flex items-center gap-2">
-                  <PhoneIcon className="h-4 w-4 text-slate-500" />
-                  (11) 99999-9999
-                </li>
-                <li className="flex items-center gap-2">
-                  <MailIcon className="h-4 w-4 text-slate-500" />
-                  contato@leidycleaner.com.br
-                </li>
-                <li className="flex items-center gap-2">
-                  <PinIcon className="h-4 w-4 text-slate-500" />
-                  São Paulo - SP
-                </li>
-              </ul>
-            </div>
+
+            <p className="mt-10 border-t border-slate-200 pt-5 text-center text-xs text-slate-500">
+              © 2024 Leidy Cleaner Services. Todos os direitos reservados.
+            </p>
           </div>
-          <p className="mt-8 text-center text-xs text-slate-500">
-            © 2024 Leidy Cleaner Services. Todos os direitos reservados.
-          </p>
         </footer>
       </div>
     </div>
