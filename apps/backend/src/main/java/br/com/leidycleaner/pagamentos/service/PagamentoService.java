@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.atendimentos.service.AtendimentoExpiracaoService;
 import br.com.leidycleaner.core.exception.BusinessException;
 import br.com.leidycleaner.pagamentos.dto.CheckoutDto;
 import br.com.leidycleaner.pagamentos.dto.CheckoutRequest;
@@ -36,22 +37,26 @@ public class PagamentoService {
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
     private final AsaasGatewayClient asaasGatewayClient;
     private final UsuarioRepository usuarioRepository;
+    private final AtendimentoExpiracaoService atendimentoExpiracaoService;
 
     public PagamentoService(
             PagamentoRepository pagamentoRepository,
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             AsaasGatewayClient asaasGatewayClient,
-            UsuarioRepository usuarioRepository
+            UsuarioRepository usuarioRepository,
+            AtendimentoExpiracaoService atendimentoExpiracaoService
     ) {
         this.pagamentoRepository = pagamentoRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.asaasGatewayClient = asaasGatewayClient;
         this.usuarioRepository = usuarioRepository;
+        this.atendimentoExpiracaoService = atendimentoExpiracaoService;
     }
 
     @Transactional
     @Deprecated(forRemoval = false)
     public PagamentoDto criar(Long usuarioId, PagamentoRequest request) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         AtendimentoFaxina atendimento = buscarAtendimentoDoCliente(usuarioId, request.atendimentoId());
         validarAtendimentoAguardandoPagamento(atendimento);
         if (pagamentoRepository.existsByAtendimentoId(atendimento.getId())) {
@@ -82,6 +87,7 @@ public class PagamentoService {
 
     @Transactional(readOnly = true)
     public PagamentoDto buscarPorId(Long usuarioId, Long pagamentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         Pagamento pagamento = pagamentoRepository.findByIdWithAtendimentoCliente(pagamentoId)
                 .orElseThrow(() -> new BusinessException("PAGAMENTO_NOT_FOUND", "Pagamento nao encontrado", HttpStatus.NOT_FOUND));
         validarClienteOuAdminDoPagamento(usuarioId, pagamento);
@@ -90,6 +96,7 @@ public class PagamentoService {
 
     @Transactional(readOnly = true)
     public PagamentoDto buscarPorAtendimento(Long usuarioId, Long atendimentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         Pagamento pagamento = pagamentoRepository.findByAtendimentoId(atendimentoId)
                 .orElseThrow(() -> new BusinessException("PAGAMENTO_NOT_FOUND", "Pagamento nao encontrado", HttpStatus.NOT_FOUND));
         validarClienteOuAdminDoPagamento(usuarioId, pagamento);
@@ -98,6 +105,7 @@ public class PagamentoService {
 
     @Transactional(readOnly = true)
     public List<PagamentoDto> listarAdmin(StatusPagamento status, MetodoPagamento metodoPagamento, Long atendimentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         return pagamentoRepository.findAdminList(status, metodoPagamento, atendimentoId)
                 .stream()
                 .map(PagamentoMapper::paraDto)
@@ -106,9 +114,14 @@ public class PagamentoService {
 
     @Transactional
     public PagamentoDto consultarStatus(Long usuarioId, Long pagamentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         Pagamento pagamento = pagamentoRepository.findByIdWithAtendimentoCliente(pagamentoId)
                 .orElseThrow(() -> new BusinessException("PAGAMENTO_NOT_FOUND", "Pagamento nao encontrado", HttpStatus.NOT_FOUND));
         validarClienteDoPagamento(usuarioId, pagamento);
+        if (pagamento.getAtendimento().getStatus() == StatusAtendimento.CANCELADO
+                && pagamento.getStatus() != StatusPagamento.PAGO) {
+            return PagamentoMapper.paraDto(pagamento);
+        }
 
         AsaasPagamentoGatewayResponse gatewayResponse = asaasGatewayClient.consultarPagamento(pagamento.getGatewayPaymentId());
         pagamento.atualizarConsultaGateway(
@@ -124,13 +137,14 @@ public class PagamentoService {
 
     @Transactional
     public CheckoutDto criarCheckout(Long usuarioId, CheckoutRequest request) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         AtendimentoFaxina atendimento = buscarAtendimentoDoCliente(usuarioId, request.atendimentoId());
         var pagamentoExistente = pagamentoRepository.findByAtendimentoIdForUpdate(atendimento.getId());
+        validarAtendimentoAguardandoPagamento(atendimento);
         if (pagamentoExistente.isPresent()) {
             return checkoutDtoParaPagamentoExistente(pagamentoExistente.get());
         }
 
-        validarAtendimentoAguardandoPagamento(atendimento);
         AsaasCheckoutGatewayResponse gatewayResponse = asaasGatewayClient.criarCheckout(new AsaasCheckoutRequest(
                 atendimento.getId(),
                 atendimento.getValorServico(),

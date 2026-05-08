@@ -2459,6 +2459,168 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
+    void atendimentoAguardandoPagamentoVencidoSemPagamentoViraCancelado() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m6c.expira-sem-pagamento", "79515233344");
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/meus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
+                .andExpect(jsonPath("$.data[0].status").value("CANCELADO"));
+
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("CANCELADO");
+
+        mockMvc.perform(get("/api/v1/solicitacoes/{id}", atendimento.solicitacaoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("EXPIRADA"));
+    }
+
+    @Test
+    void pagamentoPendenteDeAtendimentoVencidoViraCancelado() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m6c.expira-pagamento-pendente", "79516233344");
+        mockarCheckoutAsaas("chk_m6c_expira_pendente", "https://asaas.local/checkout/chk_m6c_expira_pendente");
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("CANCELADO"));
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(pagamento -> pagamento.getStatus().name())
+                .isEqualTo("CANCELADO");
+
+        mockMvc.perform(post("/api/v1/pagamentos/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(checkoutJson(atendimento.atendimentoId())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("ATENDIMENTO_STATUS_INCOMPATIVEL"));
+    }
+
+    @Test
+    void atendimentoAguardandoPagamentoFuturoNaoExpira() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m6c.futuro-nao-expira", "79517233344");
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("AGUARDANDO_PAGAMENTO"));
+
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("AGUARDANDO_PAGAMENTO");
+    }
+
+    @Test
+    void atendimentoConfirmadoPassadoNaoExpiraPorFaltaDePagamento() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoConfirmado("m6c.confirmado-passado", "79518233344", "chk_m6c_confirmado_passado");
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("CONFIRMADO"));
+    }
+
+    @Test
+    void atendimentoEmExecucaoPassadoNaoExpiraPorFaltaDePagamento() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoConfirmado("m6c.execucao-passado", "79519233344", "chk_m6c_execucao_passado");
+        iniciarAtendimento(atendimento);
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("EM_EXECUCAO"));
+    }
+
+    @Test
+    void atendimentoFinalizadoPassadoNaoExpiraPorFaltaDePagamento() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoFinalizado("m6c.finalizado-passado", "79520233344", "chk_m6c_finalizado_passado");
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("FINALIZADO"));
+    }
+
+    @Test
+    void atendimentoCanceladoPermaneceCanceladoNaExpiracao() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m6c.cancelado-permanece", "79521233344");
+        var atendimentoPersistido = atendimentoFaxinaRepository.findById(atendimento.atendimentoId()).orElseThrow();
+        atendimentoPersistido.cancelar();
+        atendimentoFaxinaRepository.saveAndFlush(atendimentoPersistido);
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("CANCELADO"));
+    }
+
+    @Test
+    void webhookTardioNaoReconfirmaAtendimentoCanceladoPorVencimento() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m6c.webhook-tardio", "79522233344");
+        String checkoutId = "chk_m6c_webhook_tardio";
+        mockarCheckoutAsaas(checkoutId, "https://asaas.local/checkout/" + checkoutId);
+        criarCheckout(atendimento.tokenCliente(), atendimento.atendimentoId());
+        vencerAtendimento(atendimento.atendimentoId());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CANCELADO"));
+
+        confirmarCheckoutAsaas(checkoutId);
+
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("EM_ANALISE")
+                .isNotEqualTo("CONFIRMADO");
+
+        assertThat(pagamentoRepository.findByAtendimentoId(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(pagamento -> pagamento.getStatus().name())
+                .isEqualTo("PAGO");
+
+        mockMvc.perform(post("/api/v1/atendimentos/{id}/iniciar", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenProfissional())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(checkpointJson("local/checkpoints/inicio-em-analise.png", "Tentativa em analise")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("ATENDIMENTO_STATUS_INCOMPATIVEL"));
+
+        assertThat(checkpointServicoRepository.findByAtendimentoIdOrderByRegistradoEmAscIdAsc(atendimento.atendimentoId()))
+                .isEmpty();
+    }
+
+    @Test
     void endpointsDeAtendimentoExigemJwt() throws Exception {
         mockMvc.perform(get("/api/v1/atendimentos/meus"))
                 .andExpect(status().isUnauthorized())
@@ -3968,6 +4130,12 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("FINALIZADO"));
+    }
+
+    private void vencerAtendimento(Long atendimentoId) {
+        var atendimento = atendimentoFaxinaRepository.findById(atendimentoId).orElseThrow();
+        ReflectionTestUtils.setField(atendimento, "inicioPrevistoEm", OffsetDateTime.now().minusHours(1));
+        atendimentoFaxinaRepository.saveAndFlush(atendimento);
     }
 
     private void mockarCriacaoAsaas(String gatewayPaymentId, String status, String urlPagamento, String pixCopiaECola) {

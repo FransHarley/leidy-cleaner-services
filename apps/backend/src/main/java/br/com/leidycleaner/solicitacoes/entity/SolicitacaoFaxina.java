@@ -120,6 +120,10 @@ public class SolicitacaoFaxina {
         status = StatusSolicitacao.CANCELADA;
     }
 
+    public void expirar() {
+        status = StatusSolicitacao.EXPIRADA;
+    }
+
     public void marcarConvitesEnviados() {
         status = StatusSolicitacao.CONVITES_ENVIADOS;
     }

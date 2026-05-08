@@ -153,6 +153,14 @@ public class AtendimentoFaxina {
         }
     }
 
+    public void cancelar() {
+        status = StatusAtendimento.CANCELADO;
+    }
+
+    public void enviarParaAnalise() {
+        status = StatusAtendimento.EM_ANALISE;
+    }
+
     public void iniciarServico(OffsetDateTime inicioRealEm) {
         this.status = StatusAtendimento.EM_EXECUCAO;
         this.inicioRealEm = inicioRealEm;

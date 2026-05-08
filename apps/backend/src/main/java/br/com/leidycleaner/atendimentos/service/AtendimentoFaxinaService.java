@@ -33,21 +33,25 @@ public class AtendimentoFaxinaService {
     private final CheckpointServicoRepository checkpointServicoRepository;
     private final UsuarioRepository usuarioRepository;
     private final AvaliacaoProfissionalRepository avaliacaoProfissionalRepository;
+    private final AtendimentoExpiracaoService atendimentoExpiracaoService;
 
     public AtendimentoFaxinaService(
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             CheckpointServicoRepository checkpointServicoRepository,
             UsuarioRepository usuarioRepository,
-            AvaliacaoProfissionalRepository avaliacaoProfissionalRepository
+            AvaliacaoProfissionalRepository avaliacaoProfissionalRepository,
+            AtendimentoExpiracaoService atendimentoExpiracaoService
     ) {
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.checkpointServicoRepository = checkpointServicoRepository;
         this.usuarioRepository = usuarioRepository;
         this.avaliacaoProfissionalRepository = avaliacaoProfissionalRepository;
+        this.atendimentoExpiracaoService = atendimentoExpiracaoService;
     }
 
     @Transactional(readOnly = true)
     public List<?> listarMeus(Long usuarioId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         Usuario usuario = buscarUsuario(usuarioId);
         return atendimentoFaxinaRepository.findRelacionadosByUsuarioId(usuarioId)
                 .stream()
@@ -61,6 +65,7 @@ public class AtendimentoFaxinaService {
             Long clienteId,
             Long profissionalId
     ) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         return atendimentoFaxinaRepository.findAdminList(status, clienteId, profissionalId)
                 .stream()
                 .map(AtendimentoFaxinaMapper::paraDto)
@@ -69,12 +74,14 @@ public class AtendimentoFaxinaService {
 
     @Transactional(readOnly = true)
     public Object buscarRelacionado(Long usuarioId, Long atendimentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         Usuario usuario = buscarUsuario(usuarioId);
         return paraDtoPorPerfil(buscarAtendimentoVisivel(usuario, atendimentoId), usuario);
     }
 
     @Transactional(readOnly = true)
     public List<CheckpointServicoDto> listarCheckpoints(Long usuarioId, Long atendimentoId) {
+        atendimentoExpiracaoService.expirarAtendimentosNaoPagosVencidos();
         AtendimentoFaxina atendimento = buscarAtendimentoVisivel(buscarUsuario(usuarioId), atendimentoId);
         return checkpointServicoRepository.findByAtendimentoIdOrderByRegistradoEmAscIdAsc(atendimento.getId())
                 .stream()

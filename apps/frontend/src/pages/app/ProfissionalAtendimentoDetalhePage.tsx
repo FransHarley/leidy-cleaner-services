@@ -137,6 +137,8 @@ export function ProfissionalAtendimentoDetalhePage() {
   }
 
   const atendimento = atendimentoQuery.data;
+  const atendimentoCanceladoSemExecucao =
+    atendimento?.status === 'CANCELADO' && !atendimento.inicioRealEm && !atendimento.fimRealEm;
 
   return (
     <div className="grid gap-5">
@@ -173,6 +175,10 @@ export function ProfissionalAtendimentoDetalhePage() {
 
       {atendimento && <AtendimentoInfoPanel atendimento={atendimento} financialView="professional" />}
 
+      {atendimentoCanceladoSemExecucao && (
+        <FormAlert tone="info" message="Atendimento cancelado por falta de pagamento dentro do prazo." />
+      )}
+
       {atendimento?.status === 'FINALIZADO' && (
         <section className="grid gap-4">
           <div>
@@ -188,7 +194,7 @@ export function ProfissionalAtendimentoDetalhePage() {
         </section>
       )}
 
-      {atendimento && (
+      {atendimento && !atendimentoCanceladoSemExecucao && (
         <section className="grid gap-4">
           {canStartAtendimento(atendimento.status) && (
             <CheckpointActionForm actionLabel="Iniciar atendimento" isSubmitting={startMutation.isPending} onSubmit={handleStart} />
@@ -212,7 +218,8 @@ export function ProfissionalAtendimentoDetalhePage() {
         </section>
       )}
 
-      <section className="grid gap-4">
+      {!atendimentoCanceladoSemExecucao && (
+        <section className="grid gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
@@ -230,7 +237,8 @@ export function ProfissionalAtendimentoDetalhePage() {
         )}
 
         {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

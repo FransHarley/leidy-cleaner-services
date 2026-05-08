@@ -28,7 +28,8 @@ export function AtendimentoPagamentoCard({
   const statusInfo = getStatusAtendimentoPagamentoInfo(atendimento.status);
   const pagamentoStatus = pagamento?.status ?? 'PENDENTE';
   const isPaid = pagamentoStatus === 'PAGO';
-  const isPayDisabled = isOpeningPayment || isPagamentoLoading;
+  const isCanceled = atendimento.status === 'CANCELADO';
+  const isPayDisabled = isCanceled || isOpeningPayment || isPagamentoLoading;
 
   return (
     <article className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm transition hover:border-cyan-100">
@@ -56,6 +57,11 @@ export function AtendimentoPagamentoCard({
               <PagamentoStatusBadge status={pagamentoStatus} />
             )}
           </div>
+          {isCanceled && (
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold leading-6 text-red-700">
+              Atendimento cancelado por falta de pagamento dentro do prazo.
+            </p>
+          )}
         </div>
 
         {isPaid ? (
@@ -64,6 +70,13 @@ export function AtendimentoPagamentoCard({
             to={`/app/cliente/pagamentos/atendimento/${atendimento.id}`}
           >
             Ver pagamento
+          </Link>
+        ) : isCanceled ? (
+          <Link
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+            to={`/app/cliente/pagamentos/atendimento/${atendimento.id}`}
+          >
+            Ver status
           </Link>
         ) : (
           <button

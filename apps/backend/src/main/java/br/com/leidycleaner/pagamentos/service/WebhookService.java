@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
+import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
 import br.com.leidycleaner.core.exception.BusinessException;
 import br.com.leidycleaner.pagamentos.entity.Pagamento;
@@ -242,6 +243,20 @@ public class WebhookService {
         }
 
         AtendimentoFaxina atendimento = pagamento.getAtendimento();
+        if (atendimento.getStatus() == StatusAtendimento.CANCELADO) {
+            atendimento.enviarParaAnalise();
+            atendimentoFaxinaRepository.save(atendimento);
+            LOGGER.warn(
+                    "asaas_webhook_pagamento_confirmed_atendimento_cancelado_em_analise event={} paymentId={} gatewayPaymentId={} pagamentoId={} atendimentoId={} status={}",
+                    event,
+                    paymentId,
+                    gatewayPaymentId,
+                    pagamento.getId(),
+                    atendimento.getId(),
+                    atendimento.getStatus()
+            );
+            return;
+        }
         atendimento.confirmarPagamento();
         atendimentoFaxinaRepository.save(atendimento);
         LOGGER.info(

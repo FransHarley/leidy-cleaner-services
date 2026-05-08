@@ -53,6 +53,8 @@ export function ClienteAtendimentoDetalhePage() {
 
   const atendimento = atendimentoQuery.data;
   const canShowAvaliacao = atendimento?.status === 'FINALIZADO';
+  const atendimentoCanceladoSemExecucao =
+    atendimento?.status === 'CANCELADO' && !atendimento.inicioRealEm && !atendimento.fimRealEm;
 
   const avaliacoesQuery = useQuery({
     queryKey:
@@ -186,6 +188,10 @@ export function ClienteAtendimentoDetalhePage() {
 
       {atendimentoQuery.data && <AtendimentoInfoPanel atendimento={atendimentoQuery.data} />}
 
+      {atendimentoCanceladoSemExecucao && (
+        <FormAlert tone="info" message="Atendimento cancelado por falta de pagamento dentro do prazo." />
+      )}
+
       {canShowAvaliacao && atendimento && (
         <section className="grid gap-4">
           <div>
@@ -227,7 +233,8 @@ export function ClienteAtendimentoDetalhePage() {
         </section>
       )}
 
-      <section className="grid gap-4">
+      {!atendimentoCanceladoSemExecucao && (
+        <section className="grid gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
@@ -245,7 +252,8 @@ export function ClienteAtendimentoDetalhePage() {
         )}
 
         {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

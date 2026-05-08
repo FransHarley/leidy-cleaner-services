@@ -1,20 +1,43 @@
 package br.com.leidycleaner.atendimentos.repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
+import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
+import jakarta.persistence.LockModeType;
 
 public interface AtendimentoFaxinaRepository extends JpaRepository<AtendimentoFaxina, Long> {
 
     Optional<AtendimentoFaxina> findBySolicitacaoId(Long solicitacaoId);
 
     boolean existsBySolicitacaoId(Long solicitacaoId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select a
+            from AtendimentoFaxina a
+            where a.status = :statusAtendimento
+              and a.inicioPrevistoEm < :agora
+              and not exists (
+                  select p.id
+                  from Pagamento p
+                  where p.atendimento = a
+                    and p.status = :statusPagamentoPago
+              )
+            """)
+    List<AtendimentoFaxina> findVencidosSemPagamentoPagoForUpdate(
+            @Param("statusAtendimento") StatusAtendimento statusAtendimento,
+            @Param("statusPagamentoPago") StatusPagamento statusPagamentoPago,
+            @Param("agora") OffsetDateTime agora
+    );
 
     @Query("""
             select a

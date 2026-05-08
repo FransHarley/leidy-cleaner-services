@@ -150,6 +150,14 @@ public class Pagamento {
         return true;
     }
 
+    public boolean cancelarSeAguardandoConfirmacao() {
+        if (status != StatusPagamento.PENDENTE && status != StatusPagamento.AGUARDANDO_CONFIRMACAO) {
+            return false;
+        }
+        status = StatusPagamento.CANCELADO;
+        return true;
+    }
+
     private boolean confirmarViaWebhook(String payloadResumo) {
         if (status == StatusPagamento.PAGO && webhookProcessado) {
             return false;
