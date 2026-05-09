@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const previewAllowedHosts = [
+  'wholesome-emotion-production.up.railway.app',
+  'cleanerleidy.com.br',
+  'www.cleanerleidy.com.br',
+];
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -11,5 +17,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: previewAllowedHosts,
   },
 });
