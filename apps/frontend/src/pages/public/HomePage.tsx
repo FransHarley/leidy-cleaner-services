@@ -70,7 +70,7 @@ export function HomePage() {
     </h1>
 
     <p className="mt-4 max-w-[560px] text-lg leading-7 text-slate-600 sm:mt-5 sm:text-xl sm:leading-8">
-      Faxina residencial com praticidade, confiança e cuidado em cada detalhe.
+      Faxina residencial, comercial, condominial e eventos com praticidade, confiança e cuidado em cada detalhe.
     </p>
 
     <p className="mt-4 inline-flex max-w-[560px] rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold leading-6 text-slate-700">

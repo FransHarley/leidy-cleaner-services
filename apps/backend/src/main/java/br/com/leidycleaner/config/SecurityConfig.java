@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/profissionais/pre-cadastro-completo").permitAll()
                         .requestMatchers(securityProperties.publicEndpoints()).permitAll()
                         .anyRequest().authenticated())
