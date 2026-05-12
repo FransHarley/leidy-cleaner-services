@@ -36,6 +36,7 @@ public class AdminDashboardService {
     private static final List<StatusSolicitacao> SOLICITACOES_ABERTAS = List.of(
             StatusSolicitacao.CRIADA,
             StatusSolicitacao.AGUARDANDO_SELECAO,
+            StatusSolicitacao.AGUARDANDO_PAGAMENTO,
             StatusSolicitacao.CONVITES_ENVIADOS,
             StatusSolicitacao.AGUARDANDO_ACEITE,
             StatusSolicitacao.ACEITA

@@ -3,7 +3,6 @@ package br.com.leidycleaner.solicitacoes.service;
 import java.text.Normalizer;
 import java.time.DayOfWeek;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,7 +19,6 @@ import br.com.leidycleaner.clientes.entity.PerfilCliente;
 import br.com.leidycleaner.clientes.repository.PerfilClienteRepository;
 import br.com.leidycleaner.configuracoes.service.ConfiguracaoPrecoService;
 import br.com.leidycleaner.configuracoes.service.ConfiguracaoPrecoService.ValoresCalculadosPreco;
-import br.com.leidycleaner.convites.service.ConviteProfissionalService;
 import br.com.leidycleaner.core.exception.BusinessException;
 import br.com.leidycleaner.enderecos.entity.Endereco;
 import br.com.leidycleaner.enderecos.repository.EnderecoRepository;
@@ -61,7 +59,6 @@ public class SolicitacaoFaxinaService {
     private final RegiaoAtendimentoRepository regiaoAtendimentoRepository;
     private final PerfilProfissionalRepository perfilProfissionalRepository;
     private final SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository;
-    private final ConviteProfissionalService conviteProfissionalService;
     private final UsuarioRepository usuarioRepository;
     private final ConfiguracaoPrecoService configuracaoPrecoService;
 
@@ -72,7 +69,6 @@ public class SolicitacaoFaxinaService {
             RegiaoAtendimentoRepository regiaoAtendimentoRepository,
             PerfilProfissionalRepository perfilProfissionalRepository,
             SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository,
-            ConviteProfissionalService conviteProfissionalService,
             UsuarioRepository usuarioRepository,
             ConfiguracaoPrecoService configuracaoPrecoService
     ) {
@@ -82,7 +78,6 @@ public class SolicitacaoFaxinaService {
         this.regiaoAtendimentoRepository = regiaoAtendimentoRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
         this.solicitacaoProfissionalSelecionadoRepository = solicitacaoProfissionalSelecionadoRepository;
-        this.conviteProfissionalService = conviteProfissionalService;
         this.usuarioRepository = usuarioRepository;
         this.configuracaoPrecoService = configuracaoPrecoService;
     }
@@ -211,9 +206,12 @@ public class SolicitacaoFaxinaService {
 
         solicitacaoProfissionalSelecionadoRepository.deleteBySolicitacaoId(solicitacao.getId());
         solicitacaoProfissionalSelecionadoRepository.flush();
-        List<SolicitacaoProfissionalSelecionado> selecionados = salvarSelecaoOrdenada(solicitacao, profissionalIds, profissionaisEncontrados);
-        conviteProfissionalService.substituirConvitesDaSolicitacao(solicitacao, selecionados);
-        solicitacao.marcarConvitesEnviados();
+        List<SolicitacaoProfissionalSelecionado> selecionados = salvarSelecaoUnica(
+                solicitacao,
+                profissionalIds.getFirst(),
+                profissionaisEncontrados
+        );
+        solicitacao.marcarAguardandoPagamento();
 
         return new SelecaoProfissionaisDto(
                 solicitacao.getId(),
@@ -290,8 +288,7 @@ public class SolicitacaoFaxinaService {
 
     private void validarStatusParaSelecao(SolicitacaoFaxina solicitacao) {
         if (solicitacao.getStatus() != StatusSolicitacao.CRIADA
-                && solicitacao.getStatus() != StatusSolicitacao.AGUARDANDO_SELECAO
-                && solicitacao.getStatus() != StatusSolicitacao.CONVITES_ENVIADOS) {
+                && solicitacao.getStatus() != StatusSolicitacao.AGUARDANDO_SELECAO) {
             throw new BusinessException(
                     "SOLICITACAO_STATUS_INCOMPATIVEL",
                     "Solicitacao nao permite selecao de profissionais neste status",
@@ -304,8 +301,8 @@ public class SolicitacaoFaxinaService {
         if (profissionalIds == null || profissionalIds.isEmpty()) {
             throw new BusinessException("SELECAO_VAZIA", "Selecione ao menos uma profissional", HttpStatus.BAD_REQUEST);
         }
-        if (profissionalIds.size() > 3) {
-            throw new BusinessException("SELECAO_LIMITE_EXCEDIDO", "Selecione no maximo 3 profissionais", HttpStatus.BAD_REQUEST);
+        if (profissionalIds.size() != 1) {
+            throw new BusinessException("SELECAO_QUANTIDADE_INVALIDA", "Selecione exatamente uma profissional", HttpStatus.BAD_REQUEST);
         }
         Set<Long> unicos = new HashSet<>();
         boolean temDuplicado = profissionalIds.stream().anyMatch(id -> !unicos.add(id));
@@ -329,21 +326,17 @@ public class SolicitacaoFaxinaService {
         );
     }
 
-    private List<SolicitacaoProfissionalSelecionado> salvarSelecaoOrdenada(
+    private List<SolicitacaoProfissionalSelecionado> salvarSelecaoUnica(
             SolicitacaoFaxina solicitacao,
-            List<Long> profissionalIds,
+            Long profissionalId,
             Map<Long, PerfilProfissional> profissionaisEncontrados
     ) {
-        List<SolicitacaoProfissionalSelecionado> selecionados = new ArrayList<>();
-        for (int indice = 0; indice < profissionalIds.size(); indice++) {
-            Long profissionalId = profissionalIds.get(indice);
-            selecionados.add(new SolicitacaoProfissionalSelecionado(
-                    solicitacao,
-                    profissionaisEncontrados.get(profissionalId),
-                    indice + 1
-            ));
-        }
-        return solicitacaoProfissionalSelecionadoRepository.saveAll(selecionados);
+        SolicitacaoProfissionalSelecionado selecionado = new SolicitacaoProfissionalSelecionado(
+                solicitacao,
+                profissionaisEncontrados.get(profissionalId),
+                1
+        );
+        return List.of(solicitacaoProfissionalSelecionadoRepository.save(selecionado));
     }
 
     private ProfissionalDisponivelDto paraProfissionalDisponivel(PerfilProfissional perfil) {

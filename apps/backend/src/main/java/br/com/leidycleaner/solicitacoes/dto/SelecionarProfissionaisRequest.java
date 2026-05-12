@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record SelecionarProfissionaisRequest(
         @NotNull
-        @Size(min = 1, max = 3)
+        @Size(min = 1)
         List<@NotNull Long> profissionalIds
 ) {
 }

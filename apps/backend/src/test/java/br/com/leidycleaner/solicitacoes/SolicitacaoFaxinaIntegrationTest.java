@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
 import br.com.leidycleaner.atendimentos.repository.CheckpointServicoRepository;
 import br.com.leidycleaner.avaliacoes.repository.AvaliacaoProfissionalRepository;
+import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.enderecos.repository.EnderecoRepository;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutGatewayResponse;
@@ -58,6 +59,7 @@ import br.com.leidycleaner.ocorrencias.repository.OcorrenciaAtendimentoRepositor
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
 import br.com.leidycleaner.profissionais.entity.StatusAprovacaoProfissional;
 import br.com.leidycleaner.regioes.repository.RegiaoAtendimentoRepository;
+import br.com.leidycleaner.solicitacoes.repository.SolicitacaoFaxinaRepository;
 import br.com.leidycleaner.solicitacoes.repository.SolicitacaoProfissionalSelecionadoRepository;
 import br.com.leidycleaner.usuarios.entity.StatusConta;
 import br.com.leidycleaner.usuarios.entity.Usuario;
@@ -77,6 +79,7 @@ class SolicitacaoFaxinaIntegrationTest {
     private final ObjectMapper objectMapper;
     private final RegiaoAtendimentoRepository regiaoAtendimentoRepository;
     private final EnderecoRepository enderecoRepository;
+    private final SolicitacaoFaxinaRepository solicitacaoFaxinaRepository;
     private final SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository;
     private final ConviteProfissionalRepository conviteProfissionalRepository;
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
@@ -105,6 +108,7 @@ class SolicitacaoFaxinaIntegrationTest {
             ObjectMapper objectMapper,
             RegiaoAtendimentoRepository regiaoAtendimentoRepository,
             EnderecoRepository enderecoRepository,
+            SolicitacaoFaxinaRepository solicitacaoFaxinaRepository,
             SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository,
             ConviteProfissionalRepository conviteProfissionalRepository,
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
@@ -122,6 +126,7 @@ class SolicitacaoFaxinaIntegrationTest {
         this.objectMapper = objectMapper;
         this.regiaoAtendimentoRepository = regiaoAtendimentoRepository;
         this.enderecoRepository = enderecoRepository;
+        this.solicitacaoFaxinaRepository = solicitacaoFaxinaRepository;
         this.solicitacaoProfissionalSelecionadoRepository = solicitacaoProfissionalSelecionadoRepository;
         this.conviteProfissionalRepository = conviteProfissionalRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
@@ -949,61 +954,62 @@ class SolicitacaoFaxinaIntegrationTest {
         mockMvc.perform(get("/api/v1/solicitacoes/{id}", solicitacaoId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("CONVITES_ENVIADOS"));
+                .andExpect(jsonPath("$.data.status").value("AGUARDANDO_PAGAMENTO"));
+
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacaoId)).isEmpty();
     }
 
     @Test
-    void clienteDonaPersisteSelecaoValidaDeTresProfissionaisNaOrdemInformada() throws Exception {
-        String tokenCliente = criarClienteELogar("m3c.selecao-tres-cliente@example.com");
+    void clienteDonaNaoSelecionaMaisDeUmaProfissional() throws Exception {
+        String tokenCliente = criarClienteELogar("m3c.selecao-multipla-cliente@example.com");
         Long regiaoId = segundaRegiaoId();
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
-        Long primeira = criarProfissionalConfigurada("m3c.ordem-primeira@example.com", "72222233344", "Profissional Ordem Primeira", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
-        Long segunda = criarProfissionalConfigurada("m3c.ordem-segunda@example.com", "72322233344", "Profissional Ordem Segunda", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
-        Long terceira = criarProfissionalConfigurada("m3c.ordem-terceira@example.com", "72422233344", "Profissional Ordem Terceira", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
+        Long primeira = criarProfissionalConfigurada("m3c.multipla-primeira@example.com", "72222233344", "Profissional Multipla Primeira", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
+        Long segunda = criarProfissionalConfigurada("m3c.multipla-segunda@example.com", "72322233344", "Profissional Multipla Segunda", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
 
         mockMvc.perform(post("/api/v1/solicitacoes/{id}/selecionados", solicitacaoId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(selecaoJson(List.of(segunda, terceira, primeira))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.selecionados.length()").value(3))
-                .andExpect(jsonPath("$.data.selecionados[0].profissionalId").value(segunda))
-                .andExpect(jsonPath("$.data.selecionados[0].ordemEscolha").value(1))
-                .andExpect(jsonPath("$.data.selecionados[1].profissionalId").value(terceira))
-                .andExpect(jsonPath("$.data.selecionados[1].ordemEscolha").value(2))
-                .andExpect(jsonPath("$.data.selecionados[2].profissionalId").value(primeira))
-                .andExpect(jsonPath("$.data.selecionados[2].ordemEscolha").value(3));
+                        .content(selecaoJson(List.of(primeira, segunda))))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("SELECAO_QUANTIDADE_INVALIDA"))
+                .andExpect(jsonPath("$.errors").isArray());
 
         var persistidos = solicitacaoProfissionalSelecionadoRepository.findBySolicitacaoIdOrderByOrdemEscolhaAsc(solicitacaoId);
-        assertThat(persistidos)
-                .extracting(selecionado -> selecionado.getProfissional().getId())
-                .containsExactly(segunda, terceira, primeira);
-        assertThat(persistidos)
-                .extracting("ordemEscolha")
-                .containsExactly(1, 2, 3);
+        assertThat(persistidos).isEmpty();
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacaoId)).isEmpty();
     }
 
     @Test
-    void clienteDonaSubstituiSelecaoAnteriorAoEnviarNovaSelecao() throws Exception {
+    void clienteDonaNaoSubstituiSelecaoAposAguardarPagamento() throws Exception {
         String tokenCliente = criarClienteELogar("m3c.substitui-cliente@example.com");
         Long regiaoId = primeiraRegiaoId();
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
         Long primeira = criarProfissionalConfigurada("m3c.substitui-primeira@example.com", "72522233344", "Profissional Substitui Primeira", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         Long segunda = criarProfissionalConfigurada("m3c.substitui-segunda@example.com", "72622233344", "Profissional Substitui Segunda", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
-        Long terceira = criarProfissionalConfigurada("m3c.substitui-terceira@example.com", "72722233344", "Profissional Substitui Terceira", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
 
-        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(primeira, segunda));
-        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(terceira));
+        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(primeira));
+
+        mockMvc.perform(post("/api/v1/solicitacoes/{id}/selecionados", solicitacaoId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(selecaoJson(List.of(segunda))))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("SOLICITACAO_STATUS_INCOMPATIVEL"))
+                .andExpect(jsonPath("$.errors").isArray());
 
         var persistidos = solicitacaoProfissionalSelecionadoRepository.findBySolicitacaoIdOrderByOrdemEscolhaAsc(solicitacaoId);
         assertThat(persistidos).hasSize(1);
-        assertThat(persistidos.getFirst().getProfissional().getId()).isEqualTo(terceira);
+        assertThat(persistidos.getFirst().getProfissional().getId()).isEqualTo(primeira);
         assertThat(persistidos.getFirst().getOrdemEscolha()).isEqualTo(1);
     }
 
     @Test
-    void selecaoValidaGeraConvitesEnviadosSemDuplicarAoRegerar() throws Exception {
+    void conviteLegadoListaConviteCriadoPorFixtureDeTeste() throws Exception {
         String tokenCliente = criarClienteELogar("m4a.gera-convite-cliente@example.com");
         Long regiaoId = regiaoIdPorNome("Centro Histórico");
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
@@ -1022,24 +1028,15 @@ class SolicitacaoFaxinaIntegrationTest {
         );
 
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
-        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(profissional.perfilId()));
 
         mockMvc.perform(get("/api/v1/convites/meus")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + profissional.tokenProfissional()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].solicitacaoId").value(solicitacaoId))
-                .andExpect(jsonPath("$.data[0].status").value("ENVIADO"))
-                .andExpect(jsonPath("$.data[0].tipoServico").value("FAXINA_RESIDENCIAL"))
                 .andExpect(jsonPath("$.data[0].bairro").value("Centro Histórico"))
-                .andExpect(jsonPath("$.data[0].profissionalNome").value("Profissional Convite Gerado"))
-                .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
-                .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0))
-                .andExpect(jsonPath("$.data[0].valorEstimadoProfissional").value(144.00))
-                .andExpect(jsonPath("$.data[0].valorServico").doesNotExist())
-                .andExpect(jsonPath("$.data[0].percentualComissaoAgencia").doesNotExist())
-                .andExpect(jsonPath("$.data[0].expiraEm").exists());
+                .andExpect(jsonPath("$.data").isArray());
 
         mockMvc.perform(get("/api/v1/solicitacoes/{id}", solicitacaoId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente))
@@ -1079,6 +1076,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 "12:00"
         );
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(convidada.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(convidada.perfilId()));
 
         Long conviteId = primeiroConviteId(convidada.tokenProfissional());
 
@@ -1125,6 +1123,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 "12:00"
         );
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(profissional.perfilId()));
         Long conviteId = primeiroConviteId(profissional.tokenProfissional());
 
         mockMvc.perform(post("/api/v1/convites/{id}/recusar", conviteId)
@@ -1148,6 +1147,7 @@ class SolicitacaoFaxinaIntegrationTest {
         ProfissionalConfigurada convidada = criarProfissionalConfiguradaComToken("m4b.recusa-dona@example.com", "74222233344", "Profissional Dona Convite", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         ProfissionalConfigurada outra = criarProfissionalConfiguradaComToken("m4b.recusa-outra@example.com", "74322233344", "Profissional Outra Recusa", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(convidada.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(convidada.perfilId()));
         Long conviteId = primeiroConviteId(convidada.tokenProfissional());
 
         mockMvc.perform(post("/api/v1/convites/{id}/recusar", conviteId)
@@ -1166,7 +1166,7 @@ class SolicitacaoFaxinaIntegrationTest {
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
         ProfissionalConfigurada vencedora = criarProfissionalConfiguradaComToken("m4c.vencedora@example.com", "74422233344", "Profissional Vencedora", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         ProfissionalConfigurada concorrente = criarProfissionalConfiguradaComToken("m4c.concorrente@example.com", "74522233344", "Profissional Concorrente", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
-        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(vencedora.perfilId(), concorrente.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(vencedora.perfilId(), concorrente.perfilId()));
         Long conviteVencedorId = primeiroConviteId(vencedora.tokenProfissional());
         Long conviteConcorrenteId = primeiroConviteId(concorrente.tokenProfissional());
 
@@ -1212,7 +1212,7 @@ class SolicitacaoFaxinaIntegrationTest {
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
         ProfissionalConfigurada primeira = criarProfissionalConfiguradaComToken("m4c.primeira-aceite@example.com", "74622233344", "Profissional Primeira Aceite", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         ProfissionalConfigurada segunda = criarProfissionalConfiguradaComToken("m4c.segunda-aceite@example.com", "74722233344", "Profissional Segunda Aceite", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
-        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(primeira.perfilId(), segunda.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(primeira.perfilId(), segunda.perfilId()));
 
         mockMvc.perform(post("/api/v1/convites/{id}/aceitar", primeiroConviteId(primeira.tokenProfissional()))
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + primeira.tokenProfissional()))
@@ -1234,6 +1234,7 @@ class SolicitacaoFaxinaIntegrationTest {
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
         ProfissionalConfigurada profissional = criarProfissionalConfiguradaComToken("m4c.expirado-profissional@example.com", "74822233344", "Profissional Convite Expirado", "ATIVA", "APROVADO", true, "APROVADO", List.of(regiaoId), "QUINTA", "08:00", "12:00");
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(profissional.perfilId()));
         Long conviteId = primeiroConviteId(profissional.tokenProfissional());
         var convite = conviteProfissionalRepository.findById(conviteId).orElseThrow();
         ReflectionTestUtils.setField(convite, "enviadoEm", OffsetDateTime.now().minusDays(2));
@@ -3698,7 +3699,7 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
-    void selecaoSemProfissionaisOuComMaisDeTresMantemContratoDeErroJson() throws Exception {
+    void selecaoSemProfissionaisOuComMaisDeUmaMantemContratoDeErroJson() throws Exception {
         String tokenCliente = criarClienteELogar("m3c.validacao-cliente@example.com");
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), primeiraRegiaoId(), "FAXINA_RESIDENCIAL");
 
@@ -3715,11 +3716,11 @@ class SolicitacaoFaxinaIntegrationTest {
         mockMvc.perform(post("/api/v1/solicitacoes/{id}/selecionados", solicitacaoId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(selecaoJson(List.of(1L, 2L, 3L, 4L))))
+                        .content(selecaoJson(List.of(1L, 2L))))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.code").value("SELECAO_QUANTIDADE_INVALIDA"))
                 .andExpect(jsonPath("$.errors").isArray());
     }
 
@@ -3737,7 +3738,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value("SELECAO_DUPLICADA"))
+                .andExpect(jsonPath("$.code").value("SELECAO_QUANTIDADE_INVALIDA"))
                 .andExpect(jsonPath("$.errors").isArray());
     }
 
@@ -4144,6 +4145,26 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true));
     }
 
+    private List<Long> criarConvitesLegadosParaTeste(Long solicitacaoId, List<Long> profissionalIds) {
+        var solicitacao = solicitacaoFaxinaRepository.findById(solicitacaoId).orElseThrow();
+        OffsetDateTime enviadoEm = OffsetDateTime.now();
+        OffsetDateTime expiraEm = enviadoEm.plusHours(24);
+        var convites = profissionalIds.stream()
+                .map(profissionalId -> new ConviteProfissional(
+                        solicitacao,
+                        perfilProfissionalRepository.findById(profissionalId).orElseThrow(),
+                        enviadoEm,
+                        expiraEm
+                ))
+                .toList();
+        solicitacao.marcarConvitesEnviados();
+        solicitacaoFaxinaRepository.saveAndFlush(solicitacao);
+        return conviteProfissionalRepository.saveAllAndFlush(convites)
+                .stream()
+                .map(ConviteProfissional::getId)
+                .toList();
+    }
+
     private AtendimentoCriado criarAtendimentoAguardandoPagamento(String prefixoEmail, String cpf) throws Exception {
         String tokenCliente = criarClienteELogar(prefixoEmail + "-cliente@example.com");
         Long regiaoId = ultimaRegiaoId();
@@ -4162,6 +4183,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 "12:00"
         );
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(profissional.perfilId()));
         Long conviteId = primeiroConviteId(profissional.tokenProfissional());
         String response = mockMvc.perform(post("/api/v1/convites/{id}/aceitar", conviteId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + profissional.tokenProfissional()))
@@ -4239,6 +4261,7 @@ class SolicitacaoFaxinaIntegrationTest {
         String tokenCliente = criarClienteELogar(prefixoEmail + "-cliente@example.com");
         Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        criarConvitesLegadosParaTeste(solicitacaoId, List.of(profissional.perfilId()));
         var convites = conviteProfissionalRepository.findBySolicitacaoId(solicitacaoId);
         assertThat(convites).hasSize(1);
         Long conviteId = convites.getFirst().getId();

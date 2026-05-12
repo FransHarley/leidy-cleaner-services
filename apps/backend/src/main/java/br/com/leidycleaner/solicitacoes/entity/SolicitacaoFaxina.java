@@ -113,7 +113,9 @@ public class SolicitacaoFaxina {
     }
 
     public boolean podeCancelar() {
-        return status == StatusSolicitacao.CRIADA || status == StatusSolicitacao.AGUARDANDO_SELECAO;
+        return status == StatusSolicitacao.CRIADA
+                || status == StatusSolicitacao.AGUARDANDO_SELECAO
+                || status == StatusSolicitacao.AGUARDANDO_PAGAMENTO;
     }
 
     public void cancelar() {
@@ -126,6 +128,10 @@ public class SolicitacaoFaxina {
 
     public void marcarConvitesEnviados() {
         status = StatusSolicitacao.CONVITES_ENVIADOS;
+    }
+
+    public void marcarAguardandoPagamento() {
+        status = StatusSolicitacao.AGUARDANDO_PAGAMENTO;
     }
 
     public void marcarAceita() {

@@ -184,6 +184,7 @@ class AdminDashboardIntegrationTest {
 
         criarSolicitacao(StatusSolicitacao.CRIADA, cliente, endereco, regiao);
         criarSolicitacao(StatusSolicitacao.AGUARDANDO_SELECAO, cliente, endereco, regiao);
+        criarSolicitacao(StatusSolicitacao.AGUARDANDO_PAGAMENTO, cliente, endereco, regiao);
         criarSolicitacao(StatusSolicitacao.CONVITES_ENVIADOS, cliente, endereco, regiao);
         criarSolicitacao(StatusSolicitacao.AGUARDANDO_ACEITE, cliente, endereco, regiao);
         criarSolicitacao(StatusSolicitacao.ACEITA, cliente, endereco, regiao);
@@ -203,7 +204,7 @@ class AdminDashboardIntegrationTest {
         assertIncremento(antes, depois, "pagamentosAguardandoConfirmacao", 1);
         assertIncremento(antes, depois, "pagamentosFalhos", 1);
         assertIncremento(antes, depois, "atendimentosEmAnalise", 1);
-        assertIncremento(antes, depois, "solicitacoesAbertas", 5);
+        assertIncremento(antes, depois, "solicitacoesAbertas", 6);
         assertIncremento(antes, depois, "usuariosTotal", 9);
     }
 

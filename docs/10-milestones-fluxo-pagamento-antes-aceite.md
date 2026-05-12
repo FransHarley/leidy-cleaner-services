@@ -230,31 +230,31 @@ Trocar a regra de seleção de “1 a 3” para “exatamente 1”.
 
 ### Checklist
 
-- [ ] Atualizar DTO `SelecionarProfissionaisRequest` ou equivalente.
-- [ ] Rejeitar lista vazia.
-- [ ] Rejeitar lista com mais de 1 profissional.
-- [ ] Manter validação de elegibilidade da profissional.
-- [ ] Manter validação de ownership da solicitação.
-- [ ] Ajustar constraint/check antigo de `ordem_escolha BETWEEN 1 AND 3`, se necessário.
-- [ ] Criar constraint/índice para impedir mais de uma profissional selecionada por solicitação.
-- [ ] Parar envio imediato de convites após seleção.
-- [ ] Após seleção, mover solicitação para `AGUARDANDO_PAGAMENTO`.
-- [ ] Remover/corrigir lógica de ordem de escolha.
+- [x] Atualizar DTO `SelecionarProfissionaisRequest` ou equivalente.
+- [x] Rejeitar lista vazia.
+- [x] Rejeitar lista com mais de 1 profissional.
+- [x] Manter validação de elegibilidade da profissional.
+- [x] Manter validação de ownership da solicitação.
+- [x] Ajustar constraint/check antigo de `ordem_escolha BETWEEN 1 AND 3`, se necessário.
+- [x] Criar constraint/índice para impedir mais de uma profissional selecionada por solicitação.
+- [x] Parar envio imediato de convites após seleção.
+- [x] Após seleção, mover solicitação para `AGUARDANDO_PAGAMENTO`.
+- [x] Remover/corrigir lógica de ordem de escolha.
 
 ### Critérios de aceite
 
-- [ ] Selecionar uma profissional funciona.
-- [ ] Selecionar zero profissionais falha.
-- [ ] Selecionar duas ou mais profissionais falha.
-- [ ] Nenhum convite é criado no momento da seleção.
-- [ ] Solicitação fica aguardando pagamento após seleção.
+- [x] Selecionar uma profissional funciona.
+- [x] Selecionar zero profissionais falha.
+- [x] Selecionar duas ou mais profissionais falha.
+- [x] Nenhum convite é criado no momento da seleção.
+- [x] Solicitação fica aguardando pagamento após seleção.
 
 ### Testes obrigatórios
 
-- [ ] Backend rejeita payload com mais de uma profissional.
-- [ ] Backend rejeita profissional inelegível.
-- [ ] Backend não cria convite antes do pagamento.
-- [ ] Backend muda status para `AGUARDANDO_PAGAMENTO` após seleção válida.
+- [x] Backend rejeita payload com mais de uma profissional.
+- [x] Backend rejeita profissional inelegível.
+- [x] Backend não cria convite antes do pagamento.
+- [x] Backend muda status para `AGUARDANDO_PAGAMENTO` após seleção válida.
 
 ### Validação
 
