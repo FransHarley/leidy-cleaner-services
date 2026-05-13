@@ -98,6 +98,7 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
     @Query("""
             select p
             from Pagamento p
+            left join fetch p.atendimento
             join fetch p.solicitacao s
             where s.id = :solicitacaoId
             """)

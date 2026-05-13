@@ -73,14 +73,29 @@ public class AtendimentoFaxina {
     }
 
     public AtendimentoFaxina(SolicitacaoFaxina solicitacao, PerfilProfissional profissional) {
+        this(solicitacao, profissional, StatusAtendimento.AGUARDANDO_PAGAMENTO);
+    }
+
+    private AtendimentoFaxina(
+            SolicitacaoFaxina solicitacao,
+            PerfilProfissional profissional,
+            StatusAtendimento status
+    ) {
         this.solicitacao = solicitacao;
         this.cliente = solicitacao.getCliente();
         this.profissional = profissional;
-        this.status = StatusAtendimento.AGUARDANDO_PAGAMENTO;
+        this.status = status;
         this.valorServico = solicitacao.getValorServico();
         this.percentualComissaoAgencia = solicitacao.getPercentualComissaoAgencia();
         this.valorEstimadoProfissional = solicitacao.getValorEstimadoProfissional();
         this.inicioPrevistoEm = solicitacao.getDataHoraDesejada();
+    }
+
+    public static AtendimentoFaxina criarConfirmadoParaSolicitacaoPaga(
+            SolicitacaoFaxina solicitacao,
+            PerfilProfissional profissional
+    ) {
+        return new AtendimentoFaxina(solicitacao, profissional, StatusAtendimento.CONFIRMADO);
     }
 
     @PrePersist

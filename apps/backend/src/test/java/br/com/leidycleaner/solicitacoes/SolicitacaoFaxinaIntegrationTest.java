@@ -105,6 +105,15 @@ class SolicitacaoFaxinaIntegrationTest {
     private record SolicitacaoSelecionada(String tokenCliente, Long solicitacaoId, Long profissionalId) {
     }
 
+    private record ConvitePagoPreparado(
+            String tokenCliente,
+            String tokenProfissional,
+            Long solicitacaoId,
+            Long conviteId,
+            Long pagamentoId
+    ) {
+    }
+
     @Autowired
     SolicitacaoFaxinaIntegrationTest(
             MockMvc mockMvc,
@@ -1268,6 +1277,235 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.errors").isArray());
 
         assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(solicitacaoId)).isEmpty();
+    }
+
+    @Test
+    void profissionalConvidadaAceitaConviteDeSolicitacaoPagaCriaAtendimentoConfirmadoEVinculaPagamento() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoProntoParaAceite("m6.aceite-pago", proximoCpf());
+
+        String response = mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.conviteId").value(convitePago.conviteId()))
+                .andExpect(jsonPath("$.data.conviteStatus").value("ACEITO"))
+                .andExpect(jsonPath("$.data.solicitacaoId").value(convitePago.solicitacaoId()))
+                .andExpect(jsonPath("$.data.solicitacaoStatus").value("ACEITA"))
+                .andExpect(jsonPath("$.data.atendimentoId").exists())
+                .andExpect(jsonPath("$.data.atendimentoStatus").value("CONFIRMADO"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long atendimentoId = objectMapper.readTree(response).path("data").path("atendimentoId").asLong();
+        OffsetDateTime dataHoraDesejada = solicitacaoFaxinaRepository.findById(convitePago.solicitacaoId())
+                .orElseThrow()
+                .getDataHoraDesejada();
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(convitePago.solicitacaoId()))
+                .isPresent()
+                .get()
+                .satisfies(atendimento -> {
+                    assertThat(atendimento.getId()).isEqualTo(atendimentoId);
+                    assertThat(atendimento.getStatus().name()).isEqualTo("CONFIRMADO");
+                    assertThat(atendimento.getInicioPrevistoEm()).isEqualTo(dataHoraDesejada);
+                });
+        assertThat(conviteProfissionalRepository.findById(convitePago.conviteId()))
+                .isPresent()
+                .get()
+                .extracting(convite -> convite.getStatus().name())
+                .isEqualTo("ACEITO");
+        assertThat(solicitacaoFaxinaRepository.findById(convitePago.solicitacaoId()))
+                .isPresent()
+                .get()
+                .extracting(solicitacao -> solicitacao.getStatus().name())
+                .isEqualTo("ACEITA");
+        assertThat(pagamentoRepository.findById(convitePago.pagamentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PAGO");
+                    assertThat(pagamento.getAtendimento()).isNotNull();
+                    assertThat(pagamento.getAtendimento().getId()).isEqualTo(atendimentoId);
+                    assertThat(pagamento.getSolicitacao()).isNotNull();
+                    assertThat(pagamento.getSolicitacao().getId()).isEqualTo(convitePago.solicitacaoId());
+                });
+
+        mockMvc.perform(get("/api/v1/pagamentos/atendimento/{atendimentoId}", atendimentoId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(convitePago.pagamentoId()))
+                .andExpect(jsonPath("$.data.atendimentoId").value(atendimentoId))
+                .andExpect(jsonPath("$.data.solicitacaoId").value(convitePago.solicitacaoId()))
+                .andExpect(jsonPath("$.data.status").value("PAGO"));
+
+        mockMvc.perform(get("/api/v1/pagamentos/solicitacao/{solicitacaoId}", convitePago.solicitacaoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(convitePago.pagamentoId()))
+                .andExpect(jsonPath("$.data.atendimentoId").value(atendimentoId))
+                .andExpect(jsonPath("$.data.solicitacaoId").value(convitePago.solicitacaoId()))
+                .andExpect(jsonPath("$.data.status").value("PAGO"));
+    }
+
+    @Test
+    void aceiteDeConvitePagoFalhaQuandoPagamentoNaoEstaPago() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoManualAguardandoAceite(
+                "m6.pagamento-pendente",
+                proximoCpf(),
+                true
+        );
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("PAGAMENTO_STATUS_INCOMPATIVEL"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(convitePago.solicitacaoId())).isEmpty();
+        assertThat(pagamentoRepository.findById(convitePago.pagamentoId()))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PENDENTE");
+                    assertThat(pagamento.getAtendimento()).isNull();
+                });
+    }
+
+    @Test
+    void aceiteDeConvitePagoFalhaSemPagamentoVinculado() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoManualAguardandoAceite(
+                "m6.sem-pagamento",
+                proximoCpf(),
+                false
+        );
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("PAGAMENTO_NOT_FOUND"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(convitePago.solicitacaoId())).isEmpty();
+    }
+
+    @Test
+    void convitePagoExpiradoNaoPodeSerAceito() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoManualAguardandoAceite(
+                "m6.expirado-pago",
+                proximoCpf(),
+                true
+        );
+        var convite = conviteProfissionalRepository.findById(convitePago.conviteId()).orElseThrow();
+        ReflectionTestUtils.setField(convite, "enviadoEm", OffsetDateTime.now().minusDays(2));
+        ReflectionTestUtils.setField(convite, "expiraEm", OffsetDateTime.now().minusDays(1));
+        conviteProfissionalRepository.saveAndFlush(convite);
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CONVITE_EXPIRADO"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(convitePago.solicitacaoId())).isEmpty();
+    }
+
+    @Test
+    void convitePagoRecusadoOuCanceladoNaoPodeSerAceito() throws Exception {
+        ConvitePagoPreparado conviteRecusado = criarConvitePagoManualAguardandoAceite(
+                "m6.recusado-pago",
+                proximoCpf(),
+                true
+        );
+        var recusado = conviteProfissionalRepository.findById(conviteRecusado.conviteId()).orElseThrow();
+        recusado.recusar(OffsetDateTime.now());
+        conviteProfissionalRepository.saveAndFlush(recusado);
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", conviteRecusado.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + conviteRecusado.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CONVITE_STATUS_INCOMPATIVEL"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        ConvitePagoPreparado conviteCancelado = criarConvitePagoManualAguardandoAceite(
+                "m6.cancelado-pago",
+                proximoCpf(),
+                true
+        );
+        var cancelado = conviteProfissionalRepository.findById(conviteCancelado.conviteId()).orElseThrow();
+        cancelado.cancelar(OffsetDateTime.now());
+        conviteProfissionalRepository.saveAndFlush(cancelado);
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", conviteCancelado.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + conviteCancelado.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CONVITE_STATUS_INCOMPATIVEL"))
+                .andExpect(jsonPath("$.errors").isArray());
+    }
+
+    @Test
+    void segundaTentativaDeAceiteDoMesmoConvitePagoNaoDuplicaAtendimento() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoProntoParaAceite("m6.aceite-duplicado", proximoCpf());
+
+        String response = mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Long atendimentoId = objectMapper.readTree(response).path("data").path("atendimentoId").asLong();
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + convitePago.tokenProfissional()))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CONVITE_STATUS_INCOMPATIVEL"))
+                .andExpect(jsonPath("$.errors").isArray());
+
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(convitePago.solicitacaoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimento -> atendimento.getId())
+                .isEqualTo(atendimentoId);
+    }
+
+    @Test
+    void outraProfissionalNaoAceitaConvitePago() throws Exception {
+        ConvitePagoPreparado convitePago = criarConvitePagoProntoParaAceite("m6.outra-profissional", proximoCpf());
+        Long regiaoId = solicitacaoFaxinaRepository.findById(convitePago.solicitacaoId()).orElseThrow().getRegiao().getId();
+        ProfissionalConfigurada outra = criarProfissionalConfiguradaComToken(
+                "m6.outra-profissional-nao-convidada@example.com",
+                proximoCpf(),
+                "Profissional Nao Convidada",
+                "ATIVA",
+                "APROVADO",
+                true,
+                "APROVADO",
+                List.of(regiaoId),
+                "QUINTA",
+                "08:00",
+                "12:00"
+        );
+
+        mockMvc.perform(post("/api/v1/convites/{id}/aceitar", convitePago.conviteId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + outra.tokenProfissional()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CONVITE_NOT_FOUND"))
+                .andExpect(jsonPath("$.errors").isArray());
     }
 
     @Test
@@ -4514,6 +4752,97 @@ class SolicitacaoFaxinaIntegrationTest {
         );
         selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
         return new SolicitacaoSelecionada(tokenCliente, solicitacaoId, profissional.perfilId());
+    }
+
+    private ConvitePagoPreparado criarConvitePagoProntoParaAceite(String prefixoEmail, String cpf) throws Exception {
+        String tokenCliente = criarClienteELogar(prefixoEmail + "-cliente@example.com");
+        Long regiaoId = ultimaRegiaoId();
+        Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
+        ProfissionalConfigurada profissional = criarProfissionalConfiguradaComToken(
+                prefixoEmail + "-profissional@example.com",
+                cpf,
+                "Profissional " + prefixoEmail,
+                "ATIVA",
+                "APROVADO",
+                true,
+                "APROVADO",
+                List.of(regiaoId),
+                "QUINTA",
+                "08:00",
+                "12:00"
+        );
+        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+        String gatewayPaymentId = "pay_" + prefixoEmail.replace('-', '_');
+        mockarCriacaoAsaas(gatewayPaymentId, "PENDING", "https://asaas.local/" + gatewayPaymentId, null);
+        Long pagamentoId = criarPagamentoPorSolicitacao(tokenCliente, solicitacaoId, "PIX");
+        enviarWebhookAsaas("""
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "%s",
+                    "status": "CONFIRMED"
+                  }
+                }
+                """.formatted(gatewayPaymentId));
+        Long conviteId = primeiroConviteId(profissional.tokenProfissional());
+        return new ConvitePagoPreparado(
+                tokenCliente,
+                profissional.tokenProfissional(),
+                solicitacaoId,
+                conviteId,
+                pagamentoId
+        );
+    }
+
+    private ConvitePagoPreparado criarConvitePagoManualAguardandoAceite(
+            String prefixoEmail,
+            String cpf,
+            boolean criarPagamento
+    ) throws Exception {
+        String tokenCliente = criarClienteELogar(prefixoEmail + "-cliente@example.com");
+        Long regiaoId = ultimaRegiaoId();
+        Long solicitacaoId = criarSolicitacao(tokenCliente, criarEndereco(tokenCliente), regiaoId, "FAXINA_RESIDENCIAL");
+        ProfissionalConfigurada profissional = criarProfissionalConfiguradaComToken(
+                prefixoEmail + "-profissional@example.com",
+                cpf,
+                "Profissional " + prefixoEmail,
+                "ATIVA",
+                "APROVADO",
+                true,
+                "APROVADO",
+                List.of(regiaoId),
+                "QUINTA",
+                "08:00",
+                "12:00"
+        );
+        selecionarProfissionais(tokenCliente, solicitacaoId, List.of(profissional.perfilId()));
+
+        Long pagamentoId = null;
+        if (criarPagamento) {
+            String gatewayPaymentId = "pay_" + prefixoEmail.replace('-', '_');
+            mockarCriacaoAsaas(gatewayPaymentId, "PENDING", "https://asaas.local/" + gatewayPaymentId, null);
+            pagamentoId = criarPagamentoPorSolicitacao(tokenCliente, solicitacaoId, "PIX");
+        }
+
+        var solicitacao = solicitacaoFaxinaRepository.findById(solicitacaoId).orElseThrow();
+        solicitacao.marcarPagaAguardandoAceite();
+        solicitacaoFaxinaRepository.saveAndFlush(solicitacao);
+
+        OffsetDateTime enviadoEm = OffsetDateTime.now();
+        Long conviteId = conviteProfissionalRepository.saveAndFlush(new ConviteProfissional(
+                solicitacao,
+                perfilProfissionalRepository.findById(profissional.perfilId()).orElseThrow(),
+                enviadoEm,
+                enviadoEm.plusHours(24)
+        )).getId();
+
+        return new ConvitePagoPreparado(
+                tokenCliente,
+                profissional.tokenProfissional(),
+                solicitacaoId,
+                conviteId,
+                pagamentoId
+        );
     }
 
     private AtendimentoCriado criarAtendimentoConfirmado(String prefixoEmail, String cpf, String checkoutId) throws Exception {

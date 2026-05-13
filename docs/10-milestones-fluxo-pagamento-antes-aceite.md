@@ -358,33 +358,33 @@ Adaptar aceite para o novo fluxo pago antes do convite.
 
 ### Checklist
 
-- [ ] No aceite, validar que o convite está ativo.
-- [ ] No aceite, validar que a solicitação está paga/aguardando aceite.
-- [ ] No aceite, localizar pagamento `PAGO` da solicitação.
-- [ ] Criar `AtendimentoFaxina` somente no aceite.
-- [ ] Criar atendimento com status `CONFIRMADO`.
-- [ ] Vincular pagamento existente ao atendimento criado.
-- [ ] Marcar convite como `ACEITO`.
-- [ ] Atualizar solicitação para `ACEITA`.
-- [ ] Impedir aceite duplicado.
+- [x] No aceite, validar que o convite está ativo.
+- [x] No aceite, validar que a solicitação está paga/aguardando aceite.
+- [x] No aceite, localizar pagamento `PAGO` da solicitação.
+- [x] Criar `AtendimentoFaxina` somente no aceite.
+- [x] Criar atendimento com status `CONFIRMADO`.
+- [x] Vincular pagamento existente ao atendimento criado.
+- [x] Marcar convite como `ACEITO`.
+- [x] Atualizar solicitação para `ACEITA`.
+- [x] Impedir aceite duplicado.
 - [ ] Impedir aceite se solicitação já virou crédito.
-- [ ] Impedir aceite se pagamento não estiver `PAGO`.
+- [x] Impedir aceite se pagamento não estiver `PAGO`.
 
 ### Critérios de aceite
 
-- [ ] Profissional aceita convite pago.
-- [ ] Atendimento nasce confirmado.
-- [ ] Pagamento fica com `solicitacao_id` e `atendimento_id` preenchidos.
-- [ ] Não existe atendimento antes do aceite.
-- [ ] Aceite duplicado falha sem duplicar atendimento.
+- [x] Profissional aceita convite pago.
+- [x] Atendimento nasce confirmado.
+- [x] Pagamento fica com `solicitacao_id` e `atendimento_id` preenchidos.
+- [x] Não existe atendimento antes do aceite.
+- [x] Aceite duplicado falha sem duplicar atendimento.
 
 ### Testes obrigatórios
 
-- [ ] Aceite válido cria atendimento confirmado.
-- [ ] Aceite vincula pagamento ao atendimento.
-- [ ] Aceite sem pagamento confirmado falha.
-- [ ] Aceite duplicado não cria segundo atendimento.
-- [ ] Aceite de convite expirado/cancelado falha.
+- [x] Aceite válido cria atendimento confirmado.
+- [x] Aceite vincula pagamento ao atendimento.
+- [x] Aceite sem pagamento confirmado falha.
+- [x] Aceite duplicado não cria segundo atendimento.
+- [x] Aceite de convite expirado/cancelado falha.
 
 ### Validação
 

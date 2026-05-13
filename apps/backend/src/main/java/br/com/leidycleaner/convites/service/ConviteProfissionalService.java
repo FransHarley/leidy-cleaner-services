@@ -17,6 +17,9 @@ import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.mapper.ConviteProfissionalMapper;
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.core.exception.BusinessException;
+import br.com.leidycleaner.pagamentos.entity.Pagamento;
+import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
+import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
 import br.com.leidycleaner.solicitacoes.entity.SolicitacaoFaxina;
 import br.com.leidycleaner.solicitacoes.entity.SolicitacaoProfissionalSelecionado;
@@ -34,6 +37,7 @@ public class ConviteProfissionalService {
     private final SolicitacaoFaxinaRepository solicitacaoFaxinaRepository;
     private final SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository;
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
+    private final PagamentoRepository pagamentoRepository;
     private final Clock clock;
 
     public ConviteProfissionalService(
@@ -41,13 +45,15 @@ public class ConviteProfissionalService {
             PerfilProfissionalRepository perfilProfissionalRepository,
             SolicitacaoFaxinaRepository solicitacaoFaxinaRepository,
             SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository,
-            AtendimentoFaxinaRepository atendimentoFaxinaRepository
+            AtendimentoFaxinaRepository atendimentoFaxinaRepository,
+            PagamentoRepository pagamentoRepository
     ) {
         this.conviteProfissionalRepository = conviteProfissionalRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
         this.solicitacaoFaxinaRepository = solicitacaoFaxinaRepository;
         this.solicitacaoProfissionalSelecionadoRepository = solicitacaoProfissionalSelecionadoRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
+        this.pagamentoRepository = pagamentoRepository;
         this.clock = Clock.systemDefaultZone();
     }
 
@@ -128,20 +134,69 @@ public class ConviteProfissionalService {
         validarConvitePertenceASolicitacao(convite, solicitacao);
         validarConviteRespondivel(convite);
         validarConviteNaoExpirado(convite);
-        validarSolicitacaoAceitavel(solicitacao);
-        validarAtendimentoAindaNaoCriado(solicitacao);
 
         OffsetDateTime agora = OffsetDateTime.now(clock);
+        if (solicitacao.getStatus() == StatusSolicitacao.PAGA_AGUARDANDO_ACEITE) {
+            return aceitarConviteDeSolicitacaoPaga(solicitacao, convite, agora);
+        }
+
+        validarSolicitacaoAceitavel(solicitacao);
+        validarAtendimentoAindaNaoCriado(solicitacao);
         convite.aceitar(agora);
-        conviteProfissionalRepository.findBySolicitacaoId(solicitacao.getId())
-                .stream()
-                .filter(outroConvite -> !outroConvite.getId().equals(convite.getId()))
-                .forEach(outroConvite -> outroConvite.cancelar(agora));
+        cancelarConvitesConcorrentes(solicitacao.getId(), convite.getId(), agora);
         solicitacao.marcarAceita();
 
         AtendimentoFaxina atendimento = atendimentoFaxinaRepository.save(
                 new AtendimentoFaxina(solicitacao, convite.getProfissional())
         );
+
+        return new ConviteRespostaDto(
+                convite.getId(),
+                convite.getStatus(),
+                solicitacao.getId(),
+                solicitacao.getStatus(),
+                atendimento.getId(),
+                atendimento.getStatus()
+        );
+    }
+
+    private ConviteRespostaDto aceitarConviteDeSolicitacaoPaga(
+            SolicitacaoFaxina solicitacao,
+            ConviteProfissional convite,
+            OffsetDateTime agora
+    ) {
+        validarSolicitacaoPagaAguardandoAceite(solicitacao);
+        validarAtendimentoAindaNaoCriado(solicitacao);
+
+        Pagamento pagamento = pagamentoRepository.findBySolicitacaoIdForUpdate(solicitacao.getId())
+                .orElseThrow(() -> new BusinessException(
+                        "PAGAMENTO_NOT_FOUND",
+                        "Solicitacao paga nao possui pagamento vinculado",
+                        HttpStatus.CONFLICT
+                ));
+        if (pagamento.getStatus() != StatusPagamento.PAGO) {
+            throw new BusinessException(
+                    "PAGAMENTO_STATUS_INCOMPATIVEL",
+                    "Convite so pode ser aceito quando o pagamento da solicitacao estiver pago",
+                    HttpStatus.CONFLICT
+            );
+        }
+        if (pagamento.getAtendimento() != null) {
+            throw new BusinessException(
+                    "PAGAMENTO_JA_VINCULADO_A_ATENDIMENTO",
+                    "Pagamento da solicitacao ja esta vinculado a um atendimento",
+                    HttpStatus.CONFLICT
+            );
+        }
+
+        convite.aceitar(agora);
+        cancelarConvitesConcorrentes(solicitacao.getId(), convite.getId(), agora);
+        solicitacao.marcarAceita();
+
+        AtendimentoFaxina atendimento = atendimentoFaxinaRepository.save(
+                AtendimentoFaxina.criarConfirmadoParaSolicitacaoPaga(solicitacao, convite.getProfissional())
+        );
+        pagamento.vincularAtendimento(atendimento);
 
         return new ConviteRespostaDto(
                 convite.getId(),
@@ -208,6 +263,16 @@ public class ConviteProfissionalService {
         }
     }
 
+    private void validarSolicitacaoPagaAguardandoAceite(SolicitacaoFaxina solicitacao) {
+        if (solicitacao.getStatus() != StatusSolicitacao.PAGA_AGUARDANDO_ACEITE) {
+            throw new BusinessException(
+                    "SOLICITACAO_STATUS_INCOMPATIVEL",
+                    "Solicitacao nao esta aguardando aceite apos pagamento confirmado",
+                    HttpStatus.CONFLICT
+            );
+        }
+    }
+
     private void validarSolicitacaoElegivelParaConvitePago(SolicitacaoFaxina solicitacao) {
         if (solicitacao.getStatus() != StatusSolicitacao.AGUARDANDO_PAGAMENTO
                 && solicitacao.getStatus() != StatusSolicitacao.PAGA_AGUARDANDO_ACEITE) {
@@ -246,5 +311,12 @@ public class ConviteProfissionalService {
         if (atendimentoFaxinaRepository.existsBySolicitacaoId(solicitacao.getId())) {
             throw new BusinessException("ATENDIMENTO_JA_CRIADO", "Solicitacao ja possui atendimento criado", HttpStatus.CONFLICT);
         }
+    }
+
+    private void cancelarConvitesConcorrentes(Long solicitacaoId, Long conviteAceitoId, OffsetDateTime agora) {
+        conviteProfissionalRepository.findBySolicitacaoId(solicitacaoId)
+                .stream()
+                .filter(outroConvite -> !outroConvite.getId().equals(conviteAceitoId))
+                .forEach(outroConvite -> outroConvite.cancelar(agora));
     }
 }

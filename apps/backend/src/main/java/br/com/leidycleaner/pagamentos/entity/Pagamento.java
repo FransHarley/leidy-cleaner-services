@@ -188,6 +188,13 @@ public class Pagamento {
         return true;
     }
 
+    public void vincularAtendimento(AtendimentoFaxina atendimento) {
+        this.atendimento = atendimento;
+        if (this.solicitacao == null && atendimento != null) {
+            this.solicitacao = atendimento.getSolicitacao();
+        }
+    }
+
     private boolean confirmarViaWebhook(String payloadResumo) {
         if (status == StatusPagamento.PAGO && webhookProcessado) {
             return false;
