@@ -6,7 +6,7 @@ O **App Profissional Leidy Cleaner** será um aplicativo Android e iOS voltado e
 
 O app terá como objetivo permitir que a profissional:
 
-- receba convites de faxina;
+- receba convites de faxina já pagos;
 - aceite ou recuse convites;
 - acompanhe atendimentos confirmados;
 - marque início e fim do serviço;
@@ -70,7 +70,7 @@ Não duplicar regra de negócio.
 
 Não criar microserviço novo.
 
-O backend segue sendo a fonte de verdade para autorização, aceite transacional, pagamento, atendimento e status.
+O backend segue sendo a fonte de verdade para autorização, aceite transacional, pagamento, convite, atendimento, crédito de reposição e status.
 
 ---
 
@@ -164,19 +164,19 @@ Por isso, a interface precisa ser simples, com botões grandes e linguagem diret
 3. Permite notificações
 4. App registra token do dispositivo
 5. Profissional deixa status ativo para receber chamados
-6. Sistema envia convite
-7. Profissional recebe notificação
-8. Abre o detalhe do convite
-9. Aceita ou recusa
-10. Se aceitar validamente, backend cria atendimento
-11. Profissional acompanha atendimento confirmado
-12. Após pagamento confirmado, serviço pode ser iniciado
+6. Backend confirma o pagamento da solicitação
+7. Sistema envia convite para a profissional selecionada
+8. Profissional recebe notificação
+9. Abre o detalhe do convite
+10. Aceita ou recusa
+11. Se aceitar validamente, backend cria atendimento já confirmado
+12. Profissional acompanha atendimento confirmado
 13. Profissional marca início
 14. Profissional marca fim
 15. Atendimento fica pronto para avaliação do cliente
 ```
 
-O aceite do convite precisa continuar transacional no backend. A rota de aceite deve validar solicitação aberta, convite ativo, criar atendimento, cancelar demais convites e rodar em transação.
+O aceite do convite precisa continuar transacional no backend. A rota de aceite deve validar solicitação paga e aberta, convite ativo, criar atendimento já confirmado, vincular o pagamento já pago ao atendimento e rodar em transação.
 
 ---
 
@@ -192,9 +192,10 @@ O aceite do convite precisa continuar transacional no backend. A rota de aceite 
 ### 7.2 Convites
 
 - [ ] App apenas solicita aceite/recusa
+- [ ] Convite só chega após pagamento confirmado
 - [ ] Backend decide se aceite ainda é válido
 - [ ] Backend impede duplo aceite
-- [ ] Backend cancela convites concorrentes
+- [ ] Há exatamente um convite por solicitação paga nesse fluxo
 - [ ] App deve tratar erro de convite expirado/cancelado
 - [ ] App deve impedir clique duplo visualmente, mas sem depender disso como regra de segurança
 
@@ -212,10 +213,16 @@ O aceite do convite precisa continuar transacional no backend. A rota de aceite 
 - [ ] App da profissional não confirma pagamento
 - [ ] App da profissional não cria cobrança
 - [ ] App apenas exibe status operacional quando necessário
-- [ ] Pagamento continua vinculado ao atendimento
+- [ ] Pagamento pode nascer na solicitação e só depois ser vinculado ao atendimento
 - [ ] Webhook continua sendo fonte de verdade
 
-### 7.5 Ocorrências
+### 7.5 Solicitação não aceita
+
+- [ ] Recusa ou expiração não criam atendimento
+- [ ] Backend pode gerar `CreditoSolicitacao` para o cliente
+- [ ] O app apenas reflete o encerramento do convite, sem implementar carteira, saldo ou desconto
+
+### 7.6 Ocorrências
 
 - [ ] Profissional pode abrir ocorrência relacionada ao atendimento
 - [ ] Ocorrência deve ter tipo, descrição e atendimento vinculado
@@ -433,7 +440,7 @@ Checklist:
 - [ ] Convite criado
 - [ ] Convite próximo de expirar
 - [ ] Atendimento criado
-- [ ] Atendimento confirmado após pagamento
+- [ ] Solicitação paga aguardando aceite
 - [ ] Lembrete antes do atendimento
 - [ ] Ocorrência atualizada
 

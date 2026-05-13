@@ -13,7 +13,7 @@ Este documento organiza a construção de **todo o frontend** do projeto **Leidy
 - [x] construir primeiro o que dá suporte ao fluxo operacional principal
 
 Fluxo central do produto:
-**solicitação → seleção → convites → aceite → atendimento → pagamento → execução → avaliação**
+**solicitação → seleção única → pagamento → convite → aceite → atendimento → execução → avaliação**
 
 ---
 
@@ -243,15 +243,15 @@ Entregar a seleção de profissionais a partir da solicitação.
 - [x] implementar tela com profissionais elegíveis
 - [x] implementar cards/lista de profissionais
 - [x] exibir experiência/nota/média
-- [x] implementar seleção ordenada de até 3 profissionais
-- [x] implementar feedback visual da ordem da escolha
+- [x] implementar seleção única de exatamente 1 profissional
+- [x] implementar feedback visual da profissional escolhida
 - [x] persistir seleção
 - [x] integrar com `GET /api/v1/solicitacoes/{id}/profissionais-disponiveis`
 - [x] integrar com `POST /api/v1/solicitacoes/{id}/selecionados`
 
 ### Critério de pronto
-- [x] cliente consegue escolher de 1 a 3 profissionais
-- [x] frontend respeita a UX do limite
+- [x] cliente consegue escolher exatamente 1 profissional
+- [x] frontend reflete a UX de seleção única
 - [x] backend continua sendo a validação final
 
 ---
@@ -279,21 +279,24 @@ Entregar o módulo de convites da profissional.
 
 ## F10 — Área do cliente: pagamento
 ### Objetivo
-Entregar a tela de pagamento alinhada ao backend e ao Asaas.
+Entregar a tela de pagamento por solicitação alinhada ao backend, ao Asaas e ao fluxo de crédito de reposição.
 
 ### Entregas
-- [x] implementar tela de checkout/pagamento vinculada ao atendimento
+- [x] implementar tela de checkout/pagamento vinculada à solicitação
 - [x] exibir método de pagamento
 - [x] exibir QR Code / Pix copia-e-cola / link / status
-- [x] implementar polling ou refresh controlado de status quando necessário
-- [x] implementar visual de “aguardando confirmação”
+- [x] implementar polling ou refresh controlado do estado persistido no backend
+- [x] implementar visual de `AGUARDANDO_CONFIRMACAO` e `PAGA_AGUARDANDO_ACEITE`
 - [x] integrar com rota principal de checkout implementada no backend
 - [x] integrar com `GET /api/v1/pagamentos/{id}`
-- [x] integrar com `GET /api/v1/pagamentos/atendimento/{atendimentoId}`
+- [x] integrar com `GET /api/v1/pagamentos/solicitacao/{solicitacaoId}`
 - [x] integrar com `POST /api/v1/pagamentos/{id}/consultar-status`
+- [x] refletir uso de `CreditoSolicitacao` para nova solicitação equivalente
+- [x] ocultar UI de Pix/cartão quando o backend marcar pagamento como `PAGO`
 
 ### Critério de pronto
 - [x] cliente consegue visualizar e acompanhar o pagamento
+- [x] cliente entende quando a solicitação está aguardando aceite da profissional
 - [x] frontend não confirma pagamento por conta própria
 
 ---

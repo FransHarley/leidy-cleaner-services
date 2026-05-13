@@ -113,6 +113,7 @@ Formalizar a mudança de domínio antes de mexer pesado no código.
 - [ ] Atualizar `docs/07-frontend-milestones.md` para seleção única e pagamento por solicitação.
 - [ ] Atualizar `docs/09-prd-app-profissional-capacitor.md` para indicar que convite chega somente após pagamento confirmado.
 - [ ] Atualizar `AGENTS.md` para registrar a decisão nova: exatamente 1 profissional e pagamento antes do convite.
+- [ ] Rodar uma checagem final de sincronização documental para remover sobras do fluxo antigo dos documentos oficiais.
 
 ### Critérios de aceite
 

@@ -2,421 +2,349 @@
 
 ## 1. Entidades centrais
 
-## 1.1 Usuario
+### 1.1 `Usuario`
 Conta base de qualquer perfil.
 
-### Campos principais
-- id
-- nomeCompleto
-- email
-- telefone
-- senhaHash
-- tipoUsuario
-- statusConta
-- emailVerificado
-- telefoneVerificado
-- ultimoLoginEm
-- criadoEm
-- atualizadoEm
+Campos principais:
+- `id`
+- `nomeCompleto`
+- `email`
+- `telefone`
+- `senhaHash`
+- `tipoUsuario`
+- `statusConta`
+- `emailVerificado`
+- `telefoneVerificado`
+- `ultimoLoginEm`
+- `criadoEm`
+- `atualizadoEm`
 
----
+### 1.2 `PerfilCliente`
+Complemento do usuário cliente.
 
-## 1.2 PerfilCliente
-Complemento do usuário do tipo cliente.
+Campos principais:
+- `id`
+- `usuarioId`
+- `observacoesInternas`
+- `criadoEm`
+- `atualizadoEm`
 
-### Campos principais
-- id
-- usuarioId
-- observacoesInternas
-- criadoEm
-- atualizadoEm
+### 1.3 `PerfilProfissional`
+Complemento do usuário profissional.
 
----
+Campos principais:
+- `id`
+- `usuarioId`
+- `nomeExibicao`
+- `cpf`
+- `dataNascimento`
+- `descricao`
+- `fotoPerfilUrl`
+- `experienciaAnos`
+- `ativoParaReceberChamados`
+- `statusAprovacao`
+- `notaMedia`
+- `totalAvaliacoes`
+- `criadoEm`
+- `atualizadoEm`
 
-## 1.3 PerfilProfissional
-Complemento do usuário do tipo profissional.
-
-### Campos principais
-- id
-- usuarioId
-- nomeExibicao
-- cpf
-- dataNascimento
-- descricao
-- fotoPerfilUrl
-- experienciaAnos
-- ativoParaReceberChamados
-- statusAprovacao
-- notaMedia
-- totalAvaliacoes
-- criadoEm
-- atualizadoEm
-
----
-
-## 1.4 Endereco
+### 1.4 `Endereco`
 Endereço do usuário, especialmente do cliente.
 
-### Campos principais
-- id
-- usuarioId
-- cep
-- logradouro
-- numero
-- complemento
-- bairro
-- cidade
-- estado
-- latitude
-- longitude
-- principal
-- criadoEm
+Campos principais:
+- `id`
+- `usuarioId`
+- `cep`
+- `logradouro`
+- `numero`
+- `complemento`
+- `bairro`
+- `cidade`
+- `estado`
+- `latitude`
+- `longitude`
+- `principal`
+- `criadoEm`
 
----
-
-## 1.5 RegiaoAtendimento
+### 1.5 `RegiaoAtendimento`
 Região ou bairro onde a profissional atua.
 
-### Campos principais
-- id
-- nome
-- tipo
-- ativo
+Campos principais:
+- `id`
+- `nome`
+- `tipo`
+- `ativo`
 
----
-
-## 1.6 ProfissionalRegiao
+### 1.6 `ProfissionalRegiao`
 Relação entre profissional e regiões atendidas.
 
-### Campos principais
-- id
-- profissionalId
-- regiaoId
+Campos principais:
+- `id`
+- `profissionalId`
+- `regiaoId`
 
----
-
-## 1.7 DisponibilidadeProfissional
+### 1.7 `DisponibilidadeProfissional`
 Disponibilidade semanal da profissional.
 
-### Campos principais
-- id
-- profissionalId
-- diaSemana
-- horaInicio
-- horaFim
-- ativo
+Campos principais:
+- `id`
+- `profissionalId`
+- `diaSemana`
+- `horaInicio`
+- `horaFim`
+- `ativo`
 
----
+### 1.8 `DocumentoVerificacao`
+Documentos e status de verificação.
 
-## 1.8 DocumentoVerificacao
-Agrupa documentos e status de verificação.
+Campos principais:
+- `id`
+- `usuarioId`
+- `tipoDocumento`
+- `numeroDocumento`
+- `documentoFrenteUrl`
+- `documentoVersoUrl`
+- `selfieUrl`
+- `comprovanteResidenciaUrl`
+- `statusVerificacao`
+- `observacaoAnalise`
+- `analisadoPorUsuarioId`
+- `analisadoEm`
+- `criadoEm`
 
-### Campos principais
-- id
-- usuarioId
-- tipoDocumento
-- numeroDocumento
-- documentoFrenteUrl
-- documentoVersoUrl
-- selfieUrl
-- comprovanteResidenciaUrl
-- statusVerificacao
-- observacaoAnalise
-- analisadoPorUsuarioId
-- analisadoEm
-- criadoEm
-
----
-
-## 1.9 SolicitacaoFaxina
+### 1.9 `SolicitacaoFaxina`
 Pedido criado pelo cliente.
 
-### Campos principais
-- id
-- clienteId
-- enderecoId
-- regiaoId
-- dataHoraDesejada
-- duracaoEstimadaHoras
-- tipoServico
-- observacoes
-- valorServico
-- percentualComissaoAgencia
-- valorEstimadoProfissional
-- status
-- criadoEm
-- atualizadoEm
+Campos principais:
+- `id`
+- `clienteId`
+- `enderecoId`
+- `regiaoId`
+- `dataHoraDesejada`
+- `duracaoEstimadaHoras`
+- `tipoServico`
+- `observacoes`
+- `valorServico`
+- `percentualComissaoAgencia`
+- `valorEstimadoProfissional`
+- `status`
+- `criadoEm`
+- `atualizadoEm`
 
-### TipoServico
-- FAXINA_RESIDENCIAL
-- FAXINA_COMERCIAL
-- FAXINA_CONDOMINIO
-- FAXINA_EVENTO
+`TipoServico`:
+- `FAXINA_RESIDENCIAL`
+- `FAXINA_COMERCIAL`
+- `FAXINA_CONDOMINIO`
+- `FAXINA_EVENTO`
 
----
+`StatusSolicitacaoFaxina` principais:
+- `CRIADA`
+- `AGUARDANDO_SELECAO`
+- `AGUARDANDO_PAGAMENTO`
+- `PAGA_AGUARDANDO_ACEITE`
+- `ACEITA`
+- `EM_EXECUCAO`
+- `FINALIZADA`
+- `NAO_ACEITA_CREDITO_GERADO`
+- `CANCELADA`
+- `EXPIRADA`
 
-## 1.10 SolicitacaoProfissionalSelecionado
-Profissionais escolhidas pelo cliente para a solicitação.
+### 1.10 `SolicitacaoProfissionalSelecionado`
+Profissional escolhida pelo cliente para a solicitação.
 
-### Campos principais
-- id
-- solicitacaoId
-- profissionalId
-- ordemEscolha
-- criadoEm
+Campos principais:
+- `id`
+- `solicitacaoId`
+- `profissionalId`
+- `ordemEscolha`
+- `criadoEm`
 
----
+Observação:
+- no fluxo atual, a solicitação deve ter exatamente 1 registro ativo de seleção
+- o backend continua responsável por validar a unicidade operacional dessa escolha
 
-## 1.11 ConviteProfissional
-Convite operacional enviado às profissionais selecionadas.
+### 1.11 `ConviteProfissional`
+Convite operacional enviado para a profissional selecionada.
 
-### Campos principais
-- id
-- solicitacaoId
-- profissionalId
-- status
-- enviadoEm
-- visualizadoEm
-- respondidoEm
-- expiraEm
+Campos principais:
+- `id`
+- `solicitacaoId`
+- `profissionalId`
+- `status`
+- `enviadoEm`
+- `visualizadoEm`
+- `respondidoEm`
+- `expiraEm`
 
----
+Observação:
+- no fluxo pré-pago deve existir exatamente 1 convite por solicitação paga
 
-## 1.12 AtendimentoFaxina
-Atendimento efetivo criado após aceite válido.
+### 1.12 `AtendimentoFaxina`
+Atendimento efetivo criado somente após aceite válido.
 
-### Campos principais
-- id
-- solicitacaoId
-- clienteId
-- profissionalId
-- status
-- valorServico
-- percentualComissaoAgencia
-- valorEstimadoProfissional
-- inicioPrevistoEm
-- inicioRealEm
-- fimRealEm
-- criadoEm
-- atualizadoEm
+Campos principais:
+- `id`
+- `solicitacaoId`
+- `clienteId`
+- `profissionalId`
+- `status`
+- `valorServico`
+- `percentualComissaoAgencia`
+- `valorEstimadoProfissional`
+- `inicioPrevistoEm`
+- `inicioRealEm`
+- `fimRealEm`
+- `criadoEm`
+- `atualizadoEm`
 
----
+Observação:
+- o atendimento nasce com status `CONFIRMADO`
 
-## 1.13 Pagamento
+### 1.13 `Pagamento`
 Cobrança da cliente para a empresa.
 
-### Campos principais
-- id
-- atendimentoId
-- gateway
-- gatewayPaymentId
-- metodoPagamento
-- status
-- valorBruto
-- valorTaxaGateway
-- valorLiquidoRecebido
-- recebidoEm
-- payloadResumo
-- webhookProcessado
-- criadoEm
-- atualizadoEm
+Campos principais:
+- `id`
+- `solicitacaoId`
+- `atendimentoId`
+- `gateway`
+- `gatewayPaymentId`
+- `externalReference`
+- `metodoPagamento`
+- `status`
+- `valorBruto`
+- `valorTaxaGateway`
+- `valorLiquidoRecebido`
+- `recebidoEm`
+- `payloadResumo`
+- `webhookProcessado`
+- `criadoEm`
+- `atualizadoEm`
 
----
+Regras:
+- `solicitacaoId` pode ser o vínculo inicial do pagamento
+- `atendimentoId` permanece nulo até o aceite válido
+- após aceite válido, o pagamento pago é associado ao atendimento criado
 
-## 1.14 CheckpointServico
+`GatewayPagamento` relevantes:
+- `ASAAS`
+- `INTERNO`
+
+`MetodoPagamento` relevantes:
+- `PIX`
+- `CARTAO`
+- `BOLETO`
+- `CREDITO_SOLICITACAO`
+
+### 1.14 `CreditoSolicitacao`
+Crédito operacional de reposição para uma nova solicitação equivalente.
+
+Campos principais:
+- `id`
+- `clienteId`
+- `solicitacaoOrigemId`
+- `pagamentoOrigemId`
+- `solicitacaoUsoId`
+- `tipoServico`
+- `duracaoEstimadaHoras`
+- `regiaoId`
+- `enderecoOrigemId`
+- `valorReferencia`
+- `status`
+- `criadoEm`
+- `atualizadoEm`
+
+`StatusCreditoSolicitacao`:
+- `DISPONIVEL`
+- `RESERVADO`
+- `UTILIZADO`
+- `CANCELADO`
+- `EXPIRADO`
+
+Observações:
+- não é carteira
+- não é saldo monetário
+- não é desconto
+- não é abatimento
+- não é pagamento parcial
+- não é banco de horas
+- não é divisível
+
+Equivalência para uso no MVP:
+- mesmo `clienteId`
+- mesmo `tipoServico`
+- mesma `duracaoEstimadaHoras`
+- mesmo `regiaoId`
+- o mesmo endereço exato não é obrigatório no MVP
+
+### 1.15 `CheckpointServico`
 Registro de início e fim do atendimento.
 
-### Campos principais
-- id
-- atendimentoId
-- tipo
-- registradoPorUsuarioId
-- latitude
-- longitude
-- fotoComprovacaoUrl
-- observacao
-- registradoEm
+Campos principais:
+- `id`
+- `atendimentoId`
+- `tipo`
+- `registradoPorUsuarioId`
+- `latitude`
+- `longitude`
+- `fotoComprovacaoUrl`
+- `observacao`
+- `registradoEm`
 
----
-
-## 1.15 AvaliacaoProfissional
+### 1.16 `AvaliacaoProfissional`
 Avaliação feita pelo cliente sobre a profissional.
 
-### Campos principais
-- id
-- atendimentoId
-- clienteId
-- profissionalId
-- nota
-- comentario
-- criadoEm
-- atualizadoEm
+Campos principais:
+- `id`
+- `atendimentoId`
+- `clienteId`
+- `profissionalId`
+- `nota`
+- `comentario`
+- `criadoEm`
+- `atualizadoEm`
+
+### 1.17 `OcorrenciaAtendimento`
+Problema operacional ou reclamação relacionada ao atendimento.
+
+Campos principais:
+- `id`
+- `atendimentoId`
+- `tipo`
+- `descricao`
+- `status`
+- `criadoPorUsuarioId`
+- `criadoEm`
+- `atualizadoEm`
 
 ---
 
-## 1.16 OcorrenciaAtendimento
-Problemas operacionais ou reclamações.
+## 2. Regras de domínio críticas
 
-### Campos principais
-- id
-- atendimentoId
-- abertoPorUsuarioId
-- tipo
-- descricao
-- status
-- resolvidoEm
-- resolvidoPorUsuarioId
-- criadoEm
+### Seleção
+- cliente deve selecionar exatamente 1 profissional elegível
+- backend valida a regra, não apenas o frontend
 
----
+### Pagamento
+- pagamento externo pode nascer ligado à `SolicitacaoFaxina`
+- webhook continua sendo a fonte de verdade para confirmação externa
+- reconciliação manual segura deve reutilizar o mesmo fluxo interno de confirmação
 
-## 2. Relacionamentos principais
+### Convite
+- convite só é criado após pagamento confirmado
+- pagamento confirmado não cria atendimento
 
-### Cliente
-- 1:1 com PerfilCliente
-- 1:N com SolicitacaoFaxina
-- 1:N com AtendimentoFaxina
-- 1:N com AvaliacaoProfissional
+### Aceite
+- aceite válido cria `AtendimentoFaxina` já `CONFIRMADO`
+- o pagamento pago passa a apontar para o atendimento criado
 
-### Profissional
-- 1:1 com PerfilProfissional
-- N:N com RegiaoAtendimento
-- 1:N com DisponibilidadeProfissional
-- 1:N com ConviteProfissional
-- 1:N com AtendimentoFaxina
-- 1:N com AvaliacaoProfissional
+### Recusa ou expiração
+- não criam atendimento
+- geram um `CreditoSolicitacao` exatamente uma vez
 
-### Atendimento
-- 1:1 com Pagamento no MVP
-- 1:N com CheckpointServico
-- 1:N com OcorrenciaAtendimento
-- 1:1 com AvaliacaoProfissional
+### Execução
+- somente a profissional atribuída pode iniciar e finalizar
 
----
-
-## 3. Regras de negócio centrais
-
-### 3.1 Elegibilidade da profissional
-Para aparecer como elegível, a profissional precisa:
-- estar ativa
-- ter aprovação do perfil
-- ter verificação aprovada
-- atender a região
-- estar marcada como apta para receber chamados
-- ter disponibilidade compatível
-- não ter conflito com outro atendimento
-
-### 3.2 Máximo de 3 selecionadas
-A solicitação pode ter no máximo 3 profissionais selecionadas.
-
-### 3.3 Primeira que aceitar ganha
-A aceitação precisa ser transacional.
-
-### 3.4 Pagamento
-O pagamento sempre nasce de um atendimento.
-O caminho principal do MVP inicia um checkout Asaas vinculado ao atendimento.
-
-### 3.5 Confirmação
-Somente o webhook altera o pagamento para confirmado de forma definitiva.
-
-### 3.6 Avaliação
-- apenas o cliente avalia
-- apenas a profissional é avaliada
-- só após atendimento finalizado
-- uma avaliação por atendimento
-- nota de 1 a 5
-
----
-
-## 4. Enums recomendados
-
-### TipoUsuario
-- CLIENTE
-- PROFISSIONAL
-- ADMIN
-
-### StatusConta
-- PENDENTE_VERIFICACAO
-- ATIVO
-- SUSPENSO
-- REJEITADO
-- INATIVO
-
-### StatusAprovacaoProfissional
-- PENDENTE
-- EM_ANALISE
-- APROVADO
-- REJEITADO
-- BLOQUEADO
-
-### StatusVerificacao
-- PENDENTE
-- EM_ANALISE
-- APROVADO
-- REJEITADO
-
-### TipoServico
-- PADRAO
-- PESADA
-- POS_OBRA
-- PASSAR_ROUPA
-- OUTRO
-
-### StatusSolicitacao
-- CRIADA
-- AGUARDANDO_SELECAO
-- CONVITES_ENVIADOS
-- AGUARDANDO_ACEITE
-- ACEITA
-- PAGA
-- EM_EXECUCAO
-- FINALIZADA
-- CANCELADA
-- EXPIRADA
-
-### StatusConvite
-- ENVIADO
-- VISUALIZADO
-- ACEITO
-- RECUSADO
-- EXPIRADO
-- CANCELADO
-
-### StatusAtendimento
-- AGUARDANDO_PAGAMENTO
-- CONFIRMADO
-- EM_EXECUCAO
-- FINALIZADO
-- CANCELADO
-- EM_ANALISE
-
-### MetodoPagamento
-- PIX
-- CARTAO
-- BOLETO
-
-### StatusPagamento
-- PENDENTE
-- AGUARDANDO_CONFIRMACAO
-- PAGO
-- FALHOU
-- CANCELADO
-- ESTORNADO
-
-### TipoCheckpoint
-- INICIO
-- FIM
-
-### TipoOcorrencia
-- ATRASO
-- AUSENCIA
-- CONDUTA
-- QUALIDADE_SERVICO
-- PAGAMENTO
-- OUTRO
-
-### StatusOcorrencia
-- ABERTA
-- EM_ANALISE
-- RESOLVIDA
-- CANCELADA
+### Avaliação
+- somente o cliente avalia
+- somente após `AtendimentoFaxina` finalizado

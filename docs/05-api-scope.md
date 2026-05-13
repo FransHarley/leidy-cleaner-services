@@ -54,17 +54,6 @@ Admin altera status da conta.
 ### GET `/usuarios`
 Admin lista usuários em modo somente leitura.
 
-Parametros opcionais:
-- `tipoUsuario`
-- `statusConta`
-- `search`
-
-### GET `/usuarios/{id}`
-Admin consulta detalhe seguro do usuário em modo somente leitura.
-
-### GET `/clientes`
-Não existe endpoint separado. Clientes são consultados pela visão admin de `/usuarios`, com `perfilClienteId` quando houver perfil vinculado.
-
 ---
 
 ## 4. Endereços
@@ -95,11 +84,11 @@ Admin cria região.
 Admin atualiza região.
 
 ### PATCH `/regioes/{id}/ativacao`
-Admin ativa/inativa região.
+Admin ativa ou inativa região.
 
 ---
 
-## 6. Profissional
+## 6. Profissionais
 
 ### GET `/profissionais/me`
 Retorna o perfil da profissional logada.
@@ -126,25 +115,17 @@ Atualiza disponibilidade.
 Remove disponibilidade.
 
 ### GET `/profissionais`
-Admin lista profissionais. Retorna `ApiResponse<List<AdminProfissionalResponse>>`.
-
-Parâmetros opcionais:
-- `statusAprovacao`: filtra por status de aprovação.
-- `search`: busca simples por nome de exibição, nome completo ou e-mail.
-
-Campos principais retornados: `id`, `usuarioId`, `nomeCompleto`, `email`, `telefone`, `nomeExibicao`, `cpf`, `dataNascimento`, `descricao`, `fotoPerfilUrl`, `experienciaAnos`, `ativoParaReceberChamados`, `statusAprovacao`, `notaMedia`, `totalAvaliacoes`, `criadoEm`, `atualizadoEm`, `statusConta` e `tipoUsuario`.
-
-Não expõe senha/hash, documentos de verificação ou URLs sensíveis.
+Admin lista profissionais.
 
 ### PATCH `/profissionais/{id}/aprovacao`
-Admin aprova/rejeita profissional.
+Admin aprova ou rejeita profissional.
 
 ---
 
 ## 7. Verificação documental
 
 ### POST `/verificacoes/documentos`
-Faz upload/registro dos arquivos de verificação.
+Faz upload ou registro de arquivos de verificação.
 
 ### GET `/verificacoes/minha`
 Usuário vê o status da própria verificação.
@@ -156,14 +137,14 @@ Admin lista verificações.
 Admin vê detalhes.
 
 ### PATCH `/verificacoes/{id}/analisar`
-Admin aprova/rejeita análise.
+Admin aprova ou rejeita análise.
 
 ---
 
 ## 8. Solicitações
 
 ### POST `/solicitacoes`
-Cliente cria solicitação de faxina.
+Cliente cria `SolicitacaoFaxina`.
 
 `tipoServico` deve usar um destes valores:
 - `FAXINA_RESIDENCIAL`
@@ -177,14 +158,8 @@ Cliente lista suas solicitações.
 ### GET `/solicitacoes`
 Admin lista solicitações em modo somente leitura.
 
-Parametros opcionais:
-- `status`
-- `clienteId`
-- `regiaoId`
-- `tipoServico`
-
 ### GET `/solicitacoes/{id}`
-Detalhe da solicitação para a cliente dona. Admin tambem pode consultar qualquer solicitação em modo somente leitura.
+Detalhe da solicitação para a cliente dona. Admin também pode consultar em modo somente leitura.
 
 ### PATCH `/solicitacoes/{id}/cancelar`
 Cancela solicitação.
@@ -193,7 +168,13 @@ Cancela solicitação.
 Lista profissionais elegíveis.
 
 ### POST `/solicitacoes/{id}/selecionados`
-Cliente seleciona até 3 profissionais.
+Cliente seleciona exatamente 1 profissional.
+
+Observações:
+- o contrato pode continuar aceitando `profissionalIds[]`
+- o payload deve conter exatamente 1 id
+- o backend rejeita zero ou mais de um profissional
+- após a seleção válida, a solicitação vai para `AGUARDANDO_PAGAMENTO`
 
 ---
 
@@ -208,147 +189,116 @@ Detalhe do convite.
 ### POST `/convites/{id}/aceitar`
 Profissional aceita convite.
 
+Efeitos esperados:
+- cria `AtendimentoFaxina` com status `CONFIRMADO`
+- vincula o pagamento pago ao atendimento criado
+- marca a solicitação como `ACEITA`
+
 ### POST `/convites/{id}/recusar`
 Profissional recusa convite.
+
+Efeitos esperados:
+- não cria atendimento
+- mantém o pagamento como `PAGO`
+- pode gerar `CreditoSolicitacao` se o fluxo da solicitação for encerrado por recusa
 
 ---
 
 ## 10. Atendimentos
 
 ### GET `/atendimentos/meus`
-Lista atendimentos do usuario autenticado:
-- cliente ve atendimentos em que e dona
-- profissional ve atendimentos em que esta atribuida
+Lista atendimentos do usuário autenticado.
 
 ### GET `/atendimentos/{id}`
-Detalha atendimento relacionado ao usuario autenticado. Admin também pode consultar qualquer atendimento em modo somente leitura.
+Detalha atendimento relacionado ao usuário autenticado.
 
 ### GET `/atendimentos`
 Admin lista atendimentos em modo somente leitura.
 
-Parâmetros opcionais:
-- `status`
-- `clienteId`
-- `profissionalId`
-
 ### POST `/atendimentos/{id}/iniciar`
-Profissional atribuida inicia o servico. Transicao: `CONFIRMADO -> EM_EXECUCAO`.
-
-Payload:
-```json
-{
-  "latitude": -30.1234567,
-  "longitude": -51.1234567,
-  "fotoComprovacaoUrl": "local/checkpoints/inicio.png",
-  "observacao": "Inicio registrado"
-}
-```
+Profissional atribuída inicia o serviço.
 
 ### POST `/atendimentos/{id}/finalizar`
-Profissional atribuida finaliza o servico. Transicao: `EM_EXECUCAO -> FINALIZADO`.
-
-Payload igual ao de inicio. `fotoComprovacaoUrl` e apenas metadado; upload/armazenamento real ficam fora deste marco.
+Profissional atribuída finaliza o serviço.
 
 ### GET `/atendimentos/{id}/checkpoints`
-Lista checkpoints do atendimento para usuario relacionado. Admin também pode consultar checkpoints de qualquer atendimento.
+Lista checkpoints do atendimento.
 
 ---
 
 ## 11. Pagamentos
 
-### POST `/pagamentos/checkout`
-Cria checkout Asaas para um atendimento da cliente autenticada. Esse e o caminho principal do MVP. O pagamento nasce vinculado ao `AtendimentoFaxina`, fica pendente e retorna `checkoutUrl` para redirecionamento.
-
 ### POST `/pagamentos`
-Cria cobranca direta do atendimento. Endpoint legado/deprecado; depende de `ASAAS_DEFAULT_CUSTOMER_ID` e nao e o caminho principal do checkout.
+Cria um pagamento para a cliente autenticada.
+
+Regras:
+- deve receber exatamente um vínculo: `solicitacaoId` ou `atendimentoId`
+- não pode receber os dois ao mesmo tempo
+- no fluxo pré-pago principal, o pagamento nasce com `solicitacaoId`
 
 ### GET `/pagamentos/{id}`
-Consulta pagamento do cliente relacionado. Admin tambem pode consultar qualquer pagamento em modo somente leitura.
+Consulta detalhe do pagamento.
 
 ### GET `/pagamentos/atendimento/{atendimentoId}`
-Consulta pagamento pelo atendimento para o cliente relacionado. Admin tambem pode consultar o pagamento de qualquer atendimento em modo somente leitura.
+Consulta pagamento associado a um atendimento.
 
-### GET `/pagamentos`
-Admin lista pagamentos em modo somente leitura.
-
-Parametros opcionais:
-- `status`
-- `metodoPagamento`
-- `atendimentoId`
+### GET `/pagamentos/solicitacao/{solicitacaoId}`
+Consulta pagamento associado a uma solicitação.
 
 ### POST `/pagamentos/{id}/consultar-status`
-Cliente relacionado reconsulta o gateway, mas nao confirma pagamento de forma definitiva. Estados recebidos do gateway podem ir para `AGUARDANDO_CONFIRMACAO`; `PAGO` so vem do webhook. Admin nao usa essa rota para forcar transicao.
+Consulta o status no gateway quando aplicável.
+
+Regras:
+- pode reconciliar pagamento ligado à solicitação
+- pode reconciliar pagamento ligado ao atendimento
+- se o gateway informar pagamento confirmado para uma solicitação, deve reutilizar o mesmo fluxo de confirmação do webhook
+- para solicitação paga, a reconciliação deve poder mover a solicitação para `PAGA_AGUARDANDO_ACEITE` e criar exatamente 1 convite
 
 ### POST `/webhooks/asaas`
-Recebe webhook do Asaas em `POST /api/v1/webhooks/asaas`. O endpoint:
-- aceita eventos sem JWT, mas exige o header `asaas-access-token`
-- compara `asaas-access-token` com `ASAAS_WEBHOOK_TOKEN` antes de processar o payload
-- rejeita chamadas sem token ou com token invalido com erro JSON 401
-- usa `event`, `payment.id`, `payment.checkoutSession` e, para checkout, `checkout.id` como identificadores principais
-- no caminho principal de Checkout, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` reconciliam o pagamento quando o payload traz `payment.checkoutSession`; `CHECKOUT_PAID` continua suportado se o Asaas o emitir
-- confirma `Pagamento = PAGO` e `AtendimentoFaxina = CONFIRMADO` apenas em eventos de sucesso suportados
-- e idempotente e ignora entregas duplicadas com resposta 2xx estavel
-- ignora eventos desconhecidos ou nao suportados com resposta 200 para evitar retry desnecessario do gateway
-- valida o payload estruturalmente depois da autenticacao por token do webhook
+Recebe eventos do Asaas.
+
+Regras:
+- validar autenticidade do webhook
+- suportar confirmação por `payment.id`
+- suportar fallback por `externalReference`
+- `externalReference` de solicitação usa `solicitacao-{id}`
+- `externalReference` legado de atendimento usa `atendimento-{id}`
+- webhook confirmado de solicitação cria convite e não cria atendimento
+- webhook confirmado de atendimento mantém compatibilidade com o comportamento legado
 
 ---
 
-## 12. Avaliações
+## 12. Créditos de solicitação
+
+### GET `/creditos-solicitacao/meus`
+Lista créditos de reposição do cliente autenticado.
+
+### POST `/creditos-solicitacao/{creditoId}/usar-em-solicitacao/{solicitacaoId}`
+Usa um `CreditoSolicitacao` em uma nova solicitação equivalente.
+
+Efeitos esperados:
+- valida equivalência da nova solicitação
+- muda o crédito para `UTILIZADO`
+- cria `Pagamento` interno com `gateway = INTERNO` e `metodoPagamento = CREDITO_SOLICITACAO`
+- move a solicitação para `PAGA_AGUARDANDO_ACEITE`
+- cria exatamente 1 convite
+- não chama Asaas
+
+---
+
+## 13. Avaliações
 
 ### POST `/avaliacoes`
-Cliente cria avaliação da profissional.
+Cliente cria avaliação da profissional após atendimento finalizado.
 
 ### GET `/profissionais/{id}/avaliacoes`
-Lista avaliações da profissional.
+Consulta avaliações públicas ou operacionais conforme escopo da API.
 
 ---
 
-## 13. Ocorrências
+## 14. Regras transversais
 
-### POST `/ocorrencias`
-Abre ocorrência.
-
-### GET `/ocorrencias/meus`
-Usuário lista suas ocorrências.
-
-### GET `/ocorrencias/{id}`
-Detalha ocorrência.
-
-### GET `/ocorrencias`
-Admin lista ocorrências.
-
-### PATCH `/ocorrencias/{id}/status`
-Admin altera status.
-
----
-
-## 14. Regras críticas de API
-
-### 14.1 Aceite de convite
-A rota de aceite deve:
-- validar que a solicitação ainda está aberta
-- validar que o convite ainda está ativo
-- criar o atendimento
-- cancelar os demais convites
-- rodar em transação
-
-### 14.2 Webhook de pagamento
-A rota de webhook deve:
-- validar `asaas-access-token` contra `ASAAS_WEBHOOK_TOKEN` antes de processar o payload
-- localizar o pagamento correto
-- ser idempotente
-- processar `CHECKOUT_PAID` como sucesso definitivo para pagamentos criados via Asaas Checkout quando esse evento for recebido
-- processar `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED_IN_CASH` como sucesso definitivo quando o pagamento puder ser localizado por `payment.id`, `payment.checkoutSession`, `checkout.id` ou `externalReference`
-- manter `PAYMENT_CREATED` sem confirmacao de pagamento
-- ignorar eventos nao suportados com 200
-- mapear `PAYMENT_OVERDUE` para falha sem confirmar o atendimento
-- atualizar `Pagamento` para `PAGO`
-- atualizar `AtendimentoFaxina` para `CONFIRMADO`
-- nao tratar `PAYMENT_OVERDUE` como confirmacao de pagamento
-
-### 14.3 Avaliação
-A rota de avaliação deve validar:
-- se o usuário é o cliente daquele atendimento
-- se o atendimento está finalizado
-- se a avaliação ainda não existe
-- se a nota está entre 1 e 5
+- frontend nunca confirma pagamento
+- backend é a fonte de verdade para elegibilidade, pagamento, convite, atendimento e crédito
+- aceite deve continuar transacional
+- webhook e reconciliação devem ser idempotentes

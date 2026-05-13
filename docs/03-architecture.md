@@ -2,7 +2,18 @@
 
 ## 1. Visão geral
 
-A arquitetura recomendada é de **monorepo com frontend e backend separados por aplicação**, compartilhando documentação, convenções e fluxos, mas sem forçar compartilhamento artificial de código entre Java e TypeScript.
+A arquitetura recomendada é de **monorepo com frontend e backend separados por aplicação**, compartilhando documentação, convenções e fluxos de produto.
+
+O backend continua sendo a fonte de verdade para:
+- elegibilidade da profissional
+- seleção válida de profissional
+- criação e confirmação de pagamento
+- reconciliação com Asaas
+- criação de convite
+- aceite transacional
+- criação de atendimento
+- geração e uso de `CreditoSolicitacao`
+- execução e avaliação
 
 ---
 
@@ -13,7 +24,6 @@ leidy-cleaner-services/
 ├── AGENTS.md
 ├── README.md
 ├── docker-compose.yml
-├── .env.example
 ├── apps/
 │   ├── frontend/
 │   └── backend/
@@ -21,208 +31,143 @@ leidy-cleaner-services/
 └── infra/
 ```
 
-### Estrutura recomendada do backend
+---
 
-```text
-apps/backend/src/main/java/br/com/leidycleaner/
-├── auth/
-├── usuarios/
-├── clientes/
-├── profissionais/
-├── regioes/
-├── verificacao/
-├── solicitacoes/
-├── convites/
-├── atendimentos/
-├── pagamentos/
-├── avaliacoes/
-├── ocorrencias/
-├── notificacoes/
-├── auditoria/
-├── config/
-└── core/
-```
+## 3. Camadas do backend
 
-### Estrutura recomendada do frontend
+Arquitetura modular e em camadas:
+- controllers finos
+- services com regras de negócio
+- repositories sem orquestração de fluxo
+- DTOs para entrada e saída
+- entidades sem exposição direta na API
 
-```text
-apps/frontend/src/
-├── app/
-├── components/
-├── layouts/
-├── pages/
-├── features/
-│   ├── auth/
-│   ├── cliente/
-│   ├── profissional/
-│   ├── admin/
-│   ├── solicitacoes/
-│   ├── atendimentos/
-│   └── pagamentos/
-├── hooks/
-├── services/
-├── lib/
-├── types/
-└── routes/
-```
+Módulos centrais:
+- `solicitacoes`
+- `convites`
+- `atendimentos`
+- `pagamentos`
+- `creditos`
+- `profissionais`
+- `clientes`
+- `avaliacoes`
+- `ocorrencias`
 
 ---
 
-## 3. Stack técnica
+## 4. Fluxo técnico principal
 
-## 3.1 Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- TanStack Query
-- React Hook Form
-- Zod
+### 4.1 Solicitação
+1. Cliente cria `SolicitacaoFaxina`.
+2. Backend valida endereço, região, data e tipo de serviço.
+3. Cliente consulta profissionais elegíveis.
+4. Cliente seleciona exatamente 1 profissional.
+5. Backend persiste a seleção e move a solicitação para `AGUARDANDO_PAGAMENTO`.
 
-## 3.2 Backend
-- Java 21
-- Spring Boot 3.x
-- Spring Web
-- Spring Security
-- Spring Data JPA
-- Bean Validation
-- Flyway
+### 4.2 Pagamento na solicitação
+1. Backend cria um `Pagamento` para a solicitação.
+2. Se o meio for externo, o pagamento nasce com `solicitacaoId` preenchido e `atendimentoId` nulo.
+3. `externalReference` externo usa `solicitacao-{id}`.
+4. Frontend apenas exibe checkout, status e refresh controlado.
 
-## 3.3 Dados e ambiente
-- PostgreSQL
-- Docker Compose para ambiente local
-- Redis opcional no futuro para expiração de convite, cache ou coordenação
-- Storage S3 compatível no futuro para documentos e imagens
+### 4.3 Confirmação de pagamento
+1. Asaas envia webhook para o backend.
+2. O backend valida autenticidade e registra o evento.
+3. O backend localiza o `Pagamento` por `gatewayPaymentId` e, se necessário, por `externalReference`.
+4. O mesmo fluxo interno de confirmação deve ser reutilizado por reconciliação manual segura.
+5. Ao confirmar:
+   - `Pagamento` vira `PAGO`
+   - `recebidoEm` é preenchido
+   - `SolicitacaoFaxina` vai para `PAGA_AGUARDANDO_ACEITE`
+   - o backend cria exatamente 1 `ConviteProfissional`
+   - nenhum `AtendimentoFaxina` é criado nesse momento
 
----
+### 4.4 Aceite da profissional
+1. Profissional aceita ou recusa o convite.
+2. No aceite válido, o backend roda transação para:
+   - validar convite ativo
+   - validar solicitação paga e aberta
+   - criar `AtendimentoFaxina` com status `CONFIRMADO`
+   - vincular o pagamento pago ao atendimento criado
+   - marcar o convite como aceito
+   - atualizar a solicitação para `ACEITA`
 
-## 4. Padrões de arquitetura
+### 4.5 Recusa ou expiração
+Se a profissional recusar ou o convite expirar:
+- não criar atendimento
+- manter o pagamento como `PAGO`
+- manter `atendimentoId` nulo
+- mover a solicitação para `NAO_ACEITA_CREDITO_GERADO`
+- criar exatamente um `CreditoSolicitacao`
 
-### 4.1 Backend em camadas
-- Controller
-- Service
-- Repository
-- DTO
-- Entity
-- Mapper
-
-### 4.2 Regras
-- Controller fino
-- Regra de negócio em Service
-- Repository sem orquestração de processo
-- DTO para entrada e saída
-- Entidade não exposta diretamente na API
-
-### 4.3 Frontend
-- lógica de servidor centralizada
-- formulários desacoplados
-- componentes reutilizáveis
-- estado de servidor com React Query
-- validação com Zod
+### 4.6 Uso de crédito de reposição
+1. Cliente cria uma nova solicitação equivalente.
+2. Backend valida equivalência.
+3. Backend consome um `CreditoSolicitacao`.
+4. Backend cria um `Pagamento` interno com:
+   - `gateway = INTERNO`
+   - `metodoPagamento = CREDITO_SOLICITACAO`
+   - `status = PAGO`
+   - `atendimentoId = null`
+5. Backend move a nova solicitação para `PAGA_AGUARDANDO_ACEITE` e cria exatamente 1 convite.
 
 ---
 
 ## 5. Arquitetura de pagamento
 
-## 5.1 Decisão
-O sistema usará **Asaas** com cobrança vinculada ao atendimento.
+### Regras estruturais
+- webhook é a fonte de verdade para confirmação externa
+- frontend nunca marca pagamento como pago
+- reconciliação manual consulta o gateway, mas reaproveita o mesmo fluxo interno de confirmação
+- o pagamento pode começar na solicitação e terminar vinculado ao atendimento
+- não existe criação de atendimento em webhook
 
-## 5.2 Regra de ouro
-O **webhook** do gateway será a fonte de verdade para confirmação de pagamento.
-
-### Consequência
-O frontend:
-- cria a cobrança por meio do backend
-- exibe QR Code / PIX / status
-- consulta status quando necessário
-- não confirma pagamento por conta própria
-
-### Backend
-O backend deve:
-- criar a cobrança no gateway
-- armazenar o identificador externo
-- receber e validar webhooks
-- processar atualizações de status com segurança e idempotência
-- atualizar o atendimento apenas quando o pagamento for realmente confirmado
+### Estados relevantes
+- `Pagamento`: `PENDENTE`, `AGUARDANDO_CONFIRMACAO`, `PAGO`, `FALHOU`, `CANCELADO`, `ESTORNADO`
+- `SolicitacaoFaxina`: `AGUARDANDO_PAGAMENTO`, `PAGA_AGUARDANDO_ACEITE`, `ACEITA`, `NAO_ACEITA_CREDITO_GERADO`
+- `AtendimentoFaxina`: `CONFIRMADO`, `EM_EXECUCAO`, `FINALIZADO`
 
 ---
 
-## 6. Fluxo técnico principal
+## 6. Frontend
 
-1. Cliente cria solicitação
-2. Cliente seleciona até 3 profissionais
-3. Sistema envia convites
-4. Uma profissional aceita
-5. Backend cria o atendimento
-6. Atendimento fica em `AGUARDANDO_PAGAMENTO`
-7. Backend cria cobrança no Asaas
-8. Cliente paga
-9. Webhook chega ao backend
-10. Backend atualiza `pagamento = PAGO`
-11. Backend atualiza `atendimento = CONFIRMADO`
-12. Profissional pode iniciar o serviço
-13. Profissional finaliza o serviço
-14. Cliente avalia a profissional
+O frontend deve:
+- criar solicitação
+- listar elegíveis
+- permitir seleção de exatamente 1 profissional
+- iniciar o pagamento via backend
+- exibir status do pagamento
+- buscar periodicamente o estado persistido no backend
+- ocultar UI de pagamento quando o backend marcar `PAGO`
+- mostrar estado de aguardo de aceite após pagamento confirmado
 
----
-
-## 7. Segurança
-
-### 7.1 Auth
-- JWT para access token
-- refresh token em etapa posterior se necessário
-
-### 7.2 Autorização
-- por papel
-- por ownership
-- por relação com o recurso
-
-### 7.3 Dados sensíveis
-Devem ser tratados como sensíveis:
-- documentos
-- selfie
-- comprovante de residência
-- eventuais fotos de checkpoint
-
-### 7.4 Webhook
-- validar origem/assinatura quando aplicável
-- tratar eventos duplicados
-- impedir transições de status incorretas
+O frontend não deve:
+- validar regra crítica como definitiva
+- confirmar pagamento
+- criar convite
+- criar atendimento
+- decidir equivalência de crédito
 
 ---
 
-## 8. Persistência
+## 7. Concorrência e idempotência
 
-### 8.1 Banco
-Usar PostgreSQL com modelagem relacional.
-
-### 8.2 Migrações
-- Flyway obrigatório
-- nunca editar migration já aplicada em ambiente compartilhado
-- criar novas migrations para mudanças
-
-### 8.3 Enums
-No banco, preferir `VARCHAR` + enums Java.
-Não usar enum nativo do PostgreSQL no início.
+Fluxos que exigem cuidado:
+- webhook duplicado não pode duplicar convite
+- reconciliação duplicada não pode duplicar convite
+- recusa e expiração não podem gerar crédito duplicado
+- aceite concorrente deve continuar transacional
+- vínculo do pagamento ao atendimento deve ocorrer uma única vez
 
 ---
 
-## 9. Observabilidade mínima
+## 8. Observações de evolução
 
-Para o MVP, recomenda-se:
-- logs estruturados básicos
-- logs de integração do Asaas
-- logs de erro em aceite e pagamento
-- rastreio de ações críticas em auditoria
-
----
-
-## 10. Decisões que não devem ser quebradas
-
-- monorepo
-- pagamento vinculado ao atendimento
-- webhook como fonte de verdade
-- repasse fora da plataforma
-- avaliação apenas do cliente para a profissional
-- máximo de 3 profissionais selecionadas por solicitação
+O fluxo pré-pago muda a ordem do domínio, mas mantém os princípios arquiteturais do produto:
+- backend como fonte de verdade
+- Asaas como gateway externo
+- dinheiro na conta da empresa
+- sem split
+- sem payout na plataforma
+- sem chat
+- sem múltiplas profissionais por atendimento

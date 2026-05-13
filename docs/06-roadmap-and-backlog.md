@@ -3,7 +3,7 @@
 ## Convenções
 - P0 = crítico
 - P1 = importante
-- P2 = melhoria / polimento
+- P2 = melhoria ou polimento
 
 ---
 
@@ -52,13 +52,13 @@
 
 ### P0
 - modelar `documentos_verificacao`
-- criar upload/registro de documentos
+- criar upload ou registro de documentos
 - criar consulta do status de verificação
 - criar análise de verificação pelo admin
 
 ### P1
 - modelar `regioes_atendimento`
-- criar seed de bairros/regiões iniciais
+- criar seed de bairros ou regiões iniciais
 - modelar `profissional_regioes`
 - modelar `disponibilidades_profissional`
 - criar endpoints de regiões da profissional
@@ -66,69 +66,92 @@
 
 ---
 
-## Fase 4 — Cliente e solicitação
+## Fase 4 — Solicitação e seleção única
 
 ### P0
 - modelar `enderecos`
 - criar CRUD de endereços
 - modelar `solicitacoes_faxina`
-- suportar tipos de serviço `FAXINA_RESIDENCIAL`, `FAXINA_COMERCIAL`, `FAXINA_CONDOMINIO` e `FAXINA_EVENTO`
+- suportar tipos de serviço do MVP
 - criar endpoint de criação de solicitação
 - criar listagem de solicitações do cliente
 - criar listagem de profissionais elegíveis
-- criar endpoint para seleção de até 3 profissionais
+- criar endpoint para seleção de exatamente 1 profissional
+- mover solicitação para `AGUARDANDO_PAGAMENTO` após seleção válida
 
 ---
 
-## Fase 5 — Convites e aceite
+## Fase 5 — Pagamento antes do convite
+
+### P0
+- modelar `pagamentos` com vínculo inicial à solicitação
+- integrar Asaas por API
+- criar endpoint de criação de pagamento
+- salvar `gatewayPaymentId`
+- persistir `externalReference` como `solicitacao-{id}` quando aplicável
+- criar endpoint de consulta de pagamento por solicitação
+- criar endpoint `POST /api/v1/pagamentos/{id}/consultar-status`
+- criar webhook do Asaas em `POST /api/v1/webhooks/asaas`
+- confirmar pagamento com idempotência
+- mover solicitação para `PAGA_AGUARDANDO_ACEITE`
+- criar exatamente 1 convite após confirmação
+
+### Observação crítica
+Pagamento confirmado nesse fluxo cria convite, não cria atendimento.
+
+---
+
+## Fase 6 — Convite, aceite e atendimento
 
 ### P0
 - modelar `convites_profissional`
-- criar disparo de convites
 - criar listagem de convites da profissional
 - criar aceite transacional
 - criar recusa de convite
-- cancelar os demais convites após aceite válido
+- criar atendimento automaticamente após aceite válido
+- vincular o pagamento pago ao atendimento criado
+- listar atendimentos do usuário autenticado
+- detalhar atendimento
+
+### P1
+- criar job ou scheduler para expiração de convite quando aplicável
 
 ### Observação crítica
-Essa fase não pode ser tratada como detalhe.
-É uma das duas partes mais sensíveis do sistema.
+Essa continua sendo uma das partes mais sensíveis do sistema.
 
 ---
 
-## Fase 6 — Atendimento
+## Fase 7 — Crédito de reposição
 
 ### P0
-- modelar `atendimentos_faxina`
-- criar atendimento automaticamente após aceite válido
-- listar atendimentos do usuário autenticado
-- detalhar atendimento
+- modelar `creditos_solicitacao`
+- gerar `CreditoSolicitacao` em recusa ou expiração de solicitação paga
+- garantir idempotência da geração do crédito
+- criar listagem de créditos do cliente
+- validar equivalência de uso do crédito
+- consumir crédito em nova solicitação equivalente
+- criar `Pagamento` interno com `gateway = INTERNO`
+- criar convite sem chamar Asaas quando o crédito for usado
+
+### P1
+- trilha de auditoria mais detalhada do uso do crédito
+
+### Observação crítica
+Não modelar esse crédito como carteira, saldo monetário ou desconto.
+
+---
+
+## Fase 8 — Execução do serviço
+
+### P0
 - criar checkpoint de início
 - criar checkpoint de fim
 - atualizar status do atendimento conforme execução
+- impedir início ou fim duplicados
 
 ---
 
-## Fase 7 — Pagamento com Asaas
-
-### P0
-- modelar `pagamentos`
-- criar integracao base com Asaas Checkout
-- criar endpoint principal `POST /api/v1/pagamentos/checkout`
-- salvar identificador externo
-- criar endpoint de consulta de pagamento
-- criar endpoint de webhook do Asaas em `POST /api/v1/webhooks/asaas`
-- atualizar status do pagamento via webhook
-- atualizar atendimento para `CONFIRMADO` via webhook
-- implementar idempotência mínima do webhook
-
-### Observação crítica
-Essa é a outra parte mais sensível do sistema.
-Sem isso bem feito, o produto fica operacionalmente quebrado.
-
----
-
-## Fase 8 — Avaliação
+## Fase 9 — Avaliação
 
 ### P1
 - modelar `avaliacoes_profissional`
@@ -140,7 +163,7 @@ Sem isso bem feito, o produto fica operacionalmente quebrado.
 
 ---
 
-## Fase 9 — Ocorrências e admin
+## Fase 10 — Ocorrências e admin
 
 ### P1
 - modelar `ocorrencias_atendimento`
@@ -149,30 +172,31 @@ Sem isso bem feito, o produto fica operacionalmente quebrado.
 - criar listagem admin
 - alterar status de ocorrência
 - dashboard admin inicial
-- listagens de profissionais, solicitações, atendimentos e pagamentos
+- listagens de profissionais, solicitações, créditos, atendimentos e pagamentos
 
 ---
 
-## Fase 10 — Frontend operacional
+## Fase 11 — Frontend operacional
 
 ### P1
 - home pública
 - login
-- cadastro cliente
-- cadastro profissional
+- cadastro de cliente
+- cadastro de profissional
 - dashboard cliente
 - dashboard profissional
 - dashboard admin
 - telas de solicitação
+- telas de pagamento por solicitação
 - telas de convites
 - tela de atendimento ativo
-- tela de pagamento
+- tela de créditos de reposição
 - tela de histórico
 - tela de avaliação
 
 ---
 
-## Fase 11 — Polimento
+## Fase 12 — Polimento
 
 ### P2
 - loading states
@@ -187,29 +211,34 @@ Sem isso bem feito, o produto fica operacionalmente quebrado.
 ## Ordem real de execução sugerida
 
 1. Fundação do monorepo
-2. Backend/frontend base
+2. Backend e frontend base
 3. Auth e usuários
 4. Onboarding profissional
-5. Endereços e solicitação
-6. Convites e aceite
-7. Atendimento
-8. Pagamento com webhook
-9. Avaliação
-10. Admin e ocorrências
-11. Polimento
+5. Solicitação
+6. Seleção única
+7. Pagamento
+8. Webhook e reconciliação
+9. Convite
+10. Aceite
+11. Atendimento
+12. Crédito de reposição
+13. Execução
+14. Avaliação
+15. Admin e ocorrências
+16. Polimento
 
 ---
 
 ## Pontos de maior risco técnico
 
-### 1. Aceite concorrente
+### 1. Webhook do gateway
+Precisa ser idempotente e manter o estado da solicitação consistente.
+
+### 2. Aceite concorrente
 Precisa ser transacional.
 
-### 2. Webhook do gateway
-Precisa ser idempotente e alterar o atendimento corretamente.
-
-### 3. Elegibilidade
-Não pode virar filtro frouxo.
+### 3. Equivalência de crédito
+Não pode virar um pseudo-saldo flexível.
 
 ### 4. Estados
-Não pode haver transições arbitrárias.
+Não pode haver transições arbitrárias entre solicitação, pagamento, convite e atendimento.

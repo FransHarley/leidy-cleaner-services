@@ -2,7 +2,7 @@
 
 ## O produto
 
-Leidy Cleaner Services é uma plataforma web para intermediação de serviços de limpeza.
+Leidy Cleaner Services é uma plataforma web para intermediação operacional de serviços de limpeza.
 
 Ela conecta:
 - clientes que precisam contratar faxina residencial, comercial, condominial ou para eventos
@@ -17,87 +17,66 @@ A plataforma resolve isso com:
 - cadastro estruturado
 - verificação documental
 - regiões de atendimento
-- seleção de profissionais elegíveis
-- fluxo claro de convite e aceite
-- cobrança centralizada
+- seleção de profissional elegível
+- pagamento centralizado antes do convite
+- convite e resposta com rastreabilidade
+- crédito de reposição para solicitação paga que não foi aceita
 - rastreio de execução do serviço
 - supervisão administrativa
 
 ## Decisões mais importantes
 
 ### 1. O sistema será monorepo
-Porque o projeto tem um frontend, um backend e documentação fortemente acoplados, e não há ganho real em separar cedo demais.
+Porque o projeto tem frontend, backend e documentação fortemente acoplados.
 
-### 2. O pagamento entrará integralmente na conta da empresa
-A plataforma não fará split nem repasse automático.
+### 2. O pagamento entra integralmente na conta da empresa
+A plataforma não faz split nem repasse automático.
 
-### 3. O gateway inicial será Asaas
-A integração será feita por API e webhook.
+### 3. O gateway externo inicial é Asaas
+A integração externa é feita por API e webhook.
 
-### 4. O pagamento será vinculado ao atendimento
-Não haverá cobrança solta. Cada cobrança nasce de um atendimento criado após o aceite válido.
+### 4. O pagamento pode nascer na solicitação
+No fluxo pré-pago, a cobrança externa pode ser criada primeiro para a `SolicitacaoFaxina`, com `AtendimentoFaxina` ainda inexistente. Após aceite válido, o pagamento já quitado é vinculado ao atendimento criado.
 
-### 5. O webhook será a fonte de verdade
-O frontend nunca confirmará pagamento por conta própria.
+### 5. O webhook continua sendo a fonte de verdade
+O frontend nunca confirma pagamento por conta própria. O backend reconcilia estados externos e internos.
 
-### 6. A avaliação será unilateral
-Somente o cliente poderá avaliar a profissional após o atendimento finalizado.
+### 6. Crédito de solicitação não é dinheiro
+`CreditoSolicitacao` representa um direito único de reposição para uma nova solicitação equivalente. Não é carteira, não é saldo, não é desconto e não é banco de horas.
 
-## Decisão técnica final recomendada
+### 7. A avaliação continua unilateral
+Somente o cliente avalia a profissional após o atendimento finalizado.
 
-### Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- TanStack Query
-- React Hook Form
-- Zod
+## Sequência operacional do produto
 
-### Backend
-- Java 21
-- Spring Boot 3.x
-- Spring Security
-- Spring Data JPA
-- Bean Validation
-- Flyway
-
-### Dados e infraestrutura
-- PostgreSQL
-- Docker Compose para ambiente local
-- Armazenamento de arquivos com S3 compatível no futuro
+1. Cliente cria `SolicitacaoFaxina`.
+2. Cliente visualiza profissionais elegíveis.
+3. Cliente seleciona exatamente 1 profissional.
+4. Solicitação vai para `AGUARDANDO_PAGAMENTO`.
+5. Cliente paga via Asaas ou usa um `CreditoSolicitacao`.
+6. Backend confirma o pagamento por webhook ou reconciliação segura.
+7. Solicitação vai para `PAGA_AGUARDANDO_ACEITE` e o backend cria exatamente 1 `ConviteProfissional`.
+8. Profissional aceita ou recusa.
+9. Se aceitar, o backend cria `AtendimentoFaxina` já `CONFIRMADO` e vincula o pagamento pago ao atendimento.
+10. Se recusar ou expirar, o backend gera um `CreditoSolicitacao` para reposição equivalente.
+11. Profissional executa o serviço.
+12. Cliente avalia a profissional.
 
 ## Riscos centrais do projeto
 
 ### 1. Oferta e demanda
 Sem profissionais suficientes, o fluxo não fecha. Sem clientes suficientes, as profissionais abandonam.
 
-### 2. Concorrência no aceite
-O fluxo “primeira que aceitar ganha” precisa ser transacional no backend.
+### 2. Aceite transacional
+O aceite do convite precisa ser transacional no backend para evitar inconsistência operacional.
 
 ### 3. Pagamento inconsistente
-Sem webhook bem tratado, o atendimento pode ficar com status errado.
+Sem webhook bem tratado e reconciliação segura, solicitação paga pode ficar sem convite ou com status incorreto.
 
 ### 4. Escopo inchado
-Chat, repasse automatizado, ranking avançado e automações extras são riscos de atraso se entrarem cedo demais.
-
-## Sequência correta de execução
-
-1. Base do monorepo
-2. Auth e usuários
-3. Perfis e onboarding profissional
-4. Regiões, disponibilidade e elegibilidade
-5. Solicitação de faxina
-6. Convites e aceite transacional
-7. Atendimento
-8. Pagamento com Asaas + webhook
-9. Avaliação
-10. Painel admin e ocorrências
+Chat, repasse automatizado, carteira monetária, ranking avançado e automações extras são riscos de atraso se entrarem cedo demais.
 
 ## Regra de ouro
 
-O centro do produto não é o cadastro.
-
 O centro do produto é o fluxo:
-**solicitação → convite → aceite → atendimento → pagamento → execução → avaliação**
+**solicitação → seleção única → pagamento → convite → aceite → atendimento → execução → avaliação**

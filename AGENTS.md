@@ -10,8 +10,9 @@ This is an operational platform with:
 - professional registration
 - identity verification
 - matching by region and availability
-- invitation dispatch
-- first-valid-acceptance workflow
+- payment before invitation dispatch
+- invitation dispatch after confirmed payment
+- valid acceptance creates the attendance
 - centralized payment intake
 - service execution tracking
 - unilateral client-to-professional ratings
@@ -25,7 +26,7 @@ These decisions are already made and must not be changed unless explicitly reque
 
 - architecture is **monorepo**
 - payment provider is **Asaas**
-- payment is linked to **AtendimentoFaxina**
+- external payment may be linked first to **SolicitacaoFaxina** and is linked to **AtendimentoFaxina** only after valid professional acceptance
 - webhook is the **source of truth** for payment confirmation
 - money goes to the **company account**
 - payout to the professional is **outside the platform**
@@ -34,7 +35,7 @@ These decisions are already made and must not be changed unless explicitly reque
 - there is **no** split payment
 - there is **no** in-platform payout flow
 - there is **no** chat system in the MVP
-- a client may select **up to 3 professionals** per request
+- a client must select **exactly 1 professional** per request
 
 Do not silently reintroduce excluded features.
 
@@ -53,7 +54,7 @@ Do not silently reintroduce excluded features.
 - service request creation
 - service categories: residential, commercial, condominium, and event cleaning
 - eligible professional listing
-- selection of up to 3 professionals
+- selection of exactly 1 eligible professional
 - invitation creation and response
 - first valid acceptance wins
 - attendance creation
@@ -170,6 +171,7 @@ Core concepts:
 - ConviteProfissional
 - AtendimentoFaxina
 - Pagamento
+- CreditoSolicitacao
 - CheckpointServico
 - AvaliacaoProfissional
 - OcorrenciaAtendimento
@@ -191,35 +193,49 @@ A professional is only eligible if:
 - the availability matches the requested time
 - the professional has no conflicting active attendance
 
-### 2. Maximum selected professionals
-A client may select:
-- minimum: 1 professional
-- maximum: 3 professionals
+### 2. Selected professional
+A client must select:
+- exactly 1 eligible professional
 
 This must be enforced in the backend.
 Not just in the UI.
 
-### 3. First valid acceptance wins
+### 3. Payment before invitation
+After the client selects one eligible professional:
+- the solicitation moves to `AGUARDANDO_PAGAMENTO`
+- the backend may create an external payment linked to `SolicitacaoFaxina`
+- `Pagamento.atendimentoId` may remain null until valid acceptance
+- the frontend may display payment state, but never confirm it
+
+### 4. Webhook truth and invitation dispatch
+Only the backend, through webhook processing or an explicit backend reconciliation that reuses the same confirmation flow, can definitively confirm an external payment.
+When a solicitation-linked payment is confirmed:
+- `Pagamento` becomes paid
+- `SolicitacaoFaxina` moves to `PAGA_AGUARDANDO_ACEITE`
+- the backend creates exactly one `ConviteProfissional`
+- no `AtendimentoFaxina` is created yet
+
+### 5. Valid acceptance creates the attendance
 When a professional accepts an invitation:
 - verify the invitation is still valid
-- verify the request is still open
-- create the attendance
+- verify the paid solicitation is still open
+- create the attendance with status `CONFIRMADO`
+- link the existing paid payment to the created attendance
 - mark the accepted invitation properly
-- cancel the remaining invitations
 - update request status consistently
 
 This must be transactional.
 Do not rely on frontend timing.
 
-### 4. Payment
-Payment must always be linked to an attendance.
-Do not create loose payment flows detached from the operational process.
+### 6. Refusal or expiration after payment
+If the selected professional refuses or the invitation expires:
+- no `AtendimentoFaxina` is created
+- the paid `Pagamento` remains without attendance linked
+- `SolicitacaoFaxina` moves to `NAO_ACEITA_CREDITO_GERADO`
+- the backend creates one `CreditoSolicitacao` for one equivalent replacement request
+- this credit is not a wallet, not monetary balance, not a discount, and not a bank of hours
 
-### 5. Webhook truth
-Only the backend, through webhook processing, can definitively confirm a payment.
-The frontend must not mark a payment as confirmed by itself.
-
-### 6. Service execution
+### 7. Service execution
 Only the assigned professional may:
 - start the service
 - finish the service
@@ -229,7 +245,7 @@ Rules:
 - cannot start twice
 - cannot finish twice
 
-### 7. Rating
+### 8. Rating
 The rating system is unilateral.
 Rules:
 - only the client may rate
@@ -238,7 +254,7 @@ Rules:
 - one rating per attendance
 - score must be from 1 to 5
 
-### 8. Payout
+### 9. Payout
 Payout happens outside the platform.
 Do not implement payout workflows inside the MVP unless explicitly requested.
 
@@ -270,6 +286,7 @@ Expected key tables:
 - convites_profissional
 - atendimentos_faxina
 - pagamentos
+- creditos_solicitacao
 - checkpoints_servico
 - avaliacoes_profissional
 - ocorrencias_atendimento
@@ -323,10 +340,11 @@ For critical flows, tests are expected.
 
 ### Must-test flows
 - professional eligibility filtering
-- max 3 selected professionals rule
+- exactly 1 selected professional rule
 - invitation acceptance
 - prevention of double acceptance
-- webhook payment confirmation updating attendance state
+- webhook payment confirmation creating the invitation for solicitation-linked payments
+- paid solicitation refusal or expiration generating exactly one replacement credit
 - start/end checkpoint rules
 - rating permissions and uniqueness
 
