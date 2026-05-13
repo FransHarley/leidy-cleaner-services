@@ -2289,6 +2289,155 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     @Test
+    void webhookPaymentConfirmedDaSolicitacaoCriaUmConviteSemAtendimento() throws Exception {
+        SolicitacaoSelecionada solicitacao = criarSolicitacaoAguardandoPagamento(
+                "m5.webhook-solicitacao",
+                proximoCpf()
+        );
+        mockarCriacaoAsaas("pay_m5_solicitacao", "PENDING", "https://asaas.local/pay_m5_solicitacao", null);
+        Long pagamentoId = criarPagamentoPorSolicitacao(solicitacao.tokenCliente(), solicitacao.solicitacaoId(), "PIX");
+
+        enviarWebhookAsaas("""
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "pay_m5_solicitacao",
+                    "status": "CONFIRMED"
+                  }
+                }
+                """);
+
+        assertThat(pagamentoRepository.findById(pagamentoId))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PAGO");
+                    assertThat(pagamento.getRecebidoEm()).isNotNull();
+                    assertThat(pagamento.isWebhookProcessado()).isTrue();
+                    assertThat(pagamento.getSolicitacao().getId()).isEqualTo(solicitacao.solicitacaoId());
+                    assertThat(pagamento.getAtendimento()).isNull();
+                });
+        assertThat(solicitacaoFaxinaRepository.findById(solicitacao.solicitacaoId()))
+                .isPresent()
+                .get()
+                .extracting(solicitacaoPersistida -> solicitacaoPersistida.getStatus().name())
+                .isEqualTo("PAGA_AGUARDANDO_ACEITE");
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacao.solicitacaoId()))
+                .singleElement()
+                .satisfies(convite -> {
+                    assertThat(convite.getProfissional().getId()).isEqualTo(solicitacao.profissionalId());
+                    assertThat(convite.getStatus().name()).isEqualTo("ENVIADO");
+                    assertThat(convite.getExpiraEm()).isAfter(convite.getEnviadoEm());
+                });
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).isEmpty();
+    }
+
+    @Test
+    void webhookDuplicadoDePagamentoDaSolicitacaoNaoDuplicaConvite() throws Exception {
+        SolicitacaoSelecionada solicitacao = criarSolicitacaoAguardandoPagamento(
+                "m5.webhook-solicitacao-duplicado",
+                proximoCpf()
+        );
+        mockarCriacaoAsaas("pay_m5_solicitacao_duplicado", "PENDING", "https://asaas.local/pay_m5_solicitacao_duplicado", null);
+        criarPagamentoPorSolicitacao(solicitacao.tokenCliente(), solicitacao.solicitacaoId(), "PIX");
+
+        String payload = """
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "pay_m5_solicitacao_duplicado",
+                    "status": "CONFIRMED"
+                  }
+                }
+                """;
+
+        enviarWebhookAsaas(payload);
+        enviarWebhookAsaas(payload);
+
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).hasSize(1);
+        assertThat(webhookEventRepository.countByExternalIdAndEventType(
+                "pay_m5_solicitacao_duplicado",
+                "PAYMENT_CONFIRMED"
+        )).isEqualTo(1);
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).isEmpty();
+    }
+
+    @Test
+    void webhookPaymentConfirmedDaSolicitacaoLocalizaPagamentoPorExternalReference() throws Exception {
+        SolicitacaoSelecionada solicitacao = criarSolicitacaoAguardandoPagamento(
+                "m5.webhook-solicitacao-external",
+                proximoCpf()
+        );
+        mockarCriacaoAsaas("pay_m5_solicitacao_external_local", "PENDING", "https://asaas.local/pay_m5_solicitacao_external", null);
+        Long pagamentoId = criarPagamentoPorSolicitacao(solicitacao.tokenCliente(), solicitacao.solicitacaoId(), "PIX");
+
+        enviarWebhookAsaas("""
+                {
+                  "event": "PAYMENT_CONFIRMED",
+                  "payment": {
+                    "id": "pay_m5_solicitacao_external_gateway",
+                    "status": "CONFIRMED",
+                    "externalReference": "solicitacao-%d"
+                  }
+                }
+                """.formatted(solicitacao.solicitacaoId()));
+
+        assertThat(pagamentoRepository.findById(pagamentoId))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PAGO");
+                    assertThat(pagamento.getGatewayPaymentId()).isEqualTo("pay_m5_solicitacao_external_local");
+                    assertThat(pagamento.getPayloadResumo()).contains("pay_m5_solicitacao_external_gateway");
+                    assertThat(pagamento.getAtendimento()).isNull();
+                });
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).hasSize(1);
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).isEmpty();
+    }
+
+    @Test
+    void webhookPaymentConfirmedDaSolicitacaoSemProfissionalSelecionadaFalhaSemCriarConvite() throws Exception {
+        SolicitacaoSelecionada solicitacao = criarSolicitacaoAguardandoPagamento(
+                "m5.webhook-solicitacao-sem-selecao",
+                proximoCpf()
+        );
+        mockarCriacaoAsaas("pay_m5_solicitacao_sem_selecao", "PENDING", "https://asaas.local/pay_m5_solicitacao_sem_selecao", null);
+        Long pagamentoId = criarPagamentoPorSolicitacao(solicitacao.tokenCliente(), solicitacao.solicitacaoId(), "PIX");
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            solicitacaoProfissionalSelecionadoRepository.deleteBySolicitacaoId(solicitacao.solicitacaoId());
+            solicitacaoProfissionalSelecionadoRepository.flush();
+        });
+
+        mockMvc.perform(post("/api/v1/webhooks/asaas")
+                        .header("asaas-access-token", ASAAS_WEBHOOK_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "event": "PAYMENT_CONFIRMED",
+                                  "payment": {
+                                    "id": "pay_m5_solicitacao_sem_selecao",
+                                    "status": "CONFIRMED"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("SOLICITACAO_PROFISSIONAL_SELECIONADA_INVALIDA"));
+
+        assertThat(conviteProfissionalRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).isEmpty();
+        assertThat(atendimentoFaxinaRepository.findBySolicitacaoId(solicitacao.solicitacaoId())).isEmpty();
+        assertThat(pagamentoRepository.findById(pagamentoId))
+                .isPresent()
+                .get()
+                .satisfies(pagamento -> {
+                    assertThat(pagamento.getStatus().name()).isEqualTo("PENDENTE");
+                    assertThat(pagamento.isWebhookProcessado()).isFalse();
+                    assertThat(pagamento.getAtendimento()).isNull();
+                });
+    }
+
+    @Test
     void webhookPaymentConfirmedPorPaymentIdConfirmaPagamentoEAtendimentoSemJwt() throws Exception {
         AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5b.webhook-payment", "75157233344");
         mockarCriacaoAsaas("pay_m5b_confirmado", "PENDING", "https://asaas.local/pay_m5b_confirmado", null);

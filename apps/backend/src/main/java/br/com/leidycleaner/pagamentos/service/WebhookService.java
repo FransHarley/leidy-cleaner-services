@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.convites.entity.ConviteProfissional;
+import br.com.leidycleaner.convites.service.ConviteProfissionalService;
 import br.com.leidycleaner.core.exception.BusinessException;
 import br.com.leidycleaner.pagamentos.entity.Pagamento;
 import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
@@ -47,6 +49,7 @@ public class WebhookService {
     private final PagamentoRepository pagamentoRepository;
     private final WebhookEventRepository webhookEventRepository;
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
+    private final ConviteProfissionalService conviteProfissionalService;
     private final ObjectMapper objectMapper;
     private final AsaasProperties asaasProperties;
 
@@ -54,12 +57,14 @@ public class WebhookService {
             PagamentoRepository pagamentoRepository,
             WebhookEventRepository webhookEventRepository,
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
+            ConviteProfissionalService conviteProfissionalService,
             ObjectMapper objectMapper,
             AsaasProperties asaasProperties
     ) {
         this.pagamentoRepository = pagamentoRepository;
         this.webhookEventRepository = webhookEventRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
+        this.conviteProfissionalService = conviteProfissionalService;
         this.objectMapper = objectMapper;
         this.asaasProperties = asaasProperties;
     }
@@ -244,14 +249,7 @@ public class WebhookService {
 
         AtendimentoFaxina atendimento = pagamento.getAtendimento();
         if (atendimento == null) {
-            LOGGER.info(
-                    "asaas_webhook_pagamento_confirmed_sem_atendimento event={} paymentId={} gatewayPaymentId={} pagamentoId={} solicitacaoId={}",
-                    event,
-                    paymentId,
-                    gatewayPaymentId,
-                    pagamento.getId(),
-                    pagamento.getSolicitacao() != null ? pagamento.getSolicitacao().getId() : null
-            );
+            criarConviteParaPagamentoConfirmadoDaSolicitacao(pagamento, paymentId, gatewayPaymentId, event);
             return;
         }
         if (atendimento.getStatus() == StatusAtendimento.CANCELADO) {
@@ -281,6 +279,35 @@ public class WebhookService {
         );
     }
 
+    private void criarConviteParaPagamentoConfirmadoDaSolicitacao(
+            Pagamento pagamento,
+            String paymentId,
+            String gatewayPaymentId,
+            String event
+    ) {
+        if (pagamento.getSolicitacao() == null) {
+            throw new BusinessException(
+                    "PAGAMENTO_SEM_REFERENCIA_OPERACIONAL",
+                    "Pagamento confirmado nao esta vinculado a atendimento nem a solicitacao",
+                    HttpStatus.CONFLICT
+            );
+        }
+
+        ConviteProfissional convite = conviteProfissionalService
+                .criarConviteParaSolicitacaoPaga(pagamento.getSolicitacao());
+        LOGGER.info(
+                "asaas_webhook_convite_criado_para_solicitacao_paga event={} paymentId={} gatewayPaymentId={} pagamentoId={} solicitacaoId={} conviteId={} profissionalId={} solicitacaoStatus={}",
+                event,
+                paymentId,
+                gatewayPaymentId,
+                pagamento.getId(),
+                pagamento.getSolicitacao().getId(),
+                convite.getId(),
+                convite.getProfissional().getId(),
+                pagamento.getSolicitacao().getStatus()
+        );
+    }
+
     private Optional<PagamentoLocalizado> localizarPagamento(AsaasWebhookIdentifiers identifiers) {
         if (identifiers.paymentId() != null) {
             Optional<Pagamento> pagamento = pagamentoRepository.findByGatewayPaymentIdForUpdate(identifiers.paymentId());
@@ -305,6 +332,11 @@ public class WebhookService {
             return pagamentoRepository.findByAtendimentoIdForUpdate(atendimentoId)
                     .map(pagamento -> new PagamentoLocalizado(pagamento, identifiers.externalReference()));
         }
+        Long solicitacaoId = extrairSolicitacaoId(identifiers.externalReference());
+        if (solicitacaoId != null) {
+            return pagamentoRepository.findBySolicitacaoIdForUpdate(solicitacaoId)
+                    .map(pagamento -> new PagamentoLocalizado(pagamento, identifiers.externalReference()));
+        }
         return Optional.empty();
     }
 
@@ -325,7 +357,14 @@ public class WebhookService {
     }
 
     private Long extrairAtendimentoId(String externalReference) {
-        String prefixo = "atendimento-";
+        return extrairIdComPrefixo(externalReference, "atendimento-");
+    }
+
+    private Long extrairSolicitacaoId(String externalReference) {
+        return extrairIdComPrefixo(externalReference, "solicitacao-");
+    }
+
+    private Long extrairIdComPrefixo(String externalReference, String prefixo) {
         if (externalReference == null || !externalReference.startsWith(prefixo)) {
             return null;
         }

@@ -134,6 +134,10 @@ public class SolicitacaoFaxina {
         status = StatusSolicitacao.AGUARDANDO_PAGAMENTO;
     }
 
+    public void marcarPagaAguardandoAceite() {
+        status = StatusSolicitacao.PAGA_AGUARDANDO_ACEITE;
+    }
+
     public void marcarAceita() {
         status = StatusSolicitacao.ACEITA;
     }

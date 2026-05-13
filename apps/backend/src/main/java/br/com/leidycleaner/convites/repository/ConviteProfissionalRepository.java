@@ -65,5 +65,9 @@ public interface ConviteProfissionalRepository extends JpaRepository<ConviteProf
 
     List<ConviteProfissional> findBySolicitacaoId(Long solicitacaoId);
 
+    Optional<ConviteProfissional> findBySolicitacaoIdAndProfissionalId(Long solicitacaoId, Long profissionalId);
+
+    boolean existsBySolicitacaoId(Long solicitacaoId);
+
     void deleteBySolicitacaoId(Long solicitacaoId);
 }

@@ -313,32 +313,34 @@ cd apps/backend
 ### Objetivo
 Após pagamento confirmado pelo Asaas, enviar o convite para a única profissional selecionada.
 
+Status escolhido para a solicitação após confirmação do pagamento: `PAGA_AGUARDANDO_ACEITE`.
+
 ### Checklist
 
-- [ ] Atualizar reconciliação do webhook para localizar pagamento por `solicitacao-*`.
-- [ ] Manter compatibilidade com pagamentos antigos por `atendimento-*`, se ainda necessário.
-- [ ] Ao receber evento confirmado, marcar pagamento como `PAGO`.
-- [ ] Preencher `recebidoEm` quando aplicável.
-- [ ] Se pagamento tem `solicitacaoId` e não tem `atendimentoId`, buscar a profissional selecionada.
-- [ ] Criar exatamente um `ConviteProfissional`.
-- [ ] Garantir idempotência: webhook duplicado não pode criar dois convites.
-- [ ] Atualizar solicitação para `PAGA_AGUARDANDO_ACEITE` ou `CONVITE_ENVIADO`, conforme enum escolhido.
-- [ ] Não criar atendimento no webhook.
-- [ ] Não gerar crédito no webhook de pagamento.
+- [x] Atualizar reconciliação do webhook para localizar pagamento por `solicitacao-*`.
+- [x] Manter compatibilidade com pagamentos antigos por `atendimento-*`, se ainda necessário.
+- [x] Ao receber evento confirmado, marcar pagamento como `PAGO`.
+- [x] Preencher `recebidoEm` quando aplicável.
+- [x] Se pagamento tem `solicitacaoId` e não tem `atendimentoId`, buscar a profissional selecionada.
+- [x] Criar exatamente um `ConviteProfissional`.
+- [x] Garantir idempotência: webhook duplicado não pode criar dois convites.
+- [x] Atualizar solicitação para `PAGA_AGUARDANDO_ACEITE` ou `CONVITE_ENVIADO`, conforme enum escolhido.
+- [x] Não criar atendimento no webhook.
+- [x] Não gerar crédito no webhook de pagamento.
 
 ### Critérios de aceite
 
-- [ ] Pagamento confirmado por webhook cria um único convite.
-- [ ] Webhook duplicado não duplica convite.
-- [ ] Solicitação fica aguardando resposta da profissional.
-- [ ] Atendimento ainda não existe.
+- [x] Pagamento confirmado por webhook cria um único convite.
+- [x] Webhook duplicado não duplica convite.
+- [x] Solicitação fica aguardando resposta da profissional.
+- [x] Atendimento ainda não existe.
 
 ### Testes obrigatórios
 
-- [ ] Webhook confirmado cria convite para a profissional selecionada.
-- [ ] Webhook duplicado não cria convite duplicado.
-- [ ] Webhook sem profissional selecionada não quebra silenciosamente; registra erro/status operacional.
-- [ ] Frontend não participa da confirmação.
+- [x] Webhook confirmado cria convite para a profissional selecionada.
+- [x] Webhook duplicado não cria convite duplicado.
+- [x] Webhook sem profissional selecionada não quebra silenciosamente; registra erro/status operacional.
+- [x] Frontend não participa da confirmação.
 
 ### Validação
 
