@@ -20,7 +20,7 @@ import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.convites.service.ConviteProfissionalService;
 import br.com.leidycleaner.core.exception.BusinessException;
-import br.com.leidycleaner.creditos.service.CreditoClienteService;
+import br.com.leidycleaner.creditos.service.CreditoSolicitacaoService;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.profissionais.repository.PerfilProfissionalRepository;
 import br.com.leidycleaner.solicitacoes.entity.SolicitacaoFaxina;
@@ -51,7 +51,7 @@ class ConviteProfissionalServiceTest {
     private PagamentoRepository pagamentoRepository;
 
     @Mock
-    private CreditoClienteService creditoClienteService;
+    private CreditoSolicitacaoService creditoSolicitacaoService;
 
     @Test
     void criarConviteParaSolicitacaoPagaRejeitaMaisDeUmaProfissionalSelecionada() {
@@ -62,7 +62,7 @@ class ConviteProfissionalServiceTest {
                 solicitacaoProfissionalSelecionadoRepository,
                 atendimentoFaxinaRepository,
                 pagamentoRepository,
-                creditoClienteService
+                creditoSolicitacaoService
         );
         SolicitacaoFaxina solicitacao = mock(SolicitacaoFaxina.class);
         given(solicitacao.getId()).willReturn(10L);

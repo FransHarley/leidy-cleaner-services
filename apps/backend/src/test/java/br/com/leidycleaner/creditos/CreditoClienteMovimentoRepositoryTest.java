@@ -68,7 +68,7 @@ class CreditoClienteMovimentoRepositoryTest {
     }
 
     @Test
-    void persistePagamentoPorSolicitacaoSemAtendimentoECreditoComGuardaIdempotencia() {
+    void persisteMovimentoLegadoDeAuditoriaSemVirarRegraDeSaldoDoCliente() {
         PerfilCliente cliente = criarCliente("credito.step1@example.com");
         RegiaoAtendimento regiao = regiaoAtendimentoRepository.findByAtivoTrueOrderByNomeAsc().get(0);
         Endereco endereco = enderecoRepository.saveAndFlush(new Endereco(
@@ -119,7 +119,7 @@ class CreditoClienteMovimentoRepositoryTest {
                 TipoMovimentoCreditoCliente.CREDITO_GERADO_SEM_ACEITE,
                 new BigDecimal("180.00"),
                 new BigDecimal("180.00"),
-                "Credito estrutural de teste"
+                "Movimento legado de auditoria"
         ));
 
         assertThat(movimento.getId()).isNotNull();
@@ -133,8 +133,8 @@ class CreditoClienteMovimentoRepositoryTest {
                 null,
                 TipoMovimentoCreditoCliente.CREDITO_GERADO_SEM_ACEITE,
                 new BigDecimal("180.00"),
-                new BigDecimal("360.00"),
-                "Credito duplicado de teste"
+                new BigDecimal("180.00"),
+                "Movimento legado duplicado de auditoria"
         ))).isInstanceOf(DataIntegrityViolationException.class);
     }
 

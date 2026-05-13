@@ -15,7 +15,7 @@ Cliente cria solicitação
 → backend envia convite apenas para a profissional escolhida
 → profissional aceita ou recusa
 → se aceitar: backend cria AtendimentoFaxina já CONFIRMADO
-→ se recusar ou expirar: valor vira crédito para o cliente usar no futuro
+→ se recusar ou expirar: backend gera 1 crédito de reposição para uma nova solicitação equivalente
 ```
 
 ---
@@ -32,8 +32,9 @@ Cliente cria solicitação
 - [ ] O frontend nunca confirma pagamento por conta própria.
 - [ ] O webhook do Asaas continua sendo a fonte de verdade para confirmação de pagamento.
 - [ ] O app/front da profissional não cria cobrança e não confirma pagamento.
-- [ ] Se a profissional recusar ou o convite expirar, a solicitação é encerrada e o valor vira crédito do cliente.
-- [ ] Crédito do cliente deve ser auditável por ledger/livro de movimentos, não por campo solto no cadastro.
+- [ ] Se a profissional recusar ou o convite expirar, a solicitação é encerrada e o cliente recebe 1 crédito de reposição equivalente à solicitação paga original.
+- [ ] Crédito do cliente não é carteira, não é saldo em dinheiro, não é desconto e não é banco de horas.
+- [ ] O source of truth operacional do crédito deve ser um `CreditoSolicitacao` de uso único; ledger monetário, se existir, fica apenas como auditoria interna legada.
 - [ ] Não implementar split payment.
 - [ ] Não implementar repasse/payout dentro da plataforma.
 - [ ] Não implementar saque de crédito.
@@ -82,10 +83,12 @@ Cliente cria solicitação
 ### Crédito
 
 - [ ] Crédito é do cliente, não da profissional.
-- [ ] Crédito só pode ser usado para futuras solicitações.
+- [ ] Crédito representa uma nova solicitação equivalente, não um saldo monetário.
+- [ ] Crédito só pode ser usado para futuras solicitações equivalentes.
 - [ ] Crédito não pode ser sacado pelo cliente nesta etapa.
 - [ ] Crédito não é repasse, payout ou split.
-- [ ] Movimento de crédito deve ser append-only.
+- [ ] Crédito não é carteira, desconto, pagamento parcial ou banco de horas.
+- [ ] O registro operacional do crédito deve ser append-only por `CreditoSolicitacao`.
 - [ ] Geração de crédito precisa ser idempotente.
 - [ ] Recusa + expiração não podem gerar crédito duplicado.
 
@@ -162,6 +165,10 @@ saldo_resultante NUMERIC(12,2) NOT NULL
 observacao TEXT NULL
 criado_em TIMESTAMP NOT NULL DEFAULT now()
 ```
+
+Observação:
+- `creditos_cliente_movimentos` permanece apenas como trilha de auditoria interna legada.
+- O source of truth operacional para reposição de solicitação passa a ser `CreditoSolicitacao`.
 
 ### Tipos de movimento previstos
 
@@ -398,20 +405,21 @@ cd apps/backend
 ## M7 — Recusa, expiração e geração de crédito
 
 ### Objetivo
-Encerrar a solicitação e gerar crédito quando a profissional não aceitar.
+Encerrar a solicitação e gerar um `CreditoSolicitacao` disponível quando a profissional não aceitar.
 
 ### Checklist
 
 - [x] Ao recusar convite, marcar convite como `RECUSADO`.
 - [x] Ao recusar, validar que existe pagamento `PAGO` da solicitação.
-- [x] Ao recusar, gerar movimento `CREDITO_GERADO_SEM_ACEITE`.
+- [x] Ao recusar, gerar um `CreditoSolicitacao` com status `DISPONIVEL`.
 - [x] Ao recusar, atualizar solicitação para `NAO_ACEITA_CREDITO_GERADO` ou status equivalente.
 - [x] Ao expirar convite, marcar convite como `EXPIRADO`.
-- [x] Ao expirar, gerar o mesmo tipo de crédito.
+- [x] Ao expirar, gerar um `CreditoSolicitacao` equivalente com status `DISPONIVEL`.
 - [x] Criar serviço de expiração se ainda não existir caminho real de processamento.
 - [x] Garantir idempotência entre recusa e expiração.
 - [x] Garantir que crédito não pode ser gerado duas vezes para o mesmo pagamento.
 - [x] Registrar logs operacionais sem expor dados sensíveis.
+- [x] Refatorar o modelo operacional para crédito de reposição de solicitação, e não saldo/carteira.
 
 ### Critérios de aceite
 
@@ -440,51 +448,32 @@ cd apps/backend
 ## M8 — Uso de crédito em solicitação futura
 
 ### Objetivo
-Permitir que o cliente use crédito em nova solicitação de forma auditável.
-
-### Decisão recomendada para MVP
-
-Aplicar crédito automaticamente até o limite do valor da nova solicitação:
-
-```text
-saldo_credito >= valor_solicitacao:
-  usa crédito integralmente
-  não cria cobrança externa no Asaas
-  cria registro interno de pagamento por crédito
-  dispara convite como solicitação paga
-
-saldo_credito < valor_solicitacao:
-  debita crédito disponível
-  cria cobrança Asaas apenas do valor restante
-  dispara convite somente após webhook confirmar o restante
-```
+Permitir que o cliente use um `CreditoSolicitacao` em uma nova solicitação equivalente, sem semântica de saldo monetário.
 
 ### Checklist
 
-- [ ] Criar método para calcular saldo do cliente por ledger.
-- [ ] Criar endpoint ou incluir no fluxo de pagamento a aplicação automática de crédito.
-- [ ] Registrar movimento `CREDITO_UTILIZADO_EM_SOLICITACAO`.
-- [ ] Se crédito cobrir 100%, criar pagamento interno ou status financeiro equivalente sem Asaas.
-- [ ] Se crédito cobrir parcialmente, criar cobrança Asaas apenas do saldo restante.
+- [ ] Criar método para localizar crédito disponível do cliente por equivalência.
+- [ ] Criar endpoint ou incluir no fluxo de solicitação o uso de `CreditoSolicitacao`.
+- [ ] Marcar crédito como `RESERVADO` e depois `UTILIZADO` quando a nova solicitação equivalente for efetivamente usada.
+- [ ] Se o cliente usar crédito equivalente, não criar desconto parcial nem saldo restante.
 - [ ] Garantir que uso de crédito também seja idempotente.
 - [ ] Garantir que crédito não pode ser usado por outro cliente.
-- [ ] Expor saldo de crédito para o cliente no frontend.
-- [ ] Expor histórico de crédito para admin.
+- [ ] Não expor saldo de crédito ao cliente.
+- [ ] Expor histórico/lista de créditos de solicitação para admin quando necessário.
 
 ### Critérios de aceite
 
-- [ ] Cliente com crédito consegue usar em nova solicitação.
-- [ ] Uso de crédito aparece no ledger.
-- [ ] Saldo resultante fica correto.
+- [ ] Cliente com crédito consegue usar uma nova solicitação equivalente.
+- [ ] Uso do crédito não permite parcial, divisão nem desconto.
 - [ ] Crédito não vira saque nem payout.
-- [ ] Convite só é enviado quando a nova solicitação estiver financeiramente quitada.
+- [ ] Convite só é enviado quando a nova solicitação estiver quitada por crédito equivalente ou por pagamento confirmado.
 
 ### Testes obrigatórios
 
-- [ ] Uso integral de crédito quita solicitação.
-- [ ] Uso parcial de crédito cobra somente diferença.
+- [ ] Uso de crédito equivalente quita a solicitação sem pagamento parcial.
+- [ ] Solicitação não equivalente é rejeitada.
 - [ ] Cliente não usa crédito de outro cliente.
-- [ ] Reprocessamento não duplica débito de crédito.
+- [ ] Reprocessamento não duplica uso do crédito.
 
 ### Validação
 
@@ -511,7 +500,7 @@ Adaptar o fluxo visual do cliente ao novo domínio.
 - [ ] QR Code/Pix aparece apenas enquanto pagamento está pendente.
 - [ ] Após pagamento confirmado, mostrar “Pagamento confirmado. Aguardando aceite da profissional”.
 - [ ] Solicitação detalhe mostra estados novos.
-- [ ] Mostrar mensagem clara antes do pagamento: se a profissional não aceitar, o valor vira crédito.
+- [ ] Mostrar mensagem clara antes do pagamento: se a profissional não aceitar, a cliente recebe 1 crédito de reposição para solicitação equivalente.
 - [ ] Mostrar estado de crédito gerado se a profissional recusar/expirar.
 - [ ] Se atendimento for criado, exibir link para atendimento.
 
@@ -710,7 +699,7 @@ Validar o fluxo real como cliente, profissional e admin.
 - [ ] Webhook confirma e cria convite.
 - [ ] Profissional recusa.
 - [ ] Solicitação muda para status de crédito gerado.
-- [ ] Crédito aparece no saldo/histórico do cliente.
+- [ ] Crédito aparece como crédito de reposição disponível no histórico do cliente.
 - [ ] Nenhum atendimento é criado.
 
 ### Checklist de expiração
@@ -726,10 +715,10 @@ Validar o fluxo real como cliente, profissional e admin.
 ### Checklist de crédito futuro
 
 - [ ] Cliente com crédito cria nova solicitação.
-- [ ] Sistema aplica crédito corretamente.
-- [ ] Se crédito cobre tudo, convite é enviado sem nova cobrança externa.
-- [ ] Se crédito cobre parcialmente, cliente paga apenas diferença.
-- [ ] Ledger fica correto.
+- [ ] Sistema aplica o crédito equivalente corretamente.
+- [ ] Convite é enviado sem nova cobrança externa quando a nova solicitação é quitada por crédito equivalente.
+- [ ] Não existe uso parcial nem diferença monetária a pagar a partir do crédito.
+- [ ] Histórico de uso do `CreditoSolicitacao` fica correto.
 
 ---
 

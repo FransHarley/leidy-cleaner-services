@@ -19,7 +19,8 @@ import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.mapper.ConviteProfissionalMapper;
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.core.exception.BusinessException;
-import br.com.leidycleaner.creditos.service.CreditoClienteService;
+import br.com.leidycleaner.creditos.entity.CreditoSolicitacao;
+import br.com.leidycleaner.creditos.service.CreditoSolicitacaoService;
 import br.com.leidycleaner.pagamentos.entity.Pagamento;
 import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
@@ -42,7 +43,7 @@ public class ConviteProfissionalService {
     private final SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository;
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
     private final PagamentoRepository pagamentoRepository;
-    private final CreditoClienteService creditoClienteService;
+    private final CreditoSolicitacaoService creditoSolicitacaoService;
     private final Clock clock;
 
     public ConviteProfissionalService(
@@ -52,7 +53,7 @@ public class ConviteProfissionalService {
             SolicitacaoProfissionalSelecionadoRepository solicitacaoProfissionalSelecionadoRepository,
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             PagamentoRepository pagamentoRepository,
-            CreditoClienteService creditoClienteService
+            CreditoSolicitacaoService creditoSolicitacaoService
     ) {
         this.conviteProfissionalRepository = conviteProfissionalRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
@@ -60,7 +61,7 @@ public class ConviteProfissionalService {
         this.solicitacaoProfissionalSelecionadoRepository = solicitacaoProfissionalSelecionadoRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.pagamentoRepository = pagamentoRepository;
-        this.creditoClienteService = creditoClienteService;
+        this.creditoSolicitacaoService = creditoSolicitacaoService;
         this.clock = Clock.systemDefaultZone();
     }
 
@@ -213,12 +214,12 @@ public class ConviteProfissionalService {
 
         convite.recusar(agora);
         solicitacao.marcarNaoAceitaCreditoGerado();
-        creditoClienteService.gerarCreditoSemAceite(
+        CreditoSolicitacao creditoSolicitacao = creditoSolicitacaoService.gerarCreditoDisponivel(
                 solicitacao,
                 pagamento,
-                "Credito gerado por recusa da profissional selecionada"
+                "Credito de reposicao gerado por recusa da profissional selecionada"
         );
-        registrarLogOperacionalCredito(convite, solicitacao, pagamento, "recusa da profissional");
+        registrarLogOperacionalCredito(convite, solicitacao, pagamento, creditoSolicitacao, "recusa da profissional");
         return respostaSemAtendimento(convite, solicitacao);
     }
 
@@ -236,12 +237,12 @@ public class ConviteProfissionalService {
 
         convite.expirar(agora);
         solicitacao.marcarNaoAceitaCreditoGerado();
-        creditoClienteService.gerarCreditoSemAceite(
+        CreditoSolicitacao creditoSolicitacao = creditoSolicitacaoService.gerarCreditoDisponivel(
                 solicitacao,
                 pagamento,
-                "Credito gerado porque a profissional nao aceitou o convite dentro do prazo"
+                "Credito de reposicao gerado porque a profissional nao aceitou o convite dentro do prazo"
         );
-        registrarLogOperacionalCredito(convite, solicitacao, pagamento, "expiracao do convite");
+        registrarLogOperacionalCredito(convite, solicitacao, pagamento, creditoSolicitacao, "expiracao do convite");
     }
 
     @Transactional
@@ -418,17 +419,22 @@ public class ConviteProfissionalService {
             ConviteProfissional convite,
             SolicitacaoFaxina solicitacao,
             Pagamento pagamento,
+            CreditoSolicitacao creditoSolicitacao,
             String motivo
     ) {
         LOGGER.info(
-                "credito_cliente_gerado_sem_aceite motivo={} solicitacaoId={} pagamentoId={} clienteId={} conviteId={} tipoMovimento={} valor={} solicitacaoStatusFinal={}",
+                "credito_solicitacao_gerado motivo={} solicitacaoId={} pagamentoId={} clienteId={} conviteId={} creditoSolicitacaoId={} statusCredito={} tipoServico={} duracaoHoras={} regiaoId={} valorReferencia={} solicitacaoStatusFinal={}",
                 motivo,
                 solicitacao.getId(),
                 pagamento.getId(),
                 solicitacao.getCliente().getId(),
                 convite.getId(),
-                "CREDITO_GERADO_SEM_ACEITE",
-                pagamento.getValorBruto(),
+                creditoSolicitacao.getId(),
+                creditoSolicitacao.getStatus(),
+                creditoSolicitacao.getTipoServico(),
+                creditoSolicitacao.getDuracaoEstimadaHoras(),
+                creditoSolicitacao.getRegiao().getId(),
+                creditoSolicitacao.getValorReferencia(),
                 solicitacao.getStatus()
         );
     }
