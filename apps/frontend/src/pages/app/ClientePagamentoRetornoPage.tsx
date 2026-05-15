@@ -3,9 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 export function ClientePagamentoRetornoPage() {
   const [searchParams] = useSearchParams();
   const atendimentoId = searchParams.get('atendimentoId');
+  const solicitacaoId = searchParams.get('solicitacaoId');
   const pagamentoId = searchParams.get('pagamentoId');
   const resultado = searchParams.get('resultado');
-  const pagamentoHref = atendimentoId ? `/app/cliente/pagamentos/atendimento/${atendimentoId}` : '/app/cliente/pagamentos';
+  const pagamentoHref = solicitacaoId
+    ? `/app/cliente/pagamentos/solicitacao/${solicitacaoId}`
+    : atendimentoId
+      ? `/app/cliente/pagamentos/atendimento/${atendimentoId}`
+      : '/app/cliente/pagamentos';
+  const resultadoMensagem = getResultadoMensagem(resultado);
 
   return (
     <div className="grid gap-5">
@@ -19,12 +25,12 @@ export function ClientePagamentoRetornoPage() {
 
       <section className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6">
         <h2 className="text-2xl font-black text-slate-900">Acompanhar pagamento</h2>
-        {resultado && <p className="mt-2 text-sm font-semibold text-slate-700">Resultado informado: {resultado}</p>}
+        {resultadoMensagem && <p className="mt-2 text-sm font-semibold text-slate-700">{resultadoMensagem}</p>}
         {pagamentoId && !atendimentoId && (
           <p className="mt-2 text-sm font-semibold text-slate-700">Pagamento informado: #{pagamentoId}</p>
         )}
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          Abra o atendimento para verificar se o webhook ja confirmou a cobranca.
+          Abra o fluxo correspondente para verificar o status atualizado no backend.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
@@ -43,4 +49,20 @@ export function ClientePagamentoRetornoPage() {
       </section>
     </div>
   );
+}
+
+function getResultadoMensagem(resultado: string | null) {
+  if (resultado === 'sucesso') {
+    return 'Retorno de pagamento recebido. Consulte o status atualizado antes de seguir.';
+  }
+
+  if (resultado === 'cancelado') {
+    return 'Pagamento cancelado. Voce pode tentar novamente.';
+  }
+
+  if (resultado === 'expirado') {
+    return 'O prazo do pagamento expirou. Gere uma nova tentativa se ainda desejar continuar.';
+  }
+
+  return null;
 }

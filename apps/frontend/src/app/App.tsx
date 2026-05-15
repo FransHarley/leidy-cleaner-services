@@ -48,6 +48,7 @@ import { HomePage } from '../pages/public/HomePage';
 import { CodeOfConductPage, PrivacyPolicyPage, TermsOfUsePage } from '../pages/public/LegalPages';
 import { LoginPage } from '../pages/public/LoginPage';
 import { NotFoundPage } from '../pages/public/NotFoundPage';
+import { PagamentoGatewayRetornoPage } from '../pages/public/PagamentoGatewayRetornoPage';
 import { ProfessionalRegistrationPage } from '../pages/public/ProfessionalRegistrationPage';
 import { RegistrationChoicePage } from '../pages/public/RegistrationChoicePage';
 import { ProfessionalMobileAtendimentosPage } from '../pages/professional-mobile/ProfessionalMobileAtendimentosPage';
@@ -68,6 +69,9 @@ export function App() {
         <Route path="termos-de-uso" element={<TermsOfUsePage />} />
         <Route path="privacidade" element={<PrivacyPolicyPage />} />
         <Route path="codigo-de-conduta" element={<CodeOfConductPage />} />
+        <Route path="pagamento/sucesso" element={<PagamentoGatewayRetornoPage resultado="sucesso" />} />
+        <Route path="pagamento/cancelado" element={<PagamentoGatewayRetornoPage resultado="cancelado" />} />
+        <Route path="pagamento/expirado" element={<PagamentoGatewayRetornoPage resultado="expirado" />} />
       </Route>
       <Route path="login" element={<Navigate to="/entrar" replace />} />
       <Route path="entrar" element={<LoginPage />} />

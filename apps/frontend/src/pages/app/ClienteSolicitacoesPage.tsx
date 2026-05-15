@@ -38,7 +38,7 @@ const queryKeys = {
 };
 
 type Feedback = {
-  tone: 'error' | 'success';
+  tone: 'error' | 'info' | 'success';
   title: string;
   message: string;
   details?: string[];
@@ -46,6 +46,7 @@ type Feedback = {
 
 type SolicitationRedirectState = {
   feedback?: Feedback;
+  selectedSolicitacaoId?: number | null;
 };
 
 export function ClienteSolicitacoesPage() {
@@ -57,6 +58,7 @@ export function ClienteSolicitacoesPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const sessionReady = status === 'authenticated' && Boolean(token);
+  const redirectState = location.state as SolicitationRedirectState | null;
 
   const enderecosQuery = useQuery({
     queryKey: queryKeys.enderecos,
@@ -104,6 +106,22 @@ export function ClienteSolicitacoesPage() {
     const section = document.getElementById(location.hash.replace('#', ''));
     section?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }, [location.hash]);
+
+  useEffect(() => {
+    if (!redirectState?.feedback && !redirectState?.selectedSolicitacaoId) {
+      return;
+    }
+
+    if (redirectState.feedback) {
+      setFeedback(redirectState.feedback);
+    }
+
+    if (redirectState.selectedSolicitacaoId) {
+      setSelectedId(redirectState.selectedSolicitacaoId);
+    }
+
+    navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
+  }, [location.hash, location.pathname, location.search, navigate, redirectState]);
 
   const createMutation = useMutation({
     mutationFn: (payload: SolicitacaoFaxinaRequest) => criarSolicitacao(requireToken(token), payload),

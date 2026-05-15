@@ -499,6 +499,7 @@ Adaptar o fluxo visual do cliente ao novo domínio.
 - [x] Após selecionar profissional, redirecionar para pagamento da solicitação.
 - [x] Tela de pagamento usa `solicitacaoId`, não `atendimentoId`.
 - [x] Polling de pagamento continua funcionando.
+- [x] Retorno do Asaas reconcilia o pagamento via `POST /pagamentos/{id}/consultar-status` e atualiza a solicitação.
 - [x] QR Code/Pix aparece apenas enquanto pagamento está pendente.
 - [x] Após pagamento confirmado, mostrar “Pagamento confirmado. Aguardando aceite da profissional”.
 - [x] Solicitação detalhe mostra estados novos.

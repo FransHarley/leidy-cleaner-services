@@ -48,9 +48,9 @@ app:
     # Legacy compatibility fallback for older local env files; the first value is used
     # only when ASAAS_PAYMENT_BILLING_TYPE is not set.
     checkout-billing-types: ${ASAAS_CHECKOUT_BILLING_TYPES:CREDIT_CARD}
-    # Optional for /payments. When empty or disabled, no callback.successUrl is sent to Asaas;
-    # webhook confirmation remains the source of truth.
-    checkout-success-url: ${ASAAS_CHECKOUT_SUCCESS_URL:}
+    # Local sandbox return goes back to the frontend, which still reconciles status in the backend;
+    # webhook confirmation remains the source of truth in production.
+    checkout-success-url: ${ASAAS_CHECKOUT_SUCCESS_URL:http://localhost:5173/pagamento/sucesso}
     checkout-cancel-url: ${ASAAS_CHECKOUT_CANCEL_URL:http://localhost:5173/pagamento/cancelado}
     checkout-expired-url: ${ASAAS_CHECKOUT_EXPIRED_URL:http://localhost:5173/pagamento/expirado}
   pricing:

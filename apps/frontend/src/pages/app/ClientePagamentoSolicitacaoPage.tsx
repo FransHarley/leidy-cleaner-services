@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
 import { StateBox } from '../../components/ui/PageState';
@@ -9,6 +9,7 @@ import { CreditosSolicitacaoList } from '../../features/cliente/creditos/Credito
 import { listarMeusCreditosSolicitacao, usarCreditoEmSolicitacao } from '../../features/cliente/creditos/creditosSolicitacaoApi';
 import { PagamentoDetail } from '../../features/cliente/pagamentos/PagamentoDetail';
 import {
+  buscarPagamentoPorSolicitacao,
   buscarPagamentoPorSolicitacaoOuNull,
   buscarPixQrCodePagamento,
   consultarStatusPagamento,
@@ -43,25 +44,30 @@ export function ClientePagamentoSolicitacaoPage() {
   const { solicitacaoId } = useParams();
   const parsedSolicitacaoId = Number(solicitacaoId);
   const validSolicitacaoId = Number.isFinite(parsedSolicitacaoId) && parsedSolicitacaoId > 0;
-  const { token, logout } = useAuth();
+  const { token, logout, status } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [selectedMetodo, setSelectedMetodo] = useState<MetodoPagamentoSolicitacao>('PIX');
   const [usingCreditoId, setUsingCreditoId] = useState<number | null>(null);
   const previousPagamentoStatusRef = useRef<StatusPagamento | null>(null);
+  const autoRefreshKeyRef = useRef<string | null>(null);
+  const retorno = searchParams.get('retorno');
+  const pagamentoIdFromReturn = parsePositiveId(searchParams.get('pagamentoId'));
+  const sessionReady = status === 'authenticated' && Boolean(token);
 
   const solicitacaoQuery = useQuery({
     queryKey: validSolicitacaoId ? queryKeys.solicitacaoDetalhe(parsedSolicitacaoId) : ['cliente', 'solicitacoes', 'invalid'],
     queryFn: () => buscarSolicitacao(requireToken(token), parsedSolicitacaoId),
-    enabled: Boolean(token && validSolicitacaoId),
+    enabled: Boolean(sessionReady && validSolicitacaoId),
     retry: false,
   });
 
   const pagamentoQuery = useQuery({
     queryKey: validSolicitacaoId ? queryKeys.pagamentoPorSolicitacao(parsedSolicitacaoId) : ['cliente', 'pagamentos', 'solicitacao', 'invalid'],
     queryFn: () => buscarPagamentoPorSolicitacaoOuNull(requireToken(token), parsedSolicitacaoId),
-    enabled: Boolean(token && validSolicitacaoId),
+    enabled: Boolean(sessionReady && validSolicitacaoId),
     refetchInterval: (query) => (isPendingPaymentStatus(query.state.data?.status) ? 5000 : false),
     refetchOnWindowFocus: true,
     retry: false,
@@ -70,7 +76,7 @@ export function ClientePagamentoSolicitacaoPage() {
   const creditosQuery = useQuery({
     queryKey: queryKeys.creditosDisponiveis,
     queryFn: () => listarMeusCreditosSolicitacao(requireToken(token), 'DISPONIVEL'),
-    enabled: Boolean(token && validSolicitacaoId),
+    enabled: Boolean(sessionReady && validSolicitacaoId),
     retry: false,
   });
 
@@ -79,7 +85,7 @@ export function ClientePagamentoSolicitacaoPage() {
   const pixQrCodeQuery = useQuery({
     queryKey: pagamento ? queryKeys.pixQrCode(pagamento.id) : ['cliente', 'pagamentos', 'pix-qrcode', 'invalid'],
     queryFn: () => buscarPixQrCodePagamento(requireToken(token), pagamento!.id),
-    enabled: Boolean(token && shouldLoadPixQrCode),
+    enabled: Boolean(sessionReady && shouldLoadPixQrCode),
     retry: false,
   });
 
@@ -97,6 +103,25 @@ export function ClientePagamentoSolicitacaoPage() {
       navigate('/entrar', { replace: true });
     }
   }, [logout, navigate, protectedError]);
+
+  useEffect(() => {
+    if (retorno === 'cancelado') {
+      setFeedback({
+        tone: 'info',
+        title: 'Pagamento cancelado',
+        message: 'Pagamento cancelado. Voce pode tentar novamente.',
+      });
+      return;
+    }
+
+    if (retorno === 'expirado') {
+      setFeedback({
+        tone: 'info',
+        title: 'Prazo expirado',
+        message: 'O prazo do pagamento expirou. Gere uma nova tentativa se ainda desejar continuar.',
+      });
+    }
+  }, [retorno]);
 
   useEffect(() => {
     const currentStatus = pagamento?.status ?? null;
@@ -171,6 +196,58 @@ export function ClientePagamentoSolicitacaoPage() {
     },
   });
 
+  const consultarStatusMutation = useMutation({
+    mutationFn: async ({ pagamentoId }: { pagamentoId: number | null }) => {
+      const activeToken = requireToken(token);
+      const resolvedPagamentoId = pagamentoId ?? (await buscarPagamentoPorSolicitacao(activeToken, parsedSolicitacaoId)).id;
+      const pagamentoAtualizado = await consultarStatusPagamento(activeToken, resolvedPagamentoId);
+
+      await invalidateSolicitacaoPagamentoQueries(queryClient, parsedSolicitacaoId);
+      await Promise.all([pagamentoQuery.refetch(), solicitacaoQuery.refetch()]);
+
+      return pagamentoAtualizado;
+    },
+    onMutate: () => {
+      setFeedback(null);
+    },
+    onSuccess: (pagamentoAtualizado) => {
+      if (pagamentoAtualizado.status === 'PAGO') {
+        navigate('/app/cliente/solicitacoes', {
+          replace: true,
+          state: {
+            feedback: {
+              tone: 'success',
+              title: 'Pagamento confirmado',
+              message: 'Pagamento confirmado. Agora aguardamos o aceite da profissional.',
+            },
+            selectedSolicitacaoId: parsedSolicitacaoId,
+          },
+        });
+        return;
+      }
+
+      setFeedback({
+        tone: 'info',
+        title: 'Confirmacao em andamento',
+        message: 'Pagamento recebido no Asaas. Estamos aguardando a confirmacao no sistema. Voce pode atualizar o status em instantes.',
+      });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 401) {
+        logout();
+        navigate('/entrar', { replace: true });
+        return;
+      }
+
+      setFeedback({
+        tone: 'error',
+        title: 'Nao foi possivel atualizar o pagamento',
+        message: getApiErrorMessage(error),
+        details: error instanceof ApiError ? error.errors : [],
+      });
+    },
+  });
+
   const usarCreditoMutation = useMutation({
     mutationFn: ({ creditoId }: { creditoId: number }) => usarCreditoEmSolicitacao(requireToken(token), creditoId, parsedSolicitacaoId),
     onMutate: ({ creditoId }) => {
@@ -209,6 +286,20 @@ export function ClientePagamentoSolicitacaoPage() {
     },
   });
 
+  useEffect(() => {
+    if (retorno !== 'sucesso' || !sessionReady || !validSolicitacaoId || consultarStatusMutation.isPending) {
+      return;
+    }
+
+    const refreshKey = `${parsedSolicitacaoId}:${pagamentoIdFromReturn ?? 'solicitacao'}`;
+    if (autoRefreshKeyRef.current === refreshKey) {
+      return;
+    }
+
+    autoRefreshKeyRef.current = refreshKey;
+    consultarStatusMutation.mutate({ pagamentoId: pagamentoIdFromReturn });
+  }, [consultarStatusMutation, pagamentoIdFromReturn, parsedSolicitacaoId, retorno, sessionReady, validSolicitacaoId]);
+
   if (!validSolicitacaoId) {
     return (
       <div className="grid gap-5">
@@ -245,6 +336,10 @@ export function ClientePagamentoSolicitacaoPage() {
 
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
+      {retorno === 'sucesso' && consultarStatusMutation.isPending && (
+        <StateBox tone="loading" title="Confirmando pagamento..." description="Consultando o status atualizado no backend." />
+      )}
+
       <SolicitacaoPagamentoContextSection error={solicitacaoQuery.error} isLoading={solicitacaoQuery.isLoading} solicitacao={solicitacao} />
 
       {solicitacao?.status === 'PAGA_AGUARDANDO_ACEITE' && (
@@ -272,19 +367,10 @@ export function ClientePagamentoSolicitacaoPage() {
           backHref="/app/cliente/solicitacoes"
           backLabel="Voltar para solicitacoes"
           isPixQrCodeLoading={pixQrCodeQuery.isLoading}
-          isRefreshingStatus={pagamentoQuery.isRefetching}
+          isRefreshingStatus={pagamentoQuery.isRefetching || consultarStatusMutation.isPending}
           onRefreshStatus={
             pagamento.gateway === 'ASAAS' && isPendingPaymentStatus(pagamento.status)
-              ? async () => {
-                  setFeedback(null);
-                  await consultarStatusPagamento(requireToken(token), pagamento.id);
-                  await Promise.all([
-                    pagamentoQuery.refetch(),
-                    solicitacaoQuery.refetch(),
-                    queryClient.invalidateQueries({ queryKey: queryKeys.solicitacoes }),
-                    queryClient.invalidateQueries({ queryKey: ['cliente', 'pagamentos', 'atendimentos'] }),
-                  ]);
-                }
+              ? () => consultarStatusMutation.mutate({ pagamentoId: pagamento.id })
               : null
           }
           pagamento={pagamento}
@@ -415,6 +501,17 @@ export function ClientePagamentoSolicitacaoPage() {
           message="Esta solicitacao nao esta mais aguardando pagamento. Consulte o status atual para seguir o fluxo correto."
         />
       )}
+
+      {(retorno === 'cancelado' || retorno === 'expirado') && (
+        <div className="flex flex-wrap gap-3">
+          <Link
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+            to="/app/cliente/solicitacoes"
+          >
+            Voltar para solicitacoes
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -540,4 +637,23 @@ function requireToken(token: string | null) {
 
 function isPendingPaymentStatus(status: StatusPagamento | null | undefined) {
   return status === 'PENDENTE' || status === 'AGUARDANDO_CONFIRMACAO';
+}
+
+function parsePositiveId(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+async function invalidateSolicitacaoPagamentoQueries(queryClient: ReturnType<typeof useQueryClient>, solicitacaoId: number) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['cliente', 'pagamentos'] }),
+    queryClient.invalidateQueries({ queryKey: ['cliente', 'pagamentos', 'atendimentos'] }),
+    queryClient.invalidateQueries({ queryKey: ['cliente', 'pagamentos', 'solicitacao', solicitacaoId] }),
+    queryClient.invalidateQueries({ queryKey: ['cliente', 'solicitacoes'] }),
+    queryClient.invalidateQueries({ queryKey: ['cliente', 'solicitacoes', solicitacaoId] }),
+  ]);
 }
