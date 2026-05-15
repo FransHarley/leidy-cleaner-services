@@ -53,6 +53,7 @@ export function ClientePagamentoSolicitacaoPage() {
   const [usingCreditoId, setUsingCreditoId] = useState<number | null>(null);
   const previousPagamentoStatusRef = useRef<StatusPagamento | null>(null);
   const autoRefreshKeyRef = useRef<string | null>(null);
+  const paymentActionSectionRef = useRef<HTMLDivElement | null>(null);
   const retorno = searchParams.get('retorno');
   const pagamentoIdFromReturn = parsePositiveId(searchParams.get('pagamentoId'));
   const sessionReady = status === 'authenticated' && Boolean(token);
@@ -187,10 +188,14 @@ export function ClientePagamentoSolicitacaoPage() {
         await queryClient.invalidateQueries({ queryKey: queryKeys.pagamentoPorSolicitacao(parsedSolicitacaoId) });
       }
 
+      requestAnimationFrame(() => {
+        paymentActionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
       setFeedback({
         tone: 'error',
         title: 'Nao foi possivel iniciar o pagamento',
-        message: getApiErrorMessage(error),
+        message: getPaymentCreationErrorMessage(error),
         details: error instanceof ApiError ? error.errors : [],
       });
     },
@@ -398,6 +403,12 @@ export function ClientePagamentoSolicitacaoPage() {
               </p>
             </div>
 
+            {criarPagamentoMutation.isError && feedback?.tone === 'error' && (
+              <div className="mt-5">
+                <FormAlert tone="error" title={feedback.title} message={feedback.message} details={feedback.details} />
+              </div>
+            )}
+
             <fieldset className="mt-5 grid gap-3">
               <legend className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Pagamento normal</legend>
               <div className="grid gap-2 sm:max-w-2xl sm:grid-cols-2">
@@ -420,7 +431,7 @@ export function ClientePagamentoSolicitacaoPage() {
               </div>
             </fieldset>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3">
+            <div ref={paymentActionSectionRef} className="mt-5 flex flex-wrap items-center gap-3">
               <button
                 className="inline-flex min-h-11 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
                 disabled={criarPagamentoMutation.isPending}
@@ -646,6 +657,20 @@ function parsePositiveId(value: string | null) {
 
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getPaymentCreationErrorMessage(error: unknown) {
+  const fallbackMessage = 'Nao foi possivel iniciar o pagamento. Verifique a configuracao do Asaas ou tente novamente.';
+
+  if (error instanceof ApiError) {
+    return error.message?.trim() ? error.message : fallbackMessage;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallbackMessage;
 }
 
 async function invalidateSolicitacaoPagamentoQueries(queryClient: ReturnType<typeof useQueryClient>, solicitacaoId: number) {
