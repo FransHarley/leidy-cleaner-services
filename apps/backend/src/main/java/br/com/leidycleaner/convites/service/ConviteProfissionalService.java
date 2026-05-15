@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.convites.dto.AdminConviteMonitoramentoDto;
 import br.com.leidycleaner.convites.dto.ConviteRespostaDto;
 import br.com.leidycleaner.convites.dto.ConviteProfissionalDto;
 import br.com.leidycleaner.convites.entity.ConviteProfissional;
+import br.com.leidycleaner.convites.entity.StatusConvite;
 import br.com.leidycleaner.convites.mapper.ConviteProfissionalMapper;
 import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
 import br.com.leidycleaner.core.exception.BusinessException;
@@ -104,6 +106,28 @@ public class ConviteProfissionalService {
         return conviteProfissionalRepository.findByIdAndProfissionalUsuarioId(conviteId, usuarioId)
                 .map(ConviteProfissionalMapper::paraDto)
                 .orElseThrow(() -> new BusinessException("CONVITE_NOT_FOUND", "Convite nao encontrado", HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminConviteMonitoramentoDto> listarAdminMonitoramento(
+            StatusConvite status,
+            Long solicitacaoId,
+            Long profissionalId,
+            Long clienteId,
+            OffsetDateTime expiraAntesDe,
+            OffsetDateTime expiraDepoisDe,
+            boolean somenteVencidos
+    ) {
+        return conviteProfissionalRepository.findAdminMonitoramento(
+                status,
+                solicitacaoId,
+                profissionalId,
+                clienteId,
+                expiraAntesDe,
+                expiraDepoisDe,
+                somenteVencidos,
+                OffsetDateTime.now(clock)
+        );
     }
 
     @Transactional

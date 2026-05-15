@@ -15,6 +15,10 @@ import br.com.leidycleaner.clientes.repository.PerfilClienteRepository;
 import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.service.ConviteSolicitacaoPagaService;
 import br.com.leidycleaner.core.exception.BusinessException;
+import br.com.leidycleaner.creditos.dto.AdminCreditoSolicitacaoDetalheDto;
+import br.com.leidycleaner.creditos.dto.AdminCreditoSolicitacaoListItemDto;
+import br.com.leidycleaner.creditos.dto.AdminCreditoSolicitacaoPagamentoResumoDto;
+import br.com.leidycleaner.creditos.dto.AdminCreditoSolicitacaoSolicitacaoResumoDto;
 import br.com.leidycleaner.creditos.dto.CreditoSolicitacaoDto;
 import br.com.leidycleaner.creditos.dto.UsoCreditoSolicitacaoDto;
 import br.com.leidycleaner.creditos.entity.CreditoSolicitacao;
@@ -25,6 +29,7 @@ import br.com.leidycleaner.pagamentos.entity.Pagamento;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.solicitacoes.entity.SolicitacaoFaxina;
 import br.com.leidycleaner.solicitacoes.entity.StatusSolicitacao;
+import br.com.leidycleaner.solicitacoes.entity.TipoServico;
 import br.com.leidycleaner.solicitacoes.repository.SolicitacaoFaxinaRepository;
 import br.com.leidycleaner.solicitacoes.repository.SolicitacaoProfissionalSelecionadoRepository;
 
@@ -65,6 +70,44 @@ public class CreditoSolicitacaoService {
                 .stream()
                 .map(CreditoSolicitacaoMapper::paraDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminCreditoSolicitacaoListItemDto> listarAdmin(
+            StatusCreditoSolicitacao status,
+            Long clienteId,
+            Long solicitacaoOrigemId,
+            Long solicitacaoUsoId,
+            Long pagamentoOrigemId,
+            TipoServico tipoServico,
+            Long regiaoId,
+            OffsetDateTime criadoDe,
+            OffsetDateTime criadoAte
+    ) {
+        return creditoSolicitacaoRepository.findAdminList(
+                        status,
+                        clienteId,
+                        solicitacaoOrigemId,
+                        solicitacaoUsoId,
+                        pagamentoOrigemId,
+                        tipoServico,
+                        regiaoId,
+                        criadoDe,
+                        criadoAte
+                ).stream()
+                .map(this::paraAdminListItemDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AdminCreditoSolicitacaoDetalheDto buscarAdminPorId(Long id) {
+        return creditoSolicitacaoRepository.findAdminById(id)
+                .map(this::paraAdminDetalheDto)
+                .orElseThrow(() -> new BusinessException(
+                        "CREDITO_SOLICITACAO_NOT_FOUND",
+                        "Credito de solicitacao nao encontrado",
+                        HttpStatus.NOT_FOUND
+                ));
     }
 
     @Transactional
@@ -148,6 +191,83 @@ public class CreditoSolicitacaoService {
         if (perfilClienteRepository.findByUsuarioId(usuarioId).isEmpty()) {
             throw new AccessDeniedException("Usuario autenticado nao possui perfil cliente");
         }
+    }
+
+    private AdminCreditoSolicitacaoListItemDto paraAdminListItemDto(CreditoSolicitacao credito) {
+        return new AdminCreditoSolicitacaoListItemDto(
+                credito.getId(),
+                credito.getStatus(),
+                credito.getCliente().getId(),
+                credito.getCliente().getUsuario().getNomeCompleto(),
+                credito.getSolicitacaoOrigem().getId(),
+                credito.getPagamentoOrigem().getId(),
+                credito.getSolicitacaoUso() != null ? credito.getSolicitacaoUso().getId() : null,
+                credito.getTipoServico(),
+                credito.getDuracaoEstimadaHoras(),
+                credito.getRegiao().getId(),
+                credito.getRegiao().getNome(),
+                credito.getValorReferencia(),
+                credito.getCriadoEm(),
+                credito.getReservadoEm(),
+                credito.getUtilizadoEm(),
+                credito.getCanceladoEm(),
+                credito.getObservacao()
+        );
+    }
+
+    private AdminCreditoSolicitacaoDetalheDto paraAdminDetalheDto(CreditoSolicitacao credito) {
+        return new AdminCreditoSolicitacaoDetalheDto(
+                credito.getId(),
+                credito.getStatus(),
+                credito.getCliente().getId(),
+                credito.getCliente().getUsuario().getNomeCompleto(),
+                credito.getSolicitacaoOrigem().getId(),
+                credito.getPagamentoOrigem().getId(),
+                credito.getSolicitacaoUso() != null ? credito.getSolicitacaoUso().getId() : null,
+                credito.getTipoServico(),
+                credito.getDuracaoEstimadaHoras(),
+                credito.getRegiao().getId(),
+                credito.getRegiao().getNome(),
+                credito.getValorReferencia(),
+                credito.getCriadoEm(),
+                credito.getReservadoEm(),
+                credito.getUtilizadoEm(),
+                credito.getCanceladoEm(),
+                credito.getObservacao(),
+                paraSolicitacaoResumoDto(credito.getSolicitacaoOrigem()),
+                paraPagamentoResumoDto(credito.getPagamentoOrigem()),
+                credito.getSolicitacaoUso() != null ? paraSolicitacaoResumoDto(credito.getSolicitacaoUso()) : null
+        );
+    }
+
+    private AdminCreditoSolicitacaoSolicitacaoResumoDto paraSolicitacaoResumoDto(SolicitacaoFaxina solicitacao) {
+        return new AdminCreditoSolicitacaoSolicitacaoResumoDto(
+                solicitacao.getId(),
+                solicitacao.getStatus(),
+                solicitacao.getCliente().getId(),
+                solicitacao.getCliente().getUsuario().getNomeCompleto(),
+                solicitacao.getDataHoraDesejada(),
+                solicitacao.getTipoServico(),
+                solicitacao.getDuracaoEstimadaHoras(),
+                solicitacao.getRegiao().getId(),
+                solicitacao.getRegiao().getNome()
+        );
+    }
+
+    private AdminCreditoSolicitacaoPagamentoResumoDto paraPagamentoResumoDto(Pagamento pagamento) {
+        return new AdminCreditoSolicitacaoPagamentoResumoDto(
+                pagamento.getId(),
+                pagamento.getGateway(),
+                pagamento.getMetodoPagamento(),
+                pagamento.getStatus(),
+                pagamento.getGatewayPaymentId(),
+                pagamento.getSolicitacao() != null ? pagamento.getSolicitacao().getId() : null,
+                pagamento.getAtendimento() != null ? pagamento.getAtendimento().getId() : null,
+                pagamento.getValorBruto(),
+                pagamento.getValorLiquidoRecebido(),
+                pagamento.getRecebidoEm(),
+                pagamento.getCriadoEm()
+        );
     }
 
     private void validarSolicitacaoDoCliente(Long usuarioId, SolicitacaoFaxina solicitacao) {

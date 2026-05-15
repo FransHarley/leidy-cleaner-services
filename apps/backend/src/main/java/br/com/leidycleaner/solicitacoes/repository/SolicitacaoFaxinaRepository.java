@@ -16,6 +16,8 @@ import jakarta.persistence.LockModeType;
 
 public interface SolicitacaoFaxinaRepository extends JpaRepository<SolicitacaoFaxina, Long> {
 
+    long countByStatus(StatusSolicitacao status);
+
     long countByStatusIn(Collection<StatusSolicitacao> statuses);
 
     @Query("""

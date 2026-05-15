@@ -562,21 +562,21 @@ Dar visibilidade para suporte e operação.
 
 ### Checklist
 
-- [ ] Admin vê pagamento por solicitação mesmo sem atendimento.
-- [ ] Admin vê pagamento já vinculado ao atendimento após aceite.
-- [ ] Admin vê solicitações aguardando pagamento.
-- [ ] Admin vê solicitações pagas aguardando aceite.
-- [ ] Admin vê solicitações com crédito gerado.
-- [ ] Admin vê ledger/histórico de crédito do cliente.
+- [x] Admin vê pagamento por solicitação mesmo sem atendimento.
+- [x] Admin vê pagamento já vinculado ao atendimento após aceite.
+- [x] Admin vê solicitações aguardando pagamento.
+- [x] Admin vê solicitações pagas aguardando aceite.
+- [x] Admin vê solicitações com crédito gerado.
+- [x] Admin vê ledger/histórico de crédito do cliente.
 - [ ] Logs diferenciam pagamento por solicitação e pagamento por atendimento legado.
 - [ ] Logs de webhook indicam external reference, pagamento localizado, solicitação localizada e convite criado.
 - [ ] Logs de crédito indicam idempotência sem duplicar crédito.
 
 ### Critérios de aceite
 
-- [ ] Operação consegue entender onde o fluxo parou.
-- [ ] Suporte consegue explicar ao cliente se o valor virou crédito.
-- [ ] Admin não precisa consultar banco para casos comuns.
+- [x] Operação consegue entender onde o fluxo parou.
+- [x] Suporte consegue explicar ao cliente se o valor virou crédito.
+- [x] Admin não precisa consultar banco para casos comuns.
 
 ### Validação
 

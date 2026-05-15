@@ -1,5 +1,7 @@
 package br.com.leidycleaner.admin.dashboard.service;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,8 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.leidycleaner.admin.dashboard.dto.AdminDashboardIndicadoresDto;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.convites.entity.StatusConvite;
+import br.com.leidycleaner.convites.repository.ConviteProfissionalRepository;
+import br.com.leidycleaner.creditos.entity.StatusCreditoSolicitacao;
+import br.com.leidycleaner.creditos.repository.CreditoSolicitacaoRepository;
 import br.com.leidycleaner.ocorrencias.entity.StatusOcorrencia;
 import br.com.leidycleaner.ocorrencias.repository.OcorrenciaAtendimentoRepository;
+import br.com.leidycleaner.pagamentos.entity.GatewayPagamento;
+import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
 import br.com.leidycleaner.pagamentos.repository.PagamentoRepository;
 import br.com.leidycleaner.profissionais.entity.StatusAprovacaoProfissional;
@@ -37,9 +45,15 @@ public class AdminDashboardService {
             StatusSolicitacao.CRIADA,
             StatusSolicitacao.AGUARDANDO_SELECAO,
             StatusSolicitacao.AGUARDANDO_PAGAMENTO,
+            StatusSolicitacao.PAGA_AGUARDANDO_ACEITE,
             StatusSolicitacao.CONVITES_ENVIADOS,
             StatusSolicitacao.AGUARDANDO_ACEITE,
             StatusSolicitacao.ACEITA
+    );
+
+    private static final List<StatusConvite> CONVITES_RESPONDIVEIS = List.of(
+            StatusConvite.ENVIADO,
+            StatusConvite.VISUALIZADO
     );
 
     private final DocumentoVerificacaoRepository documentoVerificacaoRepository;
@@ -48,7 +62,10 @@ public class AdminDashboardService {
     private final PagamentoRepository pagamentoRepository;
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
     private final SolicitacaoFaxinaRepository solicitacaoFaxinaRepository;
+    private final ConviteProfissionalRepository conviteProfissionalRepository;
+    private final CreditoSolicitacaoRepository creditoSolicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final Clock clock;
 
     public AdminDashboardService(
             DocumentoVerificacaoRepository documentoVerificacaoRepository,
@@ -57,6 +74,8 @@ public class AdminDashboardService {
             PagamentoRepository pagamentoRepository,
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             SolicitacaoFaxinaRepository solicitacaoFaxinaRepository,
+            ConviteProfissionalRepository conviteProfissionalRepository,
+            CreditoSolicitacaoRepository creditoSolicitacaoRepository,
             UsuarioRepository usuarioRepository
     ) {
         this.documentoVerificacaoRepository = documentoVerificacaoRepository;
@@ -65,11 +84,15 @@ public class AdminDashboardService {
         this.pagamentoRepository = pagamentoRepository;
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.solicitacaoFaxinaRepository = solicitacaoFaxinaRepository;
+        this.conviteProfissionalRepository = conviteProfissionalRepository;
+        this.creditoSolicitacaoRepository = creditoSolicitacaoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.clock = Clock.systemDefaultZone();
     }
 
     @Transactional(readOnly = true)
     public AdminDashboardIndicadoresDto buscarIndicadores() {
+        OffsetDateTime agora = OffsetDateTime.now(clock);
         return new AdminDashboardIndicadoresDto(
                 documentoVerificacaoRepository.countByStatusVerificacaoIn(VERIFICACOES_PENDENTES),
                 perfilProfissionalRepository.countByStatusAprovacaoIn(PROFISSIONAIS_PENDENTES),
@@ -80,7 +103,16 @@ public class AdminDashboardService {
                 pagamentoRepository.countByStatus(StatusPagamento.FALHOU),
                 atendimentoFaxinaRepository.countByStatus(StatusAtendimento.EM_ANALISE),
                 solicitacaoFaxinaRepository.countByStatusIn(SOLICITACOES_ABERTAS),
-                usuarioRepository.count()
+                usuarioRepository.count(),
+                solicitacaoFaxinaRepository.countByStatus(StatusSolicitacao.AGUARDANDO_PAGAMENTO),
+                solicitacaoFaxinaRepository.countByStatus(StatusSolicitacao.PAGA_AGUARDANDO_ACEITE),
+                conviteProfissionalRepository.countExpiredRespondable(CONVITES_RESPONDIVEIS, agora),
+                creditoSolicitacaoRepository.countByStatus(StatusCreditoSolicitacao.DISPONIVEL),
+                creditoSolicitacaoRepository.countByStatus(StatusCreditoSolicitacao.UTILIZADO),
+                pagamentoRepository.countByGatewayAndMetodoPagamento(
+                        GatewayPagamento.INTERNO,
+                        MetodoPagamento.CREDITO_SOLICITACAO
+                )
         );
     }
 }

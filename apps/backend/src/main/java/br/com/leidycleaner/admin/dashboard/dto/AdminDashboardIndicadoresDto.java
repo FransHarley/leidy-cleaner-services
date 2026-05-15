@@ -10,6 +10,12 @@ public record AdminDashboardIndicadoresDto(
         long pagamentosFalhos,
         long atendimentosEmAnalise,
         long solicitacoesAbertas,
-        long usuariosTotal
+        long usuariosTotal,
+        long solicitacoesAguardandoPagamento,
+        long solicitacoesPagasAguardandoAceite,
+        long convitesVencidosPendentesProcessamento,
+        long creditosSolicitacaoDisponiveis,
+        long creditosSolicitacaoUtilizados,
+        long pagamentosInternosCreditoSolicitacao
 ) {
 }

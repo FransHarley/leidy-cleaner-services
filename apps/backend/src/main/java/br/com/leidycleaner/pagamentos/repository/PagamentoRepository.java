@@ -13,10 +13,13 @@ import org.springframework.data.repository.query.Param;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 import br.com.leidycleaner.pagamentos.entity.Pagamento;
 import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
+import br.com.leidycleaner.pagamentos.entity.GatewayPagamento;
 
 public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
 
     long countByStatus(StatusPagamento status);
+
+    long countByGatewayAndMetodoPagamento(GatewayPagamento gateway, MetodoPagamento metodoPagamento);
 
     @Query("""
             select p
