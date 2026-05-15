@@ -155,6 +155,20 @@ class AdminMonitoramentoIntegrationTest {
                 .doesNotContain("payloadResumo")
                 .doesNotContain("pixCopiaECola")
                 .doesNotContain("saldo");
+
+        OffsetDateTime criadoDe = creditoDisponivel.getCriadoEm().minusMinutes(1).withNano(0);
+        OffsetDateTime criadoAte = creditoDisponivel.getCriadoEm().plusMinutes(1).withNano(0);
+
+        mockMvc.perform(get("/api/v1/admin/creditos-solicitacao")
+                        .queryParam("status", "DISPONIVEL")
+                        .queryParam("clienteId", cliente.getId().toString())
+                        .queryParam("criadoDe", criadoDe.toString())
+                        .queryParam("criadoAte", criadoAte.toString())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(creditoDisponivel.getId()));
     }
 
     @Test
@@ -204,6 +218,18 @@ class AdminMonitoramentoIntegrationTest {
         String tokenCliente = criarClienteELogar("monitoramento.cliente@example.com");
         String tokenProfissional = criarProfissionalELogar("monitoramento.profissional@example.com", "89100000000");
 
+        mockMvc.perform(get("/api/v1/pagamentos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
+        mockMvc.perform(get("/api/v1/pagamentos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenProfissional))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
         mockMvc.perform(get("/api/v1/admin/creditos-solicitacao")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenCliente))
                 .andExpect(status().isForbidden())
@@ -230,20 +256,67 @@ class AdminMonitoramentoIntegrationTest {
     }
 
     @Test
+    void endpointsAdminExigemAutenticacao() throws Exception {
+        mockMvc.perform(get("/api/v1/pagamentos"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        mockMvc.perform(get("/api/v1/admin/convites/monitoramento"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        mockMvc.perform(get("/api/v1/admin/creditos-solicitacao"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    void mesmoJwtAdminAcessaAuthMeEPaginasAdminMonitoramento() throws Exception {
+        String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("admin@leidycleaner.local"))
+                .andExpect(jsonPath("$.data.tipoUsuario").value("ADMIN"))
+                .andExpect(jsonPath("$.data.roles[0]").value("ROLE_ADMIN"));
+
+        mockMvc.perform(get("/api/v1/pagamentos")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(get("/api/v1/admin/convites/monitoramento")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(get("/api/v1/admin/creditos-solicitacao")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
     void adminConsegueListarMonitoramentoDeConvitesComFiltros() throws Exception {
         String tokenAdmin = login("admin@leidycleaner.local", "Admin123!local");
         RegiaoAtendimento regiao = regiaoAtendimentoRepository.findByAtivoTrueOrderByNomeAsc().getFirst();
         PerfilCliente cliente = criarPerfilCliente("monitoramento-convite-cliente");
         Endereco endereco = criarEndereco(cliente.getUsuario());
         PerfilProfissional profissional = criarPerfilProfissional("monitoramento-convite-prof");
+        OffsetDateTime agora = OffsetDateTime.now().withNano(0);
 
         SolicitacaoFaxina solicitacaoPendente = criarSolicitacao(StatusSolicitacao.PAGA_AGUARDANDO_ACEITE, cliente, endereco, regiao);
         Pagamento pagamentoPendente = criarPagamentoExternoPago(solicitacaoPendente, MetodoPagamento.PIX);
         ConviteProfissional convitePendente = conviteProfissionalRepository.saveAndFlush(new ConviteProfissional(
                 solicitacaoPendente,
                 profissional,
-                OffsetDateTime.now().minusHours(2),
-                OffsetDateTime.now().plusHours(6)
+                agora.minusHours(2),
+                agora.plusHours(6)
         ));
 
         SolicitacaoFaxina solicitacaoExpirada = criarSolicitacao(StatusSolicitacao.NAO_ACEITA_CREDITO_GERADO, cliente, endereco, regiao);
@@ -251,10 +324,10 @@ class AdminMonitoramentoIntegrationTest {
         ConviteProfissional conviteExpirado = new ConviteProfissional(
                 solicitacaoExpirada,
                 profissional,
-                OffsetDateTime.now().minusDays(1),
-                OffsetDateTime.now().minusHours(2)
+                agora.minusDays(1),
+                agora.minusHours(2)
         );
-        conviteExpirado.expirar(OffsetDateTime.now().minusHours(1));
+        conviteExpirado.expirar(agora.minusHours(1));
         conviteExpirado = conviteProfissionalRepository.saveAndFlush(conviteExpirado);
         CreditoSolicitacao creditoGerado = creditoSolicitacaoRepository.saveAndFlush(
                 CreditoSolicitacao.criarDisponivel(solicitacaoExpirada, pagamentoExpirado, "Credito gerado por expiracao")
@@ -306,6 +379,18 @@ class AdminMonitoramentoIntegrationTest {
                 .doesNotContain("senhaHash")
                 .doesNotContain("payloadResumo")
                 .doesNotContain("pixCopiaECola");
+
+        mockMvc.perform(get("/api/v1/admin/convites/monitoramento")
+                        .queryParam("clienteId", cliente.getId().toString())
+                        .queryParam("profissionalId", profissional.getId().toString())
+                        .queryParam("expiraDepoisDe", agora.plusHours(1).toString())
+                        .queryParam("expiraAntesDe", agora.plusHours(7).toString())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].conviteId").value(convitePendente.getId()))
+                .andExpect(jsonPath("$.data[0].statusConvite").value("ENVIADO"));
     }
 
     private PerfilCliente criarPerfilCliente(String prefixo) {

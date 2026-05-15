@@ -14,7 +14,8 @@ import br.com.leidycleaner.convites.entity.ConviteProfissional;
 import br.com.leidycleaner.convites.entity.StatusConvite;
 import jakarta.persistence.LockModeType;
 
-public interface ConviteProfissionalRepository extends JpaRepository<ConviteProfissional, Long> {
+public interface ConviteProfissionalRepository
+        extends JpaRepository<ConviteProfissional, Long>, ConviteProfissionalRepositoryCustom {
 
     @Query("""
             select convite
@@ -102,59 +103,6 @@ public interface ConviteProfissionalRepository extends JpaRepository<ConviteProf
             """)
     long countExpiredRespondable(
             @Param("statuses") List<StatusConvite> statuses,
-            @Param("agora") java.time.OffsetDateTime agora
-    );
-
-    @Query("""
-            select distinct new br.com.leidycleaner.convites.dto.AdminConviteMonitoramentoDto(
-                convite.id,
-                convite.status,
-                solicitacao.id,
-                solicitacao.status,
-                cliente.id,
-                clienteUsuario.nomeCompleto,
-                profissional.id,
-                profissionalUsuario.nomeCompleto,
-                solicitacao.dataHoraDesejada,
-                solicitacao.tipoServico,
-                solicitacao.duracaoEstimadaHoras,
-                regiao.nome,
-                convite.enviadoEm,
-                convite.respondidoEm,
-                convite.expiraEm,
-                case when convite.expiraEm <= :agora then true else false end,
-                pagamento.id,
-                pagamento.status,
-                credito.id
-            )
-            from ConviteProfissional convite
-            join convite.solicitacao solicitacao
-            join solicitacao.cliente cliente
-            join cliente.usuario clienteUsuario
-            join convite.profissional profissional
-            join profissional.usuario profissionalUsuario
-            join solicitacao.regiao regiao
-            left join Pagamento pagamento
-                on pagamento.solicitacao.id = solicitacao.id
-            left join CreditoSolicitacao credito
-                on credito.pagamentoOrigem.id = pagamento.id
-            where (:status is null or convite.status = :status)
-              and (:solicitacaoId is null or solicitacao.id = :solicitacaoId)
-              and (:profissionalId is null or profissional.id = :profissionalId)
-              and (:clienteId is null or cliente.id = :clienteId)
-              and (:expiraAntesDe is null or convite.expiraEm <= :expiraAntesDe)
-              and (:expiraDepoisDe is null or convite.expiraEm >= :expiraDepoisDe)
-              and (:somenteVencidos = false or convite.expiraEm <= :agora)
-            order by convite.expiraEm asc, convite.id desc
-            """)
-    List<AdminConviteMonitoramentoDto> findAdminMonitoramento(
-            @Param("status") StatusConvite status,
-            @Param("solicitacaoId") Long solicitacaoId,
-            @Param("profissionalId") Long profissionalId,
-            @Param("clienteId") Long clienteId,
-            @Param("expiraAntesDe") java.time.OffsetDateTime expiraAntesDe,
-            @Param("expiraDepoisDe") java.time.OffsetDateTime expiraDepoisDe,
-            @Param("somenteVencidos") boolean somenteVencidos,
             @Param("agora") java.time.OffsetDateTime agora
     );
 
