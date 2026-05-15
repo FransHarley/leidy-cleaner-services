@@ -4,7 +4,7 @@ Monorepo da plataforma operacional de intermediacao de servicos de limpeza **Lei
 
 O escopo de servicos contempla as categorias `FAXINA_RESIDENCIAL`, `FAXINA_COMERCIAL`, `FAXINA_CONDOMINIO` e `FAXINA_EVENTO`.
 
-O produto segue as decisoes do `AGENTS.md` e de `docs/spec.md`: frontend React, backend Spring Boot, PostgreSQL, pagamento via Asaas vinculado ao atendimento e confirmacao por webhook.
+O produto segue as decisoes do `AGENTS.md` e de `docs/spec.md`: frontend React, backend Spring Boot, PostgreSQL, pagamento via Asaas com fluxo principal pre-pago na `SolicitacaoFaxina` e confirmacao por webhook ou reconciliacao backend idempotente.
 
 ## Estrutura
 
@@ -93,21 +93,42 @@ http://localhost:5173
 
 ## Pagamento Asaas
 
-O caminho principal de pagamento e:
+Fluxo principal vigente:
+
+1. a cliente cria a `SolicitacaoFaxina`
+2. seleciona exatamente 1 profissional elegivel
+3. a solicitacao vai para `AGUARDANDO_PAGAMENTO`
+4. o backend cria um `Pagamento` vinculado a `SolicitacaoFaxina`
+5. webhook do Asaas ou `POST /api/v1/pagamentos/{id}/consultar-status` confirmam o pagamento
+6. a confirmacao move a solicitacao para `PAGA_AGUARDANDO_ACEITE` e cria exatamente 1 `ConviteProfissional`
+7. o `AtendimentoFaxina` so nasce quando a profissional aceita o convite
+8. nesse aceite valido, o pagamento pago passa a ser vinculado ao atendimento criado
+
+Endpoints principais:
 
 ```text
-POST /api/v1/pagamentos/checkout
-```
-
-Esse endpoint mantem o nome por compatibilidade, mas cria uma cobranca padrao no Asaas via `POST /payments`, sempre vinculada a um `AtendimentoFaxina`. O backend persiste o `Pagamento` como `PENDENTE`, salva `payment.id` em `pagamentos.gateway_payment_id` e retorna `invoiceUrl` como `checkoutUrl`/`paymentUrl`. O retorno do Asaas nao confirma pagamento; a confirmacao definitiva continua sendo feita apenas pelo webhook:
-
-```text
+POST /api/v1/pagamentos
+GET /api/v1/pagamentos/solicitacao/{solicitacaoId}
+POST /api/v1/pagamentos/{id}/consultar-status
 POST /api/v1/webhooks/asaas
 ```
 
-Variaveis usadas pela integracao:
+O retorno do Asaas nao confirma pagamento por si so. A fonte de verdade continua sendo o backend, via webhook ou reconciliacao segura que reutiliza o mesmo fluxo interno de confirmacao.
+
+O endpoint legado baseado em atendimento continua existindo apenas para compatibilidade com pagamentos antigos:
 
 ```text
+GET /api/v1/pagamentos/atendimento/{atendimentoId}
+```
+
+Variaveis usadas pelo backend:
+
+```text
+JWT_SECRET
+JWT_EXPIRATION_SECONDS
+SPRING_DATASOURCE_URL
+SPRING_DATASOURCE_USERNAME
+SPRING_DATASOURCE_PASSWORD
 ASAAS_BASE_URL
 ASAAS_API_KEY
 ASAAS_WEBHOOK_TOKEN
@@ -121,11 +142,34 @@ ASAAS_CHECKOUT_CANCEL_URL
 ASAAS_CHECKOUT_EXPIRED_URL
 ```
 
-`ASAAS_CHECKOUT_BILLING_TYPES` permanece como fallback de compatibilidade para ambientes locais antigos. Para o fluxo principal, configure `ASAAS_PAYMENT_BILLING_TYPE` com `CREDIT_CARD` ou `PIX`.
+Configuracao local recomendada:
 
-`ASAAS_PAYMENT_CALLBACK_ENABLED` controla se o backend envia `callback.successUrl` no `POST /payments`. Em desenvolvimento local, mantenha `ASAAS_PAYMENT_CALLBACK_ENABLED=false`; assim o backend nao envia `callback`, mesmo que exista uma `ASAAS_CHECKOUT_SUCCESS_URL` antiga no ambiente, evitando o bloqueio do Asaas Sandbox quando a conta ainda nao possui dominio cadastrado. Para usar callback em producao, configure `ASAAS_PAYMENT_CALLBACK_ENABLED=true` e uma `ASAAS_CHECKOUT_SUCCESS_URL` cujo dominio esteja cadastrado na conta Asaas. Esse callback serve apenas para retorno visual do cliente ao site; sem callback, o cliente pode nao voltar automaticamente. A confirmacao de pagamento continua vindo exclusivamente do webhook, e a cobranca ainda pode ser confirmada via webhook mesmo sem callback.
+- `ASAAS_BASE_URL=https://api-sandbox.asaas.com/v3`
+- `ASAAS_PAYMENT_CALLBACK_ENABLED=false`
+- `ASAAS_PAYMENT_AUTO_REDIRECT=true`
+- `ASAAS_CHECKOUT_SUCCESS_URL=http://localhost:5173/pagamento/sucesso`
+- `ASAAS_CHECKOUT_CANCEL_URL=http://localhost:5173/pagamento/cancelado`
+- `ASAAS_CHECKOUT_EXPIRED_URL=http://localhost:5173/pagamento/expirado`
 
-Para pagamentos criados pelo fluxo principal, eventos de cobranca como `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` reconciliam pelo campo `payment.id`. A localizacao por `payment.checkoutSession`, `checkout.id` e `externalReference` continua suportada para compatibilidade com registros antigos.
+Configuracao esperada em producao:
+
+- essas variaveis pertencem ao servico backend na Railway
+- depois de alterar variaveis, o backend deve ser redeployado
+- `ASAAS_BASE_URL=https://api.asaas.com/v3`
+- `ASAAS_PAYMENT_CALLBACK_ENABLED=true`
+- `ASAAS_PAYMENT_AUTO_REDIRECT=true`
+- `ASAAS_CHECKOUT_SUCCESS_URL=https://www.cleanerleidy.com.br/pagamento/sucesso`
+- `ASAAS_CHECKOUT_CANCEL_URL=https://www.cleanerleidy.com.br/pagamento/cancelado`
+- `ASAAS_CHECKOUT_EXPIRED_URL=https://www.cleanerleidy.com.br/pagamento/expirado`
+
+Observacoes operacionais:
+
+- o webhook do Asaas deve apontar para `https://BACKEND_PUBLIC_URL/api/v1/webhooks/asaas`
+- o token configurado no painel do Asaas deve ser igual a `ASAAS_WEBHOOK_TOKEN`
+- a conta do Asaas precisa ter o dominio `https://www.cleanerleidy.com.br` cadastrado em Minha Conta
+- nao misture `localhost`, `cleanerleidy.com.br` e `www.cleanerleidy.com.br` no mesmo teste de producao, porque a sessao JWT no navegador e especifica por origem
+
+`ASAAS_CHECKOUT_BILLING_TYPES` permanece apenas como fallback de compatibilidade para ambientes locais antigos. Para o fluxo principal, configure `ASAAS_PAYMENT_BILLING_TYPE` com `CREDIT_CARD` ou `PIX`.
 
 Seguranca do webhook:
 
@@ -133,9 +177,10 @@ Seguranca do webhook:
 - toda chamada deve enviar o header `asaas-access-token`
 - o backend compara esse header com `ASAAS_WEBHOOK_TOKEN` antes de processar o payload
 - chamadas sem token ou com token invalido retornam erro JSON 401
+- chamadas autenticadas mas sem permissao em endpoints privados retornam 403
 - o backend valida a estrutura do payload e trata entregas duplicadas com idempotencia
 - eventos nao suportados sao ignorados com resposta 200 para evitar retry desnecessario do gateway
-- a confirmacao definitiva continua restrita ao webhook
+- a confirmacao definitiva continua restrita ao backend
 
 ## Scripts uteis
 
@@ -155,11 +200,15 @@ npm run build
 
 ## Estado atual
 
-Este repositorio esta na fundacao tecnica do MVP:
+Este repositorio ja cobre o fluxo central do MVP pre-pago:
 
 - monorepo preservado
-- backend Spring Boot com fluxos operacionais iniciais
-- frontend React + Vite em fundacao tecnica, sem telas operacionais de checkout entregues neste marco
-- Tailwind CSS configurado
+- solicitacao, selecao unica e pagamento antes do convite implementados
+- confirmacao de pagamento via webhook e reconciliacao manual backend implementadas
+- convite unico apos pagamento confirmado implementado
+- aceite da profissional criando `AtendimentoFaxina` `CONFIRMADO` implementado
+- credito de reposicao operacional implementado para recusa ou expiracao
+- monitoramento admin de pagamentos, convites e creditos de solicitacao implementado
+- frontend React + Vite integrado ao fluxo principal do cliente e do admin
 - PostgreSQL local via Docker Compose
-- ambiente local documentado
+- ambiente local e configuracao de producao documentados
