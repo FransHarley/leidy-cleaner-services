@@ -502,7 +502,7 @@ OCORRENCIA_ATUALIZADA
 
 - [x] Gerar projeto Android
 - [ ] Abrir no Android Studio
-- [ ] Configurar package name
+- [x] Configurar package name
 - [ ] Configurar ícone
 - [ ] Configurar splash screen
 - [ ] Configurar permissões
@@ -707,7 +707,7 @@ Objetivo: transformar a experiência mobile em app Android instalável.
 - [x] Rodar `npm run build`
 - [x] Rodar `npx cap sync android`
 - [ ] Abrir no Android Studio
-- [ ] Configurar nome do app
+- [x] Configurar nome do app
 - [ ] Configurar ícone
 - [ ] Configurar splash
 - [ ] Testar em emulador
