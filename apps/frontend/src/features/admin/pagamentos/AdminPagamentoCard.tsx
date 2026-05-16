@@ -40,7 +40,7 @@ export function AdminPagamentoCard({ pagamento }: { pagamento: PagamentoAdmin })
         <DetailItem label="Taxa gateway" value={formatCurrency(pagamento.valorTaxaGateway)} />
         <DetailItem label="Valor liquido" value={formatCurrency(pagamento.valorLiquidoRecebido)} />
         <DetailItem label="Recebido em" value={formatDateTime(pagamento.recebidoEm)} />
-        <DetailItem label="Webhook" value={getWebhookLabel(pagamento.webhookProcessado)} />
+        <DetailItem label="Confirmacao automatica" value={getWebhookLabel(pagamento.webhookProcessado)} />
       </dl>
     </article>
   );

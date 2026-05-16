@@ -45,7 +45,7 @@ export function AdminOcorrenciaDetalhePage() {
       setFeedback({
         tone: 'success',
         title: 'Status atualizado',
-        message: 'A ocorrência foi atualizada pelo backend.',
+        message: 'Ocorrencia atualizada com sucesso.',
       });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.list }),
@@ -107,7 +107,7 @@ export function AdminOcorrenciaDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administração</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe da ocorrência</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Consulte o registro e atualize o status pelo endpoint administrativo.
+              Consulte o registro e atualize o status quando necessario.
             </p>
           </div>
           <Link

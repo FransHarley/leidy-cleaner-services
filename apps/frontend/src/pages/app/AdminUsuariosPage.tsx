@@ -175,7 +175,7 @@ export function AdminUsuariosPage() {
       )}
 
       {usuariosQuery.isSuccess && usuarios.length === 0 && (
-        <StateBox tone="empty" title="Nenhum usuário encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhum usuário encontrado" description="Nenhum usuário foi encontrado com os filtros atuais." />
       )}
 
       {usuarios.length > 0 && (

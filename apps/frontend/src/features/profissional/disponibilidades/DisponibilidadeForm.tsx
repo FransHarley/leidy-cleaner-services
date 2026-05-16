@@ -113,13 +113,13 @@ export function DisponibilidadeForm({
           type="checkbox"
           {...register('ativo')}
         />
-        <span>
-          <span className="block font-black text-cyan-800">Disponibilidade ativa</span>
-          <span className="mt-1 block leading-5 text-cyan-900/75">
-            Conflitos e elegibilidade final continuam sendo validados pelo backend.
+          <span>
+            <span className="block font-black text-cyan-800">Disponibilidade ativa</span>
+            <span className="mt-1 block leading-5 text-cyan-900/75">
+            Sua agenda sera considerada nas proximas oportunidades compativeis.
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         {onCancel && (

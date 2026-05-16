@@ -46,7 +46,7 @@ export function getGatewayPagamentoLabel(gateway: GatewayPagamento) {
 }
 
 export function getWebhookLabel(webhookProcessado: boolean) {
-  return webhookProcessado ? 'Processado' : 'Nao processado';
+  return webhookProcessado ? 'Concluida' : 'Pendente';
 }
 
 export function formatCurrency(value: number | null | undefined) {

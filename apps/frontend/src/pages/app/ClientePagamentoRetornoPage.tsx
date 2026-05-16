@@ -19,7 +19,7 @@ export function ClientePagamentoRetornoPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Cliente</p>
         <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Retorno do pagamento</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          O retorno do gateway nao confirma pagamento por si so. Consulte o status atual no backend.
+          Recebemos seu retorno do pagamento. Agora vamos conferir a situacao mais recente antes de seguir.
         </p>
       </section>
 
@@ -29,9 +29,7 @@ export function ClientePagamentoRetornoPage() {
         {pagamentoId && !atendimentoId && (
           <p className="mt-2 text-sm font-semibold text-slate-700">Pagamento informado: #{pagamentoId}</p>
         )}
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          Abra o fluxo correspondente para verificar o status atualizado no backend.
-        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">Abra a tela do pagamento para acompanhar a atualizacao.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             className="inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
@@ -53,7 +51,7 @@ export function ClientePagamentoRetornoPage() {
 
 function getResultadoMensagem(resultado: string | null) {
   if (resultado === 'sucesso') {
-    return 'Retorno de pagamento recebido. Consulte o status atualizado antes de seguir.';
+    return 'Recebemos o retorno do pagamento. Confira a atualizacao para continuar.';
   }
 
   if (resultado === 'cancelado') {

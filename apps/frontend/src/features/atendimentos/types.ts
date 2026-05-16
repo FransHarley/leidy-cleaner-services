@@ -35,6 +35,7 @@ export type AtendimentoBase = {
   fimRealEm: string | null;
   criadoEm: string;
   atualizadoEm: string;
+  podeAvaliar?: boolean;
   avaliacao?: AvaliacaoProfissional | null;
 };
 

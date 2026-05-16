@@ -131,7 +131,7 @@ export function ClientePagamentosPage() {
         throw new ApiError({
           status: 502,
           code: 'ASAAS_PAYMENT_URL_NOT_RETURNED',
-          message: 'URL de pagamento nao retornada pelo Asaas.',
+          message: 'Nao foi possivel abrir o link de pagamento agora.',
         });
       }
 
@@ -171,26 +171,24 @@ export function ClientePagamentosPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Cliente</p>
         <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Pagamentos dos atendimentos</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Acompanhe os pagamentos vinculados aos seus atendimentos. A confirmação definitiva sempre vem do backend.
+          Acompanhe os pagamentos vinculados aos seus atendimentos e veja quando cada cobranca for confirmada.
         </p>
       </section>
 
       <section className="grid gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900">Atendimentos para pagamento</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Escolha Pix ou cartao de credito antes de abrir a cobranca no ambiente do Asaas.
-          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Escolha Pix ou cartao de credito antes de abrir a cobranca no Asaas.</p>
         </div>
 
         {feedback && <FormAlert tone="error" title={feedback.title} message={feedback.message} details={feedback.details} />}
 
-        {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus atendimentos vinculados." />}
+        {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus atendimentos." />}
 
         {atendimentosQuery.isError && !protectedError && (
           <FormAlert
             tone="error"
-            title="Não foi possível carregar pagamentos"
+            title="Nao foi possivel carregar pagamentos"
             message={getApiErrorMessage(atendimentosQuery.error)}
             details={atendimentosQuery.error instanceof ApiError ? atendimentosQuery.error.errors : []}
           />
@@ -199,16 +197,17 @@ export function ClientePagamentosPage() {
         {pagamentoStatusError && (
           <FormAlert
             tone="error"
-            title="Nao foi possivel carregar alguns status de pagamento"
+            title="Nao foi possivel carregar alguns pagamentos"
             message={getApiErrorMessage(pagamentoStatusError)}
             details={pagamentoStatusError instanceof ApiError ? pagamentoStatusError.errors : []}
           />
         )}
 
         {atendimentosQuery.isSuccess && atendimentos.length === 0 && (
-          <StateBox tone="empty"
+          <StateBox
+            tone="empty"
             title="Nenhum atendimento encontrado"
-            description="Quando uma profissional aceitar sua solicitação e o atendimento for criado, o pagamento aparecerá aqui."
+            description="Quando uma profissional aceitar sua solicitacao e o atendimento for criado, o pagamento aparecera aqui."
           />
         )}
 
@@ -234,20 +233,19 @@ export function ClientePagamentosPage() {
         )}
 
         <Link className="font-black text-cyan-700 hover:text-cyan-800" to="/app/cliente/solicitacoes">
-          Voltar para solicitações
+          Voltar para solicitacoes
         </Link>
       </section>
     </div>
   );
 }
 
-
 function requireToken(token: string | null) {
   if (!token) {
     throw new ApiError({
       status: 401,
       code: 'UNAUTHENTICATED',
-      message: 'Sessão expirada. Entre novamente.',
+      message: 'Sessao expirada. Entre novamente.',
     });
   }
 

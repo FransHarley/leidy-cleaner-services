@@ -180,7 +180,7 @@ export function AdminSolicitacoesPage() {
       )}
 
       {solicitacoesQuery.isSuccess && solicitacoes.length === 0 && (
-        <StateBox tone="empty" title="Nenhuma solicitação encontrada" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhuma solicitação encontrada" description="Nenhuma solicitação foi encontrada com os filtros atuais." />
       )}
 
       {solicitacoes.length > 0 && (

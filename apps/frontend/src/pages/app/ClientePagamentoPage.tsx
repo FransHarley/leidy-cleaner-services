@@ -118,7 +118,7 @@ export function ClientePagamentoPage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Cliente</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Checkout e status</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Acompanhe o pagamento do atendimento #{parsedAtendimentoId}. A confirmacao definitiva depende do webhook.
+              Acompanhe o pagamento do atendimento #{parsedAtendimentoId} e veja quando a confirmacao for concluida.
             </p>
           </div>
           <Link
@@ -167,7 +167,7 @@ export function ClientePagamentoPage() {
         <FormAlert
           tone="info"
           title="Pagamento nao encontrado"
-          message="Ainda nao existe pagamento registrado para este atendimento. Volte para a lista e escolha Pix ou cartao de credito antes de continuar para o pagamento."
+          message="Ainda nao existe pagamento registrado para este atendimento. Volte para a lista e escolha Pix ou cartao de credito para continuar."
         />
       )}
 

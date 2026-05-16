@@ -161,7 +161,7 @@ export function ClientePagamentoSolicitacaoPage() {
       if (novoPagamento.metodoPagamento === 'PIX') {
         setFeedback({
           tone: 'info',
-          message: 'Pagamento Pix criado. Use o QR Code abaixo e aguarde a confirmacao do backend.',
+          message: 'Pagamento Pix criado. Use o QR Code abaixo e aguarde a confirmacao.',
         });
         return;
       }
@@ -327,7 +327,7 @@ export function ClientePagamentoSolicitacaoPage() {
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Pagamento da solicitacao</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
               Quite a solicitacao #{parsedSolicitacaoId} por Pix, cartao de credito ou solicitacao de reposicao equivalente.
-              A confirmacao final continua sendo controlada pelo backend.
+              Assim que o pagamento for confirmado, seguiremos para o proximo passo.
             </p>
           </div>
           <Link
@@ -342,7 +342,7 @@ export function ClientePagamentoSolicitacaoPage() {
       {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
       {retorno === 'sucesso' && consultarStatusMutation.isPending && (
-        <StateBox tone="loading" title="Confirmando pagamento..." description="Consultando o status atualizado no backend." />
+        <StateBox tone="loading" title="Confirmando pagamento..." description="Consultando a atualizacao mais recente do pagamento." />
       )}
 
       <SolicitacaoPagamentoContextSection error={solicitacaoQuery.error} isLoading={solicitacaoQuery.isLoading} solicitacao={solicitacao} />
@@ -414,7 +414,7 @@ export function ClientePagamentoSolicitacaoPage() {
               <div className="grid gap-2 sm:max-w-2xl sm:grid-cols-2">
                 <MetodoPagamentoOption
                   checked={selectedMetodo === 'PIX'}
-                  description="Pagamento instantaneo com QR Code e validacao final pelo backend."
+                  description="Pagamento instantaneo com QR Code."
                   groupName="metodo-pagamento-solicitacao"
                   label="Pix"
                   value="PIX"
@@ -446,7 +446,7 @@ export function ClientePagamentoSolicitacaoPage() {
                 {criarPagamentoMutation.isPending ? 'Preparando pagamento...' : `Continuar com ${getMetodoPagamentoLabel(selectedMetodo)}`}
               </button>
               <span className="text-sm leading-6 text-slate-500">
-                A confirmacao final do pagamento continua sendo feita pelo backend.
+                Assim que o pagamento for confirmado, esta pagina sera atualizada.
               </span>
             </div>
           </section>

@@ -12,8 +12,9 @@ type AtendimentoCardProps = {
 
 export function AtendimentoCard({ atendimento, profile }: AtendimentoCardProps) {
   const basePath = profile === 'CLIENTE' ? '/app/cliente/atendimentos' : '/app/profissional/atendimentos';
-  const amountLabel = profile === 'PROFISSIONAL' ? 'Você recebe' : 'Valor do serviço';
+  const amountLabel = profile === 'PROFISSIONAL' ? 'Voce recebe' : 'Valor do servico';
   const amount = profile === 'PROFISSIONAL' ? atendimento.valorEstimadoProfissional : 'valorServico' in atendimento ? atendimento.valorServico : null;
+  const showEvaluateCta = profile === 'CLIENTE' && atendimento.podeAvaliar;
 
   return (
     <article className="rounded-lg border border-slate-100 bg-white p-5 shadow-sm transition hover:border-cyan-100">
@@ -32,21 +33,27 @@ export function AtendimentoCard({ atendimento, profile }: AtendimentoCardProps) 
           )}
           <div className="mt-2">
             <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-700">{amountLabel}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-700">
-              {amount == null ? 'Valor indisponível' : formatCurrency(amount)}
-            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">{amount == null ? 'Valor indisponivel' : formatCurrency(amount)}</p>
           </div>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-            {getAtendimentoRegiaoLabel(atendimento)}
-          </p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">{getAtendimentoRegiaoLabel(atendimento)}</p>
         </div>
 
-        <Link
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
-          to={`${basePath}/${atendimento.id}`}
-        >
-          Ver detalhes
-        </Link>
+        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+          {showEvaluateCta && (
+            <Link
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+              to={`${basePath}/${atendimento.id}`}
+            >
+              Avaliar atendimento
+            </Link>
+          )}
+          <Link
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+            to={`${basePath}/${atendimento.id}`}
+          >
+            {showEvaluateCta ? 'Ver detalhes' : 'Abrir atendimento'}
+          </Link>
+        </div>
       </div>
     </article>
   );

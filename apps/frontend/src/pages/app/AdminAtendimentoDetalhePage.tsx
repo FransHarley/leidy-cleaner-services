@@ -104,7 +104,7 @@ export function AdminAtendimentoDetalhePage() {
       <section className="grid gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Veja os registros de inicio e fim deste atendimento.</p>
         </div>
 
         {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}

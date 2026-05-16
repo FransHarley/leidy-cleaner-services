@@ -204,7 +204,7 @@ export function AdminCreditosSolicitacaoPage() {
         <StateBox
           tone="empty"
           title="Nenhum credito de solicitacao encontrado"
-          description="O backend retornou uma lista vazia para os filtros atuais."
+          description="Nenhuma reposicao foi encontrada com os filtros atuais."
         />
       )}
 

@@ -58,7 +58,7 @@ export function AdminCreditoSolicitacaoDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administracao</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe da reposicao</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Consulte o contexto completo do credito de solicitacao retornado pelo backend. Esta visao nao altera status.
+              Consulte o contexto completo desta reposicao. Esta visualizacao nao altera o status.
             </p>
           </div>
           <Link
@@ -73,7 +73,7 @@ export function AdminCreditoSolicitacaoDetalhePage() {
       <FormAlert
         tone="info"
         title="Visao somente leitura"
-        message="A administracao pode monitorar creditos de solicitacao, mas o uso e a geracao continuam dependentes dos fluxos operacionais do backend."
+        message="A administracao pode acompanhar as reposicoes, mas o uso e a geracao seguem o fluxo normal da plataforma."
       />
 
       {creditoQuery.isLoading && <StateBox tone="loading" title="Carregando reposicao" description="Buscando o detalhamento operacional." />}

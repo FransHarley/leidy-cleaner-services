@@ -205,7 +205,7 @@ export function SolicitacaoForm({ enderecos, regioes, isSubmitting = false, onSu
       </fieldset>
 
       <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700">
-        Valor final sempre sera recalculado pelo backend no momento da criacao.
+        O valor final sera confirmado quando sua solicitacao for criada.
       </div>
 
       <section className="grid gap-3 rounded-lg border border-cyan-100 bg-cyan-50 px-4 py-4" aria-live="polite">
@@ -234,7 +234,7 @@ export function SolicitacaoForm({ enderecos, regioes, isSubmitting = false, onSu
           </p>
         ) : previewReady && precoPreviewQuery.isFetching ? (
           <p className="text-sm leading-6 text-cyan-900">
-            Calculando valor estimado conforme a regra do backend.
+            Calculando o valor estimado para voce.
           </p>
         ) : (
           <p className="text-sm leading-6 text-cyan-900">

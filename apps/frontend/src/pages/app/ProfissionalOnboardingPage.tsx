@@ -219,7 +219,7 @@ export function ProfissionalOnboardingPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Profissional</p>
         <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Meu perfil e onboarding</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Complete seus dados profissionais, regiões, disponibilidade e verificação documental. As regras finais continuam centralizadas no backend.
+          Complete seus dados profissionais, regioes, disponibilidade e verificacao documental para concluir seu cadastro.
         </p>
       </section>
 
@@ -249,7 +249,7 @@ export function ProfissionalOnboardingPage() {
         )}
       </OnboardingSection>
 
-      <OnboardingSection title="Regiões de atendimento" description="Selecione as regiões em que você atende. A elegibilidade final é calculada pelo backend.">
+      <OnboardingSection title="Regiões de atendimento" description="Selecione as regiões em que você atende para receber convites compatíveis.">
         {(regioesQuery.isLoading || minhasRegioesQuery.isLoading) && (
           <StateBox tone="loading" title="Carregando regiões" description="Buscando regiões ativas e suas seleções atuais." />
         )}
@@ -273,7 +273,7 @@ export function ProfissionalOnboardingPage() {
         )}
       </OnboardingSection>
 
-      <OnboardingSection title="Disponibilidade semanal" description="Cadastre horários recorrentes de atendimento. Conflitos seguem sob validação do backend.">
+      <OnboardingSection title="Disponibilidade semanal" description="Cadastre seus horarios recorrentes para mostrar quando voce pode atender.">
         <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
           <h3 className="text-lg font-black text-slate-900">
             {editingDisponibilidade ? 'Editar disponibilidade' : 'Adicionar disponibilidade'}
@@ -315,7 +315,7 @@ export function ProfissionalOnboardingPage() {
         )}
       </OnboardingSection>
 
-      <OnboardingSection title="Verificação documental" description="Registre os dados exigidos para análise. O backend atual recebe URLs/caminhos em JSON, não upload multipart.">
+      <OnboardingSection title="Verificação documental" description="Informe os dados solicitados para analise documental.">
         {verificacaoQuery.isLoading && <StateBox tone="loading" title="Carregando verificação" description="Buscando seu status documental atual." />}
         {verificacaoQuery.isError && !verificacaoNotFound && !protectedError && (
           <FormAlert

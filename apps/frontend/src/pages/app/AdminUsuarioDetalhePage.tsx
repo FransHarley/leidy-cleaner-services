@@ -58,7 +58,7 @@ export function AdminUsuarioDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administração</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe do usuário</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Consulte dados cadastrais seguros retornados pelo backend. Esta visão não altera a conta.
+              Consulte os dados cadastrais desta conta. Esta visualizacao e somente leitura.
             </p>
           </div>
           <Link

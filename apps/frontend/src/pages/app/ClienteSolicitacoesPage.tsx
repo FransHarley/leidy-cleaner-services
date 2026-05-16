@@ -211,8 +211,7 @@ export function ClienteSolicitacoesPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Cliente</p>
         <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Minhas solicitacoes</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Crie e acompanhe solicitacoes de faxina usando seus enderecos cadastrados. Validacao de elegibilidade, status e
-          cancelamento fica no backend.
+          Crie e acompanhe suas solicitacoes de faxina usando os enderecos ja cadastrados.
         </p>
       </section>
 
@@ -222,8 +221,7 @@ export function ClienteSolicitacoesPage() {
         <div className="mb-5">
           <h2 className="text-2xl font-black text-slate-900">Nova solicitacao</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Escolha um endereco cadastrado. A regiao operacional sera definida pelo bairro em Porto Alegre ou pela cidade no
-            litoral atendido.
+            Escolha um endereco cadastrado. A regiao sera definida automaticamente para facilitar sua solicitacao.
           </p>
         </div>
 

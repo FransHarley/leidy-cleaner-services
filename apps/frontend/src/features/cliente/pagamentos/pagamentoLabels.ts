@@ -74,12 +74,12 @@ export function getStatusPagamentoInfo(status: StatusPagamento) {
 
 export function getStatusPagamentoDescription(status: StatusPagamento) {
   const descriptions: Record<StatusPagamento, string> = {
-    PENDENTE: 'O checkout foi criado e ainda nao ha confirmacao definitiva.',
-    AGUARDANDO_CONFIRMACAO: 'O gateway retornou indicio de pagamento, mas a confirmacao definitiva ainda depende do webhook.',
-    PAGO: 'O backend confirmou o pagamento como pago.',
-    FALHOU: 'O backend registrou falha no pagamento.',
-    CANCELADO: 'O backend registrou o pagamento como cancelado.',
-    ESTORNADO: 'O backend registrou estorno do pagamento.',
+    PENDENTE: 'Seu pagamento foi iniciado e esta aguardando confirmacao.',
+    AGUARDANDO_CONFIRMACAO: 'Recebemos o retorno do pagamento e estamos concluindo a confirmacao.',
+    PAGO: 'Pagamento confirmado com sucesso.',
+    FALHOU: 'Nao foi possivel concluir o pagamento.',
+    CANCELADO: 'O pagamento foi cancelado.',
+    ESTORNADO: 'O pagamento foi estornado.',
   };
 
   return descriptions[status];

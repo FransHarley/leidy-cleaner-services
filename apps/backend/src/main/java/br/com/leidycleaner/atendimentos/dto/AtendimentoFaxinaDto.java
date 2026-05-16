@@ -29,6 +29,7 @@ public record AtendimentoFaxinaDto(
         OffsetDateTime fimRealEm,
         OffsetDateTime criadoEm,
         OffsetDateTime atualizadoEm,
+        boolean podeAvaliar,
         AvaliacaoProfissionalDto avaliacao
 ) {
 }

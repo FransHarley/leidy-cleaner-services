@@ -211,10 +211,10 @@ public class AtendimentoFaxinaService {
     private Object paraDtoPorPerfil(AtendimentoFaxina atendimento, Usuario usuario) {
         AvaliacaoProfissionalDto avaliacao = buscarAvaliacao(atendimento);
         if (usuario.getTipoUsuario() == TipoUsuario.PROFISSIONAL) {
-            return AtendimentoFaxinaMapper.paraProfissionalDto(atendimento, avaliacao);
+            return AtendimentoFaxinaMapper.paraProfissionalDto(atendimento, avaliacao, false);
         }
 
-        return AtendimentoFaxinaMapper.paraDto(atendimento, avaliacao);
+        return AtendimentoFaxinaMapper.paraDto(atendimento, avaliacao, podeAvaliar(atendimento, usuario, avaliacao));
     }
 
     private AvaliacaoProfissionalDto buscarAvaliacao(AtendimentoFaxina atendimento) {
@@ -229,5 +229,12 @@ public class AtendimentoFaxinaService {
 
     private boolean isAdmin(Usuario usuario) {
         return usuario.getTipoUsuario() == TipoUsuario.ADMIN;
+    }
+
+    private boolean podeAvaliar(AtendimentoFaxina atendimento, Usuario usuario, AvaliacaoProfissionalDto avaliacao) {
+        return usuario.getTipoUsuario() == TipoUsuario.CLIENTE
+                && atendimento.getCliente().getUsuario().getId().equals(usuario.getId())
+                && atendimento.getStatus() == StatusAtendimento.FINALIZADO
+                && avaliacao == null;
     }
 }

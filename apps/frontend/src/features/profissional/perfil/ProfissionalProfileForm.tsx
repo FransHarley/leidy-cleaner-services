@@ -105,7 +105,7 @@ export function ProfissionalProfileForm({ perfil, isSubmitting = false, onSubmit
 
       <TextInput
         error={errors.fotoPerfilUrl?.message}
-        helperText="Opcional. O backend atual recebe apenas URL/metadado."
+        helperText="Opcional. Informe um link ou referencia da imagem."
         label="URL da foto de perfil"
         placeholder="https://..."
         registration={register('fotoPerfilUrl')}
@@ -121,7 +121,7 @@ export function ProfissionalProfileForm({ perfil, isSubmitting = false, onSubmit
         <span>
           <span className="block font-black text-cyan-800">Ativo para receber chamados</span>
           <span className="mt-1 block leading-5 text-cyan-900/75">
-            A disponibilidade real também depende das regras e aprovações do backend.
+            Sua disponibilidade fica sujeita a aprovacao e compatibilidade com os atendimentos.
           </span>
         </span>
       </label>

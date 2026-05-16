@@ -94,7 +94,7 @@ export function AdminConfiguracaoPrecosPage() {
       setFeedback({
         tone: 'success',
         title: 'Preços atualizados',
-        message: 'A nova configuração será usada nas próximas solicitações criadas pelo backend.',
+        message: 'A nova configuracao sera usada nas proximas solicitacoes.',
       });
     },
     onError: (error) => {

@@ -48,7 +48,7 @@ export function CreditoSolicitacaoCard({
             </p>
           )}
           <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
-            Este credito permite uma nova tentativa equivalente. A validacao final e feita pelo sistema.
+            Este credito permite uma nova tentativa equivalente. A confirmacao final acontece ao concluir a solicitacao.
           </p>
           {solicitacaoAlvo && (
             <p
@@ -58,7 +58,7 @@ export function CreditoSolicitacaoCard({
             >
               {isCompatibilidadeProvavel
                 ? 'Compatibilidade aparente com esta solicitacao.'
-                : 'Pode haver incompatibilidade com esta solicitacao. O backend fara a validacao final.'}
+                : 'Pode haver incompatibilidade com esta solicitacao. Vamos conferir os detalhes antes de concluir.'}
             </p>
           )}
         </div>

@@ -260,11 +260,11 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 function buildSuccessMessage(action: ConviteAction, response: ConviteResposta) {
   if (action === 'aceitar') {
     return response.atendimentoId
-      ? `O backend registrou o aceite e criou o atendimento #${response.atendimentoId}.`
-      : 'O backend registrou o aceite do convite.';
+      ? `Convite aceito com sucesso. Atendimento #${response.atendimentoId} criado.`
+      : 'Convite aceito com sucesso.';
   }
 
-  return 'O backend registrou a recusa do convite.';
+  return 'Convite recusado com sucesso.';
 }
 
 function requireToken(token: string | null) {

@@ -43,31 +43,32 @@ export function ProfissionalAtendimentosPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Profissional</p>
         <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Meus atendimentos</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Acompanhe serviços atribuídos a você e registre início ou fim quando o backend permitir.
+          Acompanhe os servicos atribuidos a voce e registre o inicio e o fim no momento certo.
         </p>
       </section>
 
       <section className="grid gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Atendimentos atribuídos</h2>
+          <h2 className="text-2xl font-black text-slate-900">Atendimentos atribuidos</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Abra um atendimento para ver detalhes e checkpoints.</p>
         </div>
 
-        {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus serviços atribuídos." />}
+        {atendimentosQuery.isLoading && <StateBox tone="loading" title="Carregando atendimentos" description="Buscando seus servicos atribuidos." />}
 
         {atendimentosQuery.isError && !protectedError && (
           <FormAlert
             tone="error"
-            title="Não foi possível carregar atendimentos"
+            title="Nao foi possivel carregar atendimentos"
             message={getApiErrorMessage(atendimentosQuery.error)}
             details={atendimentosQuery.error instanceof ApiError ? atendimentosQuery.error.errors : []}
           />
         )}
 
         {atendimentosQuery.isSuccess && atendimentos.length === 0 && (
-          <StateBox tone="empty"
-            title="Nenhum atendimento atribuído"
-            description="Quando você aceitar um convite e o atendimento for criado, ele aparecerá aqui."
+          <StateBox
+            tone="empty"
+            title="Nenhum atendimento atribuido"
+            description="Quando voce aceitar um convite e o atendimento for criado, ele aparecera aqui."
           />
         )}
 
@@ -87,13 +88,12 @@ export function ProfissionalAtendimentosPage() {
   );
 }
 
-
 function requireToken(token: string | null) {
   if (!token) {
     throw new ApiError({
       status: 401,
       code: 'UNAUTHENTICATED',
-      message: 'Sessão expirada. Entre novamente.',
+      message: 'Sessao expirada. Entre novamente.',
     });
   }
 

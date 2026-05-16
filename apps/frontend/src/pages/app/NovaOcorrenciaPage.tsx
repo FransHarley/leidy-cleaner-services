@@ -41,7 +41,7 @@ export function NovaOcorrenciaPage() {
       setFeedback({
         tone: 'success',
         title: 'Ocorrência registrada',
-        message: 'O registro foi criado pelo backend.',
+        message: 'Ocorrencia criada com sucesso.',
       });
       await queryClient.invalidateQueries({ queryKey: queryKeys.ocorrencias });
       navigate(`/app/ocorrencias/${ocorrencia.id}`);
@@ -91,7 +91,7 @@ export function NovaOcorrenciaPage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Ocorrências</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Nova ocorrência</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Selecione um atendimento retornado pelo backend e descreva a situação.
+              Selecione o atendimento relacionado e descreva a situacao.
             </p>
           </div>
           <Link
@@ -119,7 +119,7 @@ export function NovaOcorrenciaPage() {
       {atendimentosQuery.isSuccess && atendimentos.length === 0 && (
         <StateBox tone="empty"
           title="Nenhum atendimento encontrado"
-          description="O backend exige um atendimento vinculado para abrir uma ocorrência."
+          description="Escolha um atendimento para registrar a ocorrencia."
         />
       )}
 

@@ -46,7 +46,7 @@ export function OcorrenciaStatusForm({ initialStatus, isSubmitting, onSubmit }: 
     <form className="grid gap-4 rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6" noValidate onSubmit={handleSubmit(handleValidSubmit)}>
       <div>
         <h2 className="text-2xl font-black text-slate-900">Atualizar status</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">A transição é enviada ao backend pelo contrato administrativo.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Escolha o novo status para seguir com o atendimento.</p>
       </div>
 
       <label className="block" htmlFor="status">

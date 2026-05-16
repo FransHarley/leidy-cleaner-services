@@ -17,11 +17,33 @@ type DashboardSummaryCard = {
   tone?: 'red' | 'yellow' | 'green' | 'neutral';
 };
 
+type DashboardActionTone = 'red' | 'cyan';
+
 const summaryToneClassName: Record<NonNullable<DashboardSummaryCard['tone']>, string> = {
   red: 'border-red-100 bg-red-50 text-red-900',
   yellow: 'border-amber-100 bg-amber-50 text-amber-950',
   green: 'border-green-100 bg-green-50 text-green-900',
   neutral: 'border-slate-100 bg-white text-slate-900',
+};
+
+const actionToneClassName: Record<
+  DashboardActionTone,
+  { section: string; overline: string; title: string; description: string; button: string }
+> = {
+  red: {
+    section: 'border-red-100 bg-red-50',
+    overline: 'text-red-700',
+    title: 'text-red-950',
+    description: 'text-red-900',
+    button: 'bg-red-700 text-white hover:bg-red-800 focus-visible:ring-red-700',
+  },
+  cyan: {
+    section: 'border-cyan-100 bg-cyan-50',
+    overline: 'text-cyan-700',
+    title: 'text-cyan-950',
+    description: 'text-cyan-900',
+    button: 'bg-cyan-700 text-white hover:bg-cyan-800 focus-visible:ring-cyan-700',
+  },
 };
 
 export function DashboardCards({ items }: DashboardCardsProps) {
@@ -82,22 +104,26 @@ export function DashboardActionAlert({
   description,
   href,
   title,
+  tone = 'red',
 }: {
   cta: string;
   description: string;
   href: string;
   title: string;
+  tone?: DashboardActionTone;
 }) {
+  const toneClasses = actionToneClassName[tone];
+
   return (
-    <section className="rounded-lg border border-red-100 bg-red-50 p-5 shadow-sm md:p-6">
+    <section className={`rounded-lg border p-5 shadow-sm md:p-6 ${toneClasses.section}`}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">Ação pendente</p>
-          <h2 className="mt-2 text-2xl font-black text-red-950">{title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-red-900">{description}</p>
+          <p className={`text-xs font-black uppercase tracking-[0.16em] ${toneClasses.overline}`}>Acao pendente</p>
+          <h2 className={`mt-2 text-2xl font-black ${toneClasses.title}`}>{title}</h2>
+          <p className={`mt-2 max-w-2xl text-sm leading-6 ${toneClasses.description}`}>{description}</p>
         </div>
         <Link
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-red-700 px-5 text-sm font-black text-white transition hover:bg-red-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 md:w-auto"
+          className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-5 text-sm font-black transition focus:outline-none focus-visible:ring-2 md:w-auto ${toneClasses.button}`}
           to={href}
         >
           {cta}

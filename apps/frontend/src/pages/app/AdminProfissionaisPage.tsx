@@ -115,7 +115,7 @@ export function AdminProfissionaisPage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administração</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Profissionais</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Liste perfis profissionais e altere o status de aprovação pelo backend.
+              Liste perfis profissionais e acompanhe o status de aprovacao.
             </p>
           </div>
           <Link
@@ -194,7 +194,7 @@ export function AdminProfissionaisPage() {
         )}
 
         {profissionaisQuery.isSuccess && profissionais.length === 0 && (
-          <StateBox tone="empty" title="Nenhuma profissional encontrada" description="O backend retornou uma lista vazia." />
+          <StateBox tone="empty" title="Nenhuma profissional encontrada" description="Nenhuma profissional foi encontrada." />
         )}
 
         {profissionais.length > 0 && (

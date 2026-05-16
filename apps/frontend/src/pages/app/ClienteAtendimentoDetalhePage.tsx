@@ -54,6 +54,7 @@ export function ClienteAtendimentoDetalhePage() {
 
   const atendimento = atendimentoQuery.data;
   const canShowAvaliacao = atendimento?.status === 'FINALIZADO';
+  const podeAvaliar = atendimento?.podeAvaliar ?? false;
   const atendimentoCanceladoSemExecucao =
     atendimento?.status === 'CANCELADO' && !atendimento.inicioRealEm && !atendimento.fimRealEm;
 
@@ -82,12 +83,13 @@ export function ClienteAtendimentoDetalhePage() {
       setDuplicateBlocked(false);
       setFeedback({
         tone: 'success',
-        title: 'Avaliação enviada',
-        message: 'Sua avaliação foi registrada para este atendimento.',
+        title: 'Avaliacao enviada',
+        message: 'Sua avaliacao foi registrada com sucesso.',
       });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.detalhe(atendimentoId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.avaliacoesProfissional(avaliacao.profissionalId) }),
+        queryClient.invalidateQueries({ queryKey: ['atendimentos', 'meus', 'cliente'] }),
       ]);
     },
     onError: async (error) => {
@@ -101,7 +103,7 @@ export function ClienteAtendimentoDetalhePage() {
         setDuplicateBlocked(true);
         setFeedback({
           tone: 'info',
-          title: 'Atendimento já avaliado',
+          title: 'Atendimento ja avaliado',
           message: error.message,
         });
 
@@ -114,7 +116,7 @@ export function ClienteAtendimentoDetalhePage() {
 
       setFeedback({
         tone: 'error',
-        title: 'Não foi possível enviar a avaliação',
+        title: 'Nao foi possivel enviar a avaliacao',
         message: getApiErrorMessage(error),
         details: error instanceof ApiError ? error.errors : [],
       });
@@ -148,7 +150,7 @@ export function ClienteAtendimentoDetalhePage() {
   if (!validId) {
     return (
       <div className="grid gap-5">
-        <FormAlert tone="error" title="Atendimento inválido" message="O identificador do atendimento não é válido." />
+        <FormAlert tone="error" title="Atendimento invalido" message="O identificador do atendimento nao e valido." />
         <Link className="font-black text-cyan-700 hover:text-cyan-800" to="/app/cliente/atendimentos">
           Voltar para atendimentos
         </Link>
@@ -164,7 +166,7 @@ export function ClienteAtendimentoDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Cliente</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe do atendimento</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Acompanhe o status operacional e os checkpoints registrados pela profissional.
+              Acompanhe o andamento do servico, veja os registros da profissional e avalie sua experiencia quando tudo terminar.
             </p>
           </div>
           <Link
@@ -181,7 +183,7 @@ export function ClienteAtendimentoDetalhePage() {
       {atendimentoQuery.isError && !protectedError && (
         <FormAlert
           tone="error"
-          title="Não foi possível carregar o atendimento"
+          title="Nao foi possivel carregar o atendimento"
           message={getApiErrorMessage(atendimentoQuery.error)}
           details={atendimentoQuery.error instanceof ApiError ? atendimentoQuery.error.errors : []}
         />
@@ -198,20 +200,20 @@ export function ClienteAtendimentoDetalhePage() {
       {canShowAvaliacao && atendimento && (
         <section className="grid gap-4">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Avaliação</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Avalie a profissional vinculada a este atendimento finalizado.</p>
+            <h2 className="text-2xl font-black text-slate-900">Avaliacao</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Conte como foi sua experiencia com a profissional neste atendimento.</p>
           </div>
 
           {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
           {avaliacoesQuery.isLoading && (
-            <StateBox tone="loading" title="Verificando avaliações" description="Buscando registros já existentes para esta profissional." />
+            <StateBox tone="loading" title="Carregando avaliacao" description="Verificando se este atendimento ja foi avaliado." />
           )}
 
           {avaliacoesQuery.isError && !protectedError && (
             <FormAlert
               tone="error"
-              title="Não foi possível verificar avaliações anteriores"
+              title="Nao foi possivel verificar a avaliacao"
               message={getApiErrorMessage(avaliacoesQuery.error)}
               details={avaliacoesQuery.error instanceof ApiError ? avaliacoesQuery.error.errors : []}
             />
@@ -219,17 +221,19 @@ export function ClienteAtendimentoDetalhePage() {
 
           {avaliacaoExistente && <AvaliacaoResumo avaliacao={avaliacaoExistente} />}
 
-          {!avaliacaoExistente && duplicateBlocked && (
-            <FormAlert tone="info" message="O backend informou que este atendimento já possui avaliação registrada." />
+          {!avaliacaoExistente && duplicateBlocked && <FormAlert tone="info" message="Este atendimento ja foi avaliado." />}
+
+          {!avaliacaoExistente && !duplicateBlocked && podeAvaliar && !avaliacoesQuery.isLoading && (
+            <AvaliacaoForm isSubmitting={createAvaliacaoMutation.isPending} onSubmit={handleAvaliacaoSubmit} />
           )}
 
-          {!avaliacaoExistente && !duplicateBlocked && !avaliacoesQuery.isLoading && (
-            <AvaliacaoForm isSubmitting={createAvaliacaoMutation.isPending} onSubmit={handleAvaliacaoSubmit} />
+          {!avaliacaoExistente && !duplicateBlocked && !podeAvaliar && !avaliacoesQuery.isLoading && (
+            <FormAlert tone="info" message="A avaliacao deste atendimento nao esta disponivel neste momento." />
           )}
 
           {avaliacoesQuery.data && (
             <div className="grid gap-3">
-              <h3 className="text-xl font-black text-slate-900">Avaliações da profissional</h3>
+              <h3 className="text-xl font-black text-slate-900">Avaliacoes da profissional</h3>
               <AvaliacoesProfissionalList avaliacoes={avaliacoesQuery.data} currentAtendimentoId={atendimento.id} />
             </div>
           )}
@@ -238,36 +242,35 @@ export function ClienteAtendimentoDetalhePage() {
 
       {!atendimentoCanceladoSemExecucao && (
         <section className="grid gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
-        </div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Veja os registros de inicio e fim enviados pela profissional.</p>
+          </div>
 
-        {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
+          {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
 
-        {checkpointsQuery.isError && !protectedError && (
-          <FormAlert
-            tone="error"
-            title="Não foi possível carregar checkpoints"
-            message={getApiErrorMessage(checkpointsQuery.error)}
-            details={checkpointsQuery.error instanceof ApiError ? checkpointsQuery.error.errors : []}
-          />
-        )}
+          {checkpointsQuery.isError && !protectedError && (
+            <FormAlert
+              tone="error"
+              title="Nao foi possivel carregar checkpoints"
+              message={getApiErrorMessage(checkpointsQuery.error)}
+              details={checkpointsQuery.error instanceof ApiError ? checkpointsQuery.error.errors : []}
+            />
+          )}
 
-        {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
+          {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
         </section>
       )}
     </div>
   );
 }
 
-
 function requireToken(token: string | null) {
   if (!token) {
     throw new ApiError({
       status: 401,
       code: 'UNAUTHENTICATED',
-      message: 'Sessão expirada. Entre novamente.',
+      message: 'Sessao expirada. Entre novamente.',
     });
   }
 

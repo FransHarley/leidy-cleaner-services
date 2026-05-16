@@ -26,7 +26,7 @@ export function AdminPagamentoInfoPanel({ pagamento }: { pagamento: PagamentoAdm
         <DetailItem label="Taxa gateway" value={formatCurrency(pagamento.valorTaxaGateway)} />
         <DetailItem label="Valor liquido" value={formatCurrency(pagamento.valorLiquidoRecebido)} />
         <DetailItem label="Recebido em" value={formatDateTime(pagamento.recebidoEm)} />
-        <DetailItem label="Webhook" value={getWebhookLabel(pagamento.webhookProcessado)} />
+        <DetailItem label="Confirmacao automatica" value={getWebhookLabel(pagamento.webhookProcessado)} />
       </dl>
 
       {(pagamento.urlPagamento || pagamento.pixCopiaECola) && (

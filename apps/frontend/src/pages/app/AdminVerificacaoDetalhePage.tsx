@@ -52,7 +52,7 @@ export function AdminVerificacaoDetalhePage() {
       setFeedback({
         tone: 'success',
         title: 'Análise salva',
-        message: 'A verificação foi atualizada pelo backend.',
+        message: 'Verificacao atualizada com sucesso.',
       });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.list }),

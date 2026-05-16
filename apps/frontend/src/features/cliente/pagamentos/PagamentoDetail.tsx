@@ -69,7 +69,7 @@ export function PagamentoDetail({
             {isInternalCreditPayment && isPaid
               ? 'Pagamento realizado com solicitacao de reposicao.'
               : isWaitingWebhook
-                ? 'Aguardando confirmacao do pagamento pelo webhook.'
+                ? 'Estamos aguardando a confirmacao do seu pagamento.'
                 : getStatusPagamentoDescription(pagamento.status)}
           </p>
         </div>
@@ -109,13 +109,13 @@ export function PagamentoDetail({
       <div className="mt-6 grid gap-4">
         {isPaid && (
           <div className="rounded-lg border border-green-100 bg-green-50 p-4 text-sm font-semibold leading-6 text-green-800">
-            {isInternalCreditPayment ? 'Pagamento realizado com solicitacao de reposicao.' : 'Pagamento confirmado pelo backend.'}
+            {isInternalCreditPayment ? 'Pagamento realizado com solicitacao de reposicao.' : 'Pagamento confirmado.'}
           </div>
         )}
 
         {isWaitingWebhook && (
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-            Aguardando confirmacao do pagamento pelo webhook.
+            Estamos aguardando a confirmacao do seu pagamento.
           </div>
         )}
 
@@ -130,7 +130,7 @@ export function PagamentoDetail({
             <div>
               <h3 className="font-black text-cyan-900">Pagamento Pix</h3>
               <p className="mt-2 text-sm leading-6 text-cyan-900">
-                Use o QR Code abaixo ou copie o codigo Pix. A confirmacao definitiva continua dependendo do webhook.
+                Use o QR Code abaixo ou copie o codigo Pix. Assim que o pagamento for confirmado, esta tela sera atualizada.
               </p>
             </div>
 

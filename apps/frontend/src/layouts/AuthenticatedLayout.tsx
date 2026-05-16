@@ -76,39 +76,46 @@ export function AuthenticatedLayout() {
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f6f7f4] text-slate-900">
       <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-8 md:py-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <button
-              aria-expanded={mobileMenuOpen}
-              aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 lg:hidden"
-              type="button"
-              onClick={() => setMobileMenuOpen((current) => !current)}
-            >
-              {mobileMenuOpen ? 'Fechar' : 'Menu'}
-            </button>
-            <BrandMark compact />
+        <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-3 px-4 py-3 sm:px-5 md:px-8 md:py-4">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <button
+                aria-expanded={mobileMenuOpen}
+                aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 lg:hidden"
+                type="button"
+                onClick={() => setMobileMenuOpen((current) => !current)}
+              >
+                {mobileMenuOpen ? 'Fechar' : 'Menu'}
+              </button>
+              <div className="min-w-0 flex-1">
+                <BrandMark compact />
+              </div>
+            </div>
+            <div className="flex min-w-0 shrink-0 items-center gap-3">
+              <div className="hidden min-w-0 text-right md:block">
+                <p className="truncate text-sm font-black text-slate-900">{user.nomeCompleto}</p>
+                <p className="text-xs font-semibold text-slate-500">{getProfileLabel(profile)}</p>
+              </div>
+              <button
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 sm:px-4"
+                type="button"
+                onClick={handleLogout}
+              >
+                Sair
+              </button>
+            </div>
           </div>
-          <div className="flex min-w-0 items-center gap-3">
+
+          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-end">
             {shouldShowClientRequestCta && (
               <Link
-                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 md:ml-auto md:w-auto"
                 to="/app/cliente/solicitacoes#nova-solicitacao"
               >
                 Solicitar faxina
               </Link>
             )}
-            <div className="hidden min-w-0 text-right md:block">
-              <p className="truncate text-sm font-black text-slate-900">{user.nomeCompleto}</p>
-              <p className="text-xs font-semibold text-slate-500">{getProfileLabel(profile)}</p>
-            </div>
-            <button
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 sm:px-4"
-              type="button"
-              onClick={handleLogout}
-            >
-              Sair
-            </button>
           </div>
         </div>
       </header>

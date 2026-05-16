@@ -25,8 +25,8 @@ export function AnaliseVerificacaoForm({ initialStatus, isSubmitting, onSubmit }
   return (
     <form className="grid gap-4 rounded-lg border border-slate-100 bg-white p-5 shadow-sm md:p-6" onSubmit={handleSubmit}>
       <div>
-        <h3 className="text-xl font-black text-slate-900">Analisar verificação</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">A decisão será enviada para o backend de verificação.</p>
+        <h3 className="text-xl font-black text-slate-900">Analisar verificacao</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Revise os documentos e registre sua decisao.</p>
       </div>
 
       <label className="grid gap-2 text-sm font-bold text-slate-700">
@@ -46,7 +46,7 @@ export function AnaliseVerificacaoForm({ initialStatus, isSubmitting, onSubmit }
       </label>
 
       <label className="grid gap-2 text-sm font-bold text-slate-700">
-        Observação da análise
+        Observacao da analise
         <textarea
           className="min-h-28 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700"
           disabled={isSubmitting}
@@ -60,7 +60,7 @@ export function AnaliseVerificacaoForm({ initialStatus, isSubmitting, onSubmit }
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? 'Enviando...' : 'Salvar análise'}
+        {isSubmitting ? 'Enviando...' : 'Salvar analise'}
       </button>
     </form>
   );

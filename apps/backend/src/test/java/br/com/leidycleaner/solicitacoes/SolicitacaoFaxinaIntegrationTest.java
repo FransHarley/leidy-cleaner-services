@@ -3684,6 +3684,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data[0].status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data[0].podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
                 .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0));
 
@@ -3694,6 +3695,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data.profissionalNotaMedia").exists())
                 .andExpect(jsonPath("$.data.profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data.avaliacao").doesNotExist());
@@ -3711,6 +3713,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data[0].status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data[0].podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data[0].profissionalNotaMedia").exists())
                 .andExpect(jsonPath("$.data[0].profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data[0].valorEstimadoProfissional").value(144.00))
@@ -3724,11 +3727,48 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
                 .andExpect(jsonPath("$.data.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data.profissionalNotaMedia").exists())
                 .andExpect(jsonPath("$.data.profissionalTotalAvaliacoes").value(0))
                 .andExpect(jsonPath("$.data.valorEstimadoProfissional").value(144.00))
                 .andExpect(jsonPath("$.data.valorServico").doesNotExist())
                 .andExpect(jsonPath("$.data.percentualComissaoAgencia").doesNotExist());
+    }
+
+    @Test
+    void clienteVisualizaAtendimentoFinalizadoComAvaliacaoPendente() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoFinalizado("m8.pode-avaliar", "77151233344", "chk_m8_pode_avaliar");
+
+        mockMvc.perform(get("/api/v1/atendimentos/meus")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(atendimento.atendimentoId()))
+                .andExpect(jsonPath("$.data[0].status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data[0].podeAvaliar").value(true))
+                .andExpect(jsonPath("$.data[0].avaliacao").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
+                .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(true))
+                .andExpect(jsonPath("$.data.avaliacao").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/atendimentos/{id}", atendimento.atendimentoId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenProfissional()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(atendimento.atendimentoId()))
+                .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(false))
+                .andExpect(jsonPath("$.data.avaliacao").doesNotExist());
     }
 
     @Test
@@ -4110,6 +4150,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data.avaliacao.avaliacaoId").value(avaliacaoId))
                 .andExpect(jsonPath("$.data.avaliacao.nota").value(5))
                 .andExpect(jsonPath("$.data.avaliacao.comentario").value("Atendimento excelente"));
@@ -4120,6 +4161,7 @@ class SolicitacaoFaxinaIntegrationTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("FINALIZADO"))
+                .andExpect(jsonPath("$.data.podeAvaliar").value(false))
                 .andExpect(jsonPath("$.data.avaliacao.avaliacaoId").value(avaliacaoId))
                 .andExpect(jsonPath("$.data.avaliacao.nota").value(5))
                 .andExpect(jsonPath("$.data.avaliacao.comentario").value("Atendimento excelente"));

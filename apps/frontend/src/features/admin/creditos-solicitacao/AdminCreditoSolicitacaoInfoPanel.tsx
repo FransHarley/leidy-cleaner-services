@@ -64,7 +64,7 @@ function SolicitacaoResumoCard({
     return (
       <section className="rounded-lg border border-slate-100 bg-slate-50 p-4">
         <h3 className="font-black text-slate-900">{titulo}</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Nenhum resumo retornado pelo backend.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Nenhum resumo disponivel no momento.</p>
       </section>
     );
   }
@@ -98,7 +98,7 @@ function PagamentoResumoCard({ pagamento }: { pagamento: AdminCreditoSolicitacao
     return (
       <section className="rounded-lg border border-slate-100 bg-slate-50 p-4">
         <h3 className="font-black text-slate-900">Pagamento origem</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Nenhum pagamento retornado pelo backend.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Nenhum pagamento relacionado foi encontrado.</p>
       </section>
     );
   }

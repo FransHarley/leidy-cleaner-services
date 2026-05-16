@@ -176,7 +176,7 @@ export function AdminConvitesMonitoramentoPage() {
       </form>
 
       <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-        Esta tela espelha o estado operacional do backend. Ela nao dispara expiracao, aceite, recusa ou geracao de credito.
+        Acompanhe convites e solicitacoes que ainda precisam de observacao. Esta tela nao altera o andamento automaticamente.
       </div>
 
       {convitesQuery.isLoading && <StateBox tone="loading" title="Carregando monitoramento" description="Buscando convites e solicitacoes pagas aguardando aceite." />}
@@ -191,7 +191,7 @@ export function AdminConvitesMonitoramentoPage() {
       )}
 
       {convitesQuery.isSuccess && convites.length === 0 && (
-        <StateBox tone="empty" title="Nenhum convite encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhum convite encontrado" description="Nenhum convite foi encontrado com os filtros atuais." />
       )}
 
       {convites.length > 0 && (

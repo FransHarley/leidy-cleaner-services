@@ -58,7 +58,7 @@ export function AdminPagamentoDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administracao</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe do pagamento</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Consulte o estado operacional retornado pelo backend. Esta visao nao forca transicoes de pagamento.
+              Consulte os detalhes deste pagamento. Esta visualizacao nao altera o status.
             </p>
           </div>
           <Link
@@ -73,7 +73,7 @@ export function AdminPagamentoDetalhePage() {
       <FormAlert
         tone="info"
         title="Visao somente leitura"
-        message="A administracao pode consultar pagamentos, mas a confirmacao definitiva continua restrita ao webhook do backend."
+        message="A administracao pode acompanhar pagamentos, mas a confirmacao final acontece pelo sistema."
       />
 
       {pagamentoQuery.isLoading && <StateBox tone="loading" title="Carregando pagamento" description="Buscando os dados operacionais." />}
@@ -90,8 +90,8 @@ export function AdminPagamentoDetalhePage() {
       {pagamentoQuery.data?.status === 'AGUARDANDO_CONFIRMACAO' && (
         <FormAlert
           tone="info"
-          title="Aguardando webhook"
-          message="O gateway retornou indicio de pagamento, mas o status definitivo ainda depende do webhook processado pelo backend."
+          title="Confirmacao em andamento"
+          message="Ja recebemos um sinal de pagamento, mas a confirmacao final ainda esta em andamento."
         />
       )}
 

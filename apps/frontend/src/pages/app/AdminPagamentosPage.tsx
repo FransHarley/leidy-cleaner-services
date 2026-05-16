@@ -166,7 +166,7 @@ export function AdminPagamentosPage() {
       </form>
 
       <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-        A confirmacao definitiva de pagamento continua dependendo do webhook processado pelo backend.
+        A confirmacao definitiva do pagamento acontece apos a confirmacao do sistema.
       </div>
 
       {pagamentosQuery.isLoading && <StateBox tone="loading" title="Carregando pagamentos" description="Buscando registros operacionais." />}
@@ -181,7 +181,7 @@ export function AdminPagamentosPage() {
       )}
 
       {pagamentosQuery.isSuccess && pagamentos.length === 0 && (
-        <StateBox tone="empty" title="Nenhum pagamento encontrado" description="O backend retornou uma lista vazia para os filtros atuais." />
+        <StateBox tone="empty" title="Nenhum pagamento encontrado" description="Nenhum pagamento foi encontrado com os filtros atuais." />
       )}
 
       {pagamentos.length > 0 && (

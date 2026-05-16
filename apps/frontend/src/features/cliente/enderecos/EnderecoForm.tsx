@@ -150,7 +150,7 @@ export function EnderecoForm({ initialAddress, isSubmitting = false, onCancel, o
         <span>
           <span className="block font-black text-cyan-800">Definir como endereço principal</span>
           <span className="mt-1 block leading-5 text-cyan-900/75">
-            O backend mantém a regra de principal e a lista será atualizada depois de salvar.
+            O endereco principal sera atualizado na lista depois de salvar.
           </span>
         </span>
       </label>

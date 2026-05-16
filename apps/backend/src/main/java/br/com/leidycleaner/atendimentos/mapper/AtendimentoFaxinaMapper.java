@@ -13,10 +13,18 @@ public final class AtendimentoFaxinaMapper {
     }
 
     public static AtendimentoFaxinaDto paraDto(AtendimentoFaxina atendimento) {
-        return paraDto(atendimento, null);
+        return paraDto(atendimento, null, false);
     }
 
     public static AtendimentoFaxinaDto paraDto(AtendimentoFaxina atendimento, AvaliacaoProfissionalDto avaliacao) {
+        return paraDto(atendimento, avaliacao, false);
+    }
+
+    public static AtendimentoFaxinaDto paraDto(
+            AtendimentoFaxina atendimento,
+            AvaliacaoProfissionalDto avaliacao,
+            boolean podeAvaliar
+    ) {
         return new AtendimentoFaxinaDto(
                 atendimento.getId(),
                 atendimento.getSolicitacao().getId(),
@@ -39,15 +47,24 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getFimRealEm(),
                 atendimento.getCriadoEm(),
                 atendimento.getAtualizadoEm(),
+                podeAvaliar,
                 avaliacao
         );
     }
 
     public static AtendimentoFaxinaProfissionalDto paraProfissionalDto(AtendimentoFaxina atendimento) {
-        return paraProfissionalDto(atendimento, null);
+        return paraProfissionalDto(atendimento, null, false);
     }
 
     public static AtendimentoFaxinaProfissionalDto paraProfissionalDto(AtendimentoFaxina atendimento, AvaliacaoProfissionalDto avaliacao) {
+        return paraProfissionalDto(atendimento, avaliacao, false);
+    }
+
+    public static AtendimentoFaxinaProfissionalDto paraProfissionalDto(
+            AtendimentoFaxina atendimento,
+            AvaliacaoProfissionalDto avaliacao,
+            boolean podeAvaliar
+    ) {
         return new AtendimentoFaxinaProfissionalDto(
                 atendimento.getId(),
                 atendimento.getSolicitacao().getId(),
@@ -68,6 +85,7 @@ public final class AtendimentoFaxinaMapper {
                 atendimento.getFimRealEm(),
                 atendimento.getCriadoEm(),
                 atendimento.getAtualizadoEm(),
+                podeAvaliar,
                 avaliacao
         );
     }

@@ -184,7 +184,7 @@ export function ProfessionalRegistrationPage() {
     } catch (error) {
       const message =
         error instanceof TypeError
-          ? 'Não foi possível carregar as regiões agora. Confira a conexão com a API e tente novamente.'
+          ? 'Nao foi possivel carregar as regioes agora. Confira sua conexao e tente novamente.'
           : getApiErrorMessage(error);
 
       setRegioesError(message);

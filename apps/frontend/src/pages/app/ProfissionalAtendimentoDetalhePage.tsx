@@ -60,7 +60,7 @@ export function ProfissionalAtendimentoDetalhePage() {
       setFeedback({
         tone: 'success',
         title: 'Atendimento iniciado',
-        message: 'O backend registrou o início e criou o checkpoint correspondente.',
+        message: 'Inicio do atendimento registrado com sucesso.',
       });
       await refreshAttendanceQueries(queryClient, atendimentoId);
     },
@@ -73,7 +73,7 @@ export function ProfissionalAtendimentoDetalhePage() {
       setFeedback({
         tone: 'success',
         title: 'Atendimento finalizado',
-        message: 'O backend registrou o fim e criou o checkpoint correspondente.',
+        message: 'Fim do atendimento registrado com sucesso.',
       });
       await refreshAttendanceQueries(queryClient, atendimentoId);
     },
@@ -102,14 +102,14 @@ export function ProfissionalAtendimentoDetalhePage() {
 
     setFeedback({
       tone: 'error',
-      title: 'Não foi possível atualizar atendimento',
+      title: 'Nao foi possivel atualizar atendimento',
       message: getApiErrorMessage(error),
       details: error instanceof ApiError ? error.errors : [],
     });
   }
 
   function handleStart(payload: CheckpointServicoRequest) {
-    const confirmed = window.confirm('Registrar início deste atendimento?');
+    const confirmed = window.confirm('Registrar inicio deste atendimento?');
 
     if (confirmed) {
       setFeedback(null);
@@ -118,7 +118,7 @@ export function ProfissionalAtendimentoDetalhePage() {
   }
 
   function handleFinish(payload: CheckpointServicoRequest) {
-    const confirmed = window.confirm('Registrar finalização deste atendimento?');
+    const confirmed = window.confirm('Registrar finalizacao deste atendimento?');
 
     if (confirmed) {
       setFeedback(null);
@@ -129,7 +129,7 @@ export function ProfissionalAtendimentoDetalhePage() {
   if (!validId) {
     return (
       <div className="grid gap-5">
-        <FormAlert tone="error" title="Atendimento inválido" message="O identificador do atendimento não é válido." />
+        <FormAlert tone="error" title="Atendimento invalido" message="O identificador do atendimento nao e valido." />
         <Link className="font-black text-cyan-700 hover:text-cyan-800" to="/app/profissional/atendimentos">
           Voltar para atendimentos
         </Link>
@@ -149,7 +149,7 @@ export function ProfissionalAtendimentoDetalhePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Profissional</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Detalhe do atendimento</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Registre início e fim apenas quando o atendimento estiver no status correto.
+              Marque o inicio quando chegar ao local e finalize somente quando o servico terminar.
             </p>
           </div>
           <Link
@@ -168,7 +168,7 @@ export function ProfissionalAtendimentoDetalhePage() {
       {atendimentoQuery.isError && !protectedError && (
         <FormAlert
           tone="error"
-          title="Não foi possível carregar o atendimento"
+          title="Nao foi possivel carregar o atendimento"
           message={getApiErrorMessage(atendimentoQuery.error)}
           details={atendimentoQuery.error instanceof ApiError ? atendimentoQuery.error.errors : []}
         />
@@ -185,14 +185,14 @@ export function ProfissionalAtendimentoDetalhePage() {
       {atendimento?.status === 'FINALIZADO' && (
         <section className="grid gap-4">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Avaliação</h2>
+            <h2 className="text-2xl font-black text-slate-900">Avaliacao</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Feedback da cliente para este atendimento finalizado.</p>
           </div>
 
           {atendimento.avaliacao ? (
-            <AvaliacaoResumo avaliacao={atendimento.avaliacao} title="Avaliação recebida" />
+            <AvaliacaoResumo avaliacao={atendimento.avaliacao} title="Avaliacao recebida" />
           ) : (
-            <FormAlert tone="info" message="Cliente ainda não avaliou este atendimento." />
+            <FormAlert tone="info" message="A cliente ainda nao avaliou este atendimento." />
           )}
         </section>
       )}
@@ -213,33 +213,30 @@ export function ProfissionalAtendimentoDetalhePage() {
           )}
 
           {!canStartAtendimento(atendimento.status) && !canFinishAtendimento(atendimento.status) && (
-            <FormAlert
-              tone="info"
-              message="Este atendimento não está em um status que permite registrar início ou fim pela profissional."
-            />
+            <FormAlert tone="info" message="Este atendimento nao esta disponivel para marcar inicio ou fim agora." />
           )}
         </section>
       )}
 
       {!atendimentoCanceladoSemExecucao && (
         <section className="grid gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Registros de início e fim retornados pelo backend.</p>
-        </div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">Checkpoints</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Veja os registros de inicio e fim deste atendimento.</p>
+          </div>
 
-        {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
+          {checkpointsQuery.isLoading && <StateBox tone="loading" title="Carregando checkpoints" description="Buscando registros do atendimento." />}
 
-        {checkpointsQuery.isError && !protectedError && (
-          <FormAlert
-            tone="error"
-            title="Não foi possível carregar checkpoints"
-            message={getApiErrorMessage(checkpointsQuery.error)}
-            details={checkpointsQuery.error instanceof ApiError ? checkpointsQuery.error.errors : []}
-          />
-        )}
+          {checkpointsQuery.isError && !protectedError && (
+            <FormAlert
+              tone="error"
+              title="Nao foi possivel carregar checkpoints"
+              message={getApiErrorMessage(checkpointsQuery.error)}
+              details={checkpointsQuery.error instanceof ApiError ? checkpointsQuery.error.errors : []}
+            />
+          )}
 
-        {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
+          {checkpointsQuery.data && <CheckpointsList checkpoints={checkpointsQuery.data} />}
         </section>
       )}
     </div>
@@ -254,13 +251,12 @@ async function refreshAttendanceQueries(queryClient: QueryClient, atendimentoId:
   ]);
 }
 
-
 function requireToken(token: string | null) {
   if (!token) {
     throw new ApiError({
       status: 401,
       code: 'UNAUTHENTICATED',
-      message: 'Sessão expirada. Entre novamente.',
+      message: 'Sessao expirada. Entre novamente.',
     });
   }
 

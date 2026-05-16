@@ -30,9 +30,11 @@ export type DashboardIndicators = {
   cliente: {
     pagamentosPendentes: number;
     atendimentosConfirmados: number;
+    atendimentosAguardandoAvaliacao: number;
     solicitacoesAtivas: number;
     ocorrenciasAbertas: number;
     primeiroAtendimentoPagamentoPendenteId: number | null;
+    primeiroAtendimentoAguardandoAvaliacaoId: number | null;
   };
   profissional: {
     convitesPendentes: number;
@@ -46,9 +48,11 @@ export const emptyDashboardIndicators: DashboardIndicators = {
   cliente: {
     pagamentosPendentes: 0,
     atendimentosConfirmados: 0,
+    atendimentosAguardandoAvaliacao: 0,
     solicitacoesAtivas: 0,
     ocorrenciasAbertas: 0,
     primeiroAtendimentoPagamentoPendenteId: null,
+    primeiroAtendimentoAguardandoAvaliacaoId: null,
   },
   profissional: {
     convitesPendentes: 0,
@@ -154,12 +158,15 @@ function buildClienteIndicators(
   ocorrencias: OcorrenciaAtendimento[],
 ) {
   const pagamentosPendentes = atendimentosPagamento.filter((atendimento) => atendimento.status === 'AGUARDANDO_PAGAMENTO');
+  const atendimentosAguardandoAvaliacao = atendimentos.filter((atendimento) => atendimento.podeAvaliar);
   return {
     pagamentosPendentes: pagamentosPendentes.length,
     atendimentosConfirmados: atendimentos.filter((atendimento) => atendimento.status === 'CONFIRMADO').length,
+    atendimentosAguardandoAvaliacao: atendimentosAguardandoAvaliacao.length,
     solicitacoesAtivas: solicitacoes.filter((solicitacao) => activeSolicitacaoStatuses.has(solicitacao.status)).length,
     ocorrenciasAbertas: ocorrencias.filter((ocorrencia) => ocorrencia.status === 'ABERTA' || ocorrencia.status === 'EM_ANALISE').length,
     primeiroAtendimentoPagamentoPendenteId: pagamentosPendentes[0]?.id ?? null,
+    primeiroAtendimentoAguardandoAvaliacaoId: atendimentosAguardandoAvaliacao[0]?.id ?? null,
   };
 }
 

@@ -45,7 +45,7 @@ export function AdminVerificacoesPage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Administração</p>
             <h1 className="mt-3 text-3xl font-black tracking-normal text-slate-900 md:text-4xl">Verificações documentais</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-              Revise documentos enviados por profissionais e registre a análise pelo backend.
+              Revise os documentos enviados pelas profissionais e registre sua analise.
             </p>
           </div>
           <Link

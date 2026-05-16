@@ -5,28 +5,28 @@ import { DashboardActionAlert, DashboardCards, DashboardHeader, DashboardSummary
 
 const clienteItems = [
   {
-    title: 'Endereços',
-    description: 'Base para organizar locais de atendimento do cliente.',
+    title: 'Enderecos',
+    description: 'Organize os locais onde voce pode receber o atendimento.',
     href: '/app/cliente/enderecos',
   },
   {
-    title: 'Solicitações',
-    description: 'Crie e acompanhe pedidos de faxina com região derivada do endereço.',
+    title: 'Solicitacoes',
+    description: 'Crie pedidos de faxina e acompanhe cada etapa do andamento.',
     href: '/app/cliente/solicitacoes',
   },
   {
     title: 'Pagamentos',
-    description: 'Acompanhe pagamentos das solicitações e os convites liberados após a confirmação.',
+    description: 'Veja suas cobrancas e acompanhe a confirmacao do pagamento.',
     href: '/app/cliente/pagamentos',
   },
   {
-    title: 'Histórico',
-    description: 'Acompanhe atendimentos, checkpoints e andamento operacional.',
+    title: 'Atendimentos',
+    description: 'Veja seus servicos confirmados, em andamento e finalizados.',
     href: '/app/cliente/atendimentos',
   },
   {
-    title: 'Ocorrências',
-    description: 'Abra e acompanhe ocorrências vinculadas aos seus atendimentos.',
+    title: 'Ocorrencias',
+    description: 'Abra um registro quando precisar de ajuda com um atendimento.',
     href: '/app/ocorrencias',
   },
 ];
@@ -37,19 +37,31 @@ export function ClienteDashboardPage() {
   const pendingPaymentHref = cliente.primeiroAtendimentoPagamentoPendenteId
     ? `/app/cliente/pagamentos/atendimento/${cliente.primeiroAtendimentoPagamentoPendenteId}`
     : '/app/cliente/pagamentos';
+  const pendingEvaluationHref = cliente.primeiroAtendimentoAguardandoAvaliacaoId
+    ? `/app/cliente/atendimentos/${cliente.primeiroAtendimentoAguardandoAvaliacaoId}`
+    : '/app/cliente/atendimentos';
 
   return (
     <div className="grid gap-5">
       <DashboardHeader
         title={`Bem-vindo, ${getFirstName(user?.nomeCompleto) || 'Cliente'}.`}
-        description="Acompanhe suas solicitações, confirme pagamentos com segurança e veja quando o convite é enviado para a profissional escolhida."
+        description="Acompanhe suas solicitacoes, confirme o pagamento e veja quando sua profissional for acionada."
       />
       {cliente.pagamentosPendentes > 0 && (
         <DashboardActionAlert
           cta={cliente.primeiroAtendimentoPagamentoPendenteId ? 'Pagar agora' : 'Ver pagamento'}
-          description="Finalize o checkout para liberar o envio do convite. A confirmação definitiva continua vindo do sistema."
+          description="Finalize o pagamento para liberar o envio do convite para a profissional escolhida."
           href={pendingPaymentHref}
-          title="Você tem pagamento pendente"
+          title="Voce tem pagamento pendente"
+        />
+      )}
+      {cliente.atendimentosAguardandoAvaliacao > 0 && (
+        <DashboardActionAlert
+          cta="Avaliar agora"
+          description="Seu servico foi finalizado. Conte como foi a experiencia com a profissional."
+          href={pendingEvaluationHref}
+          title="Avalie seu atendimento"
+          tone="cyan"
         />
       )}
       <DashboardSummaryCards
@@ -57,25 +69,25 @@ export function ClienteDashboardPage() {
           {
             title: 'Pagamentos pendentes',
             value: cliente.pagamentosPendentes,
-            description: 'Solicitações aguardando checkout ou confirmação do pagamento.',
+            description: 'Solicitacoes aguardando pagamento ou confirmacao.',
             tone: cliente.pagamentosPendentes > 0 ? 'red' : 'neutral',
           },
           {
             title: 'Atendimentos confirmados',
             value: cliente.atendimentosConfirmados,
-            description: 'Serviços liberados para execução.',
+            description: 'Servicos prontos para acontecer.',
             tone: cliente.atendimentosConfirmados > 0 ? 'green' : 'neutral',
           },
           {
-            title: 'Solicitações ativas',
+            title: 'Solicitacoes ativas',
             value: cliente.solicitacoesAtivas,
-            description: 'Pedidos ainda em andamento operacional.',
+            description: 'Pedidos que ainda estao em andamento.',
             tone: cliente.solicitacoesAtivas > 0 ? 'yellow' : 'neutral',
           },
           {
-            title: 'Ocorrências abertas',
+            title: 'Ocorrencias abertas',
             value: cliente.ocorrenciasAbertas,
-            description: 'Registros abertos ou em análise.',
+            description: 'Chamados que ainda estao sendo acompanhados.',
             tone: cliente.ocorrenciasAbertas > 0 ? 'yellow' : 'neutral',
           },
         ]}
