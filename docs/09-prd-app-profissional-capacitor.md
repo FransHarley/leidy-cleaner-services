@@ -720,15 +720,20 @@ Objetivo: transformar a experiência mobile em app Android instalável.
 - [ ] Corrigir problemas de viewport
 - [ ] Corrigir problemas de teclado mobile
 - [ ] Corrigir problemas de safe area
-- [ ] Gerar build release
+- [x] Gerar build debug
+- [x] Gerar build release
+- [x] Assinar build
+- [x] Gerar AAB para Play Store
 
 Critério de pronto:
 
-- [ ] APK/AAB gerado
-- [ ] App instala em Android real
-- [ ] Login funciona
-- [ ] Convites funcionam
-- [ ] Atendimentos funcionam
+Critério de pronto:
+
+- [x] APK/AAB gerado
+- [x] App instala em Android real
+- [x] Login funciona
+- [x] Convites funcionam
+- [x] Atendimentos funcionam
 
 ---
 
