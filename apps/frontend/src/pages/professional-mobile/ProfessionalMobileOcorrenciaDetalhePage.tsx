@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
 import { StateBox } from '../../components/ui/PageState';
@@ -21,6 +21,7 @@ export function ProfessionalMobileOcorrenciaDetalhePage() {
   const ocorrenciaId = Number(id);
   const validId = Number.isFinite(ocorrenciaId) && ocorrenciaId > 0;
   const { token, logout } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const ocorrenciaQuery = useQuery({
@@ -59,6 +60,14 @@ export function ProfessionalMobileOcorrenciaDetalhePage() {
           Consulte a descricao do problema e acompanhe a situacao atual informada pela administracao.
         </p>
       </section>
+
+      {location.state && isFeedbackState(location.state) && (
+        <FormAlert
+          tone={location.state.feedback.tone}
+          title={location.state.feedback.title}
+          message={location.state.feedback.message}
+        />
+      )}
 
       {ocorrenciaQuery.isLoading && (
         <StateBox
@@ -139,4 +148,13 @@ function requireToken(token: string | null) {
   }
 
   return token;
+}
+
+function isFeedbackState(value: unknown): value is { feedback: { tone: 'success' | 'error' | 'info'; title?: string; message: string } } {
+  if (!value || typeof value !== 'object' || !('feedback' in value)) {
+    return false;
+  }
+
+  const feedback = (value as { feedback?: unknown }).feedback;
+  return Boolean(feedback && typeof feedback === 'object' && 'message' in feedback && 'tone' in feedback);
 }

@@ -195,6 +195,13 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
           {!canStartAtendimento(atendimento.status) && !canFinishAtendimento(atendimento.status) && (
             <FormAlert tone="info" message="Este atendimento nao esta disponivel para iniciar ou finalizar agora." />
           )}
+
+          <Link
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-cyan-100 bg-white px-4 text-sm font-black text-cyan-700 transition hover:bg-cyan-50"
+            to={`/profissional/app/ocorrencias/nova?atendimentoId=${atendimento.id}`}
+          >
+            Abrir ocorrencia deste atendimento
+          </Link>
         </section>
       )}
 

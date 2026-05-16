@@ -57,6 +57,7 @@ import { ProfessionalMobileConviteDetalhePage } from '../pages/professional-mobi
 import { ProfessionalMobileConvitesPage } from '../pages/professional-mobile/ProfessionalMobileConvitesPage';
 import { ProfessionalMobileDisponibilidadePage } from '../pages/professional-mobile/ProfessionalMobileDisponibilidadePage';
 import { ProfessionalMobileHomePage } from '../pages/professional-mobile/ProfessionalMobileHomePage';
+import { ProfessionalMobileNovaOcorrenciaPage } from '../pages/professional-mobile/ProfessionalMobileNovaOcorrenciaPage';
 import { ProfessionalMobileOcorrenciaDetalhePage } from '../pages/professional-mobile/ProfessionalMobileOcorrenciaDetalhePage';
 import { ProfessionalMobileOcorrenciasPage } from '../pages/professional-mobile/ProfessionalMobileOcorrenciasPage';
 import { ProfessionalMobilePerfilPage } from '../pages/professional-mobile/ProfessionalMobilePerfilPage';
@@ -98,6 +99,7 @@ export function App() {
             <Route path="disponibilidade" element={<ProfessionalMobileDisponibilidadePage />} />
             <Route path="verificacao" element={<ProfessionalMobileVerificacaoPage />} />
             <Route path="ocorrencias" element={<ProfessionalMobileOcorrenciasPage />} />
+            <Route path="ocorrencias/nova" element={<ProfessionalMobileNovaOcorrenciaPage />} />
             <Route path="ocorrencias/:id" element={<ProfessionalMobileOcorrenciaDetalhePage />} />
           </Route>
         </Route>

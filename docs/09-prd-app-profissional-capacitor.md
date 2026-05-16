@@ -98,7 +98,7 @@ O backend segue sendo a fonte de verdade para autorização, aceite transacional
 - [x] Iniciar serviço
 - [x] Finalizar serviço
 - [x] Visualizar checkpoints
-- [ ] Abrir ocorrência
+- [x] Abrir ocorrência
 - [x] Listar ocorrências da profissional
 - [ ] Receber notificações push
 - [ ] Abrir convite/atendimento ao tocar na notificação
@@ -298,7 +298,7 @@ Cards principais:
 - [x] Checkpoint de fim
 - [x] Botão iniciar
 - [x] Botão finalizar
-- [ ] Botão abrir ocorrência
+- [x] Botão abrir ocorrência
 
 ### 8.7 Disponibilidade
 
@@ -327,11 +327,11 @@ Cards principais:
 ### 8.10 Ocorrências
 
 - [x] Listar ocorrências
-- [ ] Abrir nova ocorrência
-- [ ] Selecionar atendimento
-- [ ] Selecionar tipo
-- [ ] Descrever problema
-- [ ] Enviar ocorrência
+- [x] Abrir nova ocorrência
+- [x] Selecionar atendimento
+- [x] Selecionar tipo
+- [x] Descrever problema
+- [x] Enviar ocorrência
 - [x] Acompanhar status
 
 ### 8.11 Perfil
@@ -387,7 +387,7 @@ Cards principais:
 
 - [x] `GET /api/v1/ocorrencias/meus`
 - [x] `GET /api/v1/ocorrencias/{id}`
-- [ ] `POST /api/v1/ocorrencias`
+- [x] `POST /api/v1/ocorrencias`
 
 ### Notificações — novos endpoints
 
@@ -681,18 +681,18 @@ Critério de pronto:
 Objetivo: permitir registro de problemas operacionais.
 
 - [x] Listar ocorrências da profissional
-- [ ] Abrir ocorrência vinculada a atendimento
-- [ ] Selecionar tipo de ocorrência
-- [ ] Escrever descrição
-- [ ] Enviar ocorrência
+- [x] Abrir ocorrência vinculada a atendimento
+- [x] Selecionar tipo de ocorrência
+- [x] Escrever descrição
+- [x] Enviar ocorrência
 - [x] Ver detalhe da ocorrência
 - [x] Ver status da ocorrência
-- [ ] Tratar erro de atendimento inválido
+- [x] Tratar erro de atendimento inválido
 
 Critério de pronto:
 
-- [ ] Profissional consegue abrir ocorrência pelo app
-- [ ] Admin consegue visualizar ocorrência na web/admin
+- [x] Profissional consegue abrir ocorrência pelo app
+- [x] Admin consegue visualizar ocorrência na web/admin
 
 ---
 

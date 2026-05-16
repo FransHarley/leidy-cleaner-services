@@ -54,6 +54,12 @@ export function ProfessionalMobileOcorrenciasPage() {
         <p className="mt-3 text-sm leading-6 text-slate-600">
           Acompanhe os registros ja abertos na sua conta e consulte o andamento de cada atendimento relacionado.
         </p>
+        <Link
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-cyan-700 px-4 text-sm font-black text-white transition hover:bg-cyan-800"
+          to="/profissional/app/ocorrencias/nova"
+        >
+          Abrir nova ocorrencia
+        </Link>
       </section>
 
       <div className="grid grid-cols-2 gap-3">

@@ -22,11 +22,20 @@ type OcorrenciaFormValues = z.infer<typeof ocorrenciaSchema>;
 type OcorrenciaFormProps = {
   atendimentos: AtendimentoVisivel[];
   profile?: AtendimentosProfile;
+  initialAtendimentoId?: number;
+  submitLabel?: string;
   isSubmitting?: boolean;
   onSubmit: (payload: CriarOcorrenciaRequest) => void | Promise<void>;
 };
 
-export function OcorrenciaForm({ atendimentos, profile = 'CLIENTE', isSubmitting = false, onSubmit }: OcorrenciaFormProps) {
+export function OcorrenciaForm({
+  atendimentos,
+  profile = 'CLIENTE',
+  initialAtendimentoId = 0,
+  submitLabel = 'Registrar ocorrência',
+  isSubmitting = false,
+  onSubmit,
+}: OcorrenciaFormProps) {
   const {
     register,
     handleSubmit,
@@ -34,7 +43,7 @@ export function OcorrenciaForm({ atendimentos, profile = 'CLIENTE', isSubmitting
   } = useForm<OcorrenciaFormValues>({
     resolver: zodResolver(ocorrenciaSchema),
     defaultValues: {
-      atendimentoId: 0,
+      atendimentoId: initialAtendimentoId,
       tipo: 'OUTRO',
       descricao: '',
     },
@@ -111,7 +120,7 @@ export function OcorrenciaForm({ atendimentos, profile = 'CLIENTE', isSubmitting
           disabled={isSubmitting || atendimentos.length === 0}
           type="submit"
         >
-          {isSubmitting ? 'Registrando...' : 'Registrar ocorrência'}
+          {isSubmitting ? 'Registrando...' : submitLabel}
         </button>
       </div>
     </form>
