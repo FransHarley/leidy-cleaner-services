@@ -223,6 +223,7 @@ Campos principais:
 
 Regras:
 - `solicitacaoId` pode ser o vínculo inicial do pagamento
+- exatamente um vínculo operacional deve ser usado por pagamento: `solicitacaoId` ou `atendimentoId`
 - `atendimentoId` permanece nulo até o aceite válido
 - após aceite válido, o pagamento pago é associado ao atendimento criado
 

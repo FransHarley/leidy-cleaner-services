@@ -56,7 +56,7 @@ Do not silently reintroduce excluded features.
 - eligible professional listing
 - selection of exactly 1 eligible professional
 - invitation creation and response
-- first valid acceptance wins
+- attendance creation only after valid professional acceptance
 - attendance creation
 - payment creation and webhook confirmation
 - start/end service checkpoints

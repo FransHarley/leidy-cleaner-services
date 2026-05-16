@@ -54,7 +54,7 @@ Somente o cliente avalia a profissional após o atendimento finalizado.
 3. Cliente seleciona exatamente 1 profissional.
 4. Solicitação vai para `AGUARDANDO_PAGAMENTO`.
 5. Cliente paga via Asaas ou usa um `CreditoSolicitacao`.
-6. Backend confirma o pagamento por webhook ou reconciliação segura.
+6. Backend confirma o pagamento por webhook ou reconciliação segura e o `Pagamento` vira `PAGO`.
 7. Solicitação vai para `PAGA_AGUARDANDO_ACEITE` e o backend cria exatamente 1 `ConviteProfissional`.
 8. Profissional aceita ou recusa.
 9. Se aceitar, o backend cria `AtendimentoFaxina` já `CONFIRMADO` e vincula o pagamento pago ao atendimento.

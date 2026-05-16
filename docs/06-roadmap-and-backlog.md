@@ -97,7 +97,7 @@
 - criar exatamente 1 convite após confirmação
 
 ### Observação crítica
-Pagamento confirmado nesse fluxo cria convite, não cria atendimento.
+Pagamento confirmado nesse fluxo cria convite, não cria atendimento nem atualiza atendimento para `CONFIRMADO`.
 
 ---
 

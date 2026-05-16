@@ -87,7 +87,7 @@ Módulos centrais:
 2. No aceite válido, o backend roda transação para:
    - validar convite ativo
    - validar solicitação paga e aberta
-   - criar `AtendimentoFaxina` com status `CONFIRMADO`
+   - criar `AtendimentoFaxina` já com status `CONFIRMADO`
    - vincular o pagamento pago ao atendimento criado
    - marcar o convite como aceito
    - atualizar a solicitação para `ACEITA`

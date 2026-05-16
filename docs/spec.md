@@ -30,13 +30,14 @@ Fluxo central:
 5. cliente seleciona exatamente 1 profissional elegível
 6. solicitação vai para `AGUARDANDO_PAGAMENTO`
 7. cliente paga via Asaas ou usa `CreditoSolicitacao`
-8. backend confirma pagamento
-9. backend cria exatamente 1 convite
-10. profissional aceita ou recusa
-11. aceite válido cria o atendimento
-12. recusa ou expiração podem gerar crédito de reposição
-13. profissional executa o serviço
-14. cliente avalia a profissional
+8. backend confirma pagamento por webhook ou `consultar-status`
+9. `Pagamento` vira `PAGO` e a solicitação vai para `PAGA_AGUARDANDO_ACEITE`
+10. backend cria exatamente 1 convite
+11. profissional aceita ou recusa
+12. aceite válido cria `AtendimentoFaxina` já `CONFIRMADO` e vincula o pagamento já pago ao atendimento
+13. recusa ou expiração podem gerar crédito de reposição
+14. profissional executa o serviço
+15. cliente avalia a profissional
 
 ---
 

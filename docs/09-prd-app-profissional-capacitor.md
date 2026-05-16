@@ -177,6 +177,7 @@ Por isso, a interface precisa ser simples, com botões grandes e linguagem diret
 ```
 
 O aceite do convite precisa continuar transacional no backend. A rota de aceite deve validar solicitação paga e aberta, convite ativo, criar atendimento já confirmado, vincular o pagamento já pago ao atendimento e rodar em transação.
+O app não deve sugerir que o serviço depende de pagamento depois do aceite, porque a profissional só recebe convite quando o pagamento da solicitação já foi confirmado.
 
 ---
 

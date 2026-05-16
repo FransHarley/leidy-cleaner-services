@@ -149,9 +149,9 @@ Pode:
 ### 6.3 Fluxo financeiro
 1. Cliente seleciona 1 profissional elegível
 2. Backend cria cobrança vinculada à solicitação ou usa crédito interno de reposição
-3. Se for Asaas, o cliente paga e o gateway envia webhook
-4. Backend confirma o pagamento e cria o convite
-5. Se houver aceite válido, o backend cria `AtendimentoFaxina` e vincula o pagamento pago ao atendimento
+3. Se for Asaas, o cliente paga e o gateway envia webhook ou a plataforma executa reconciliação segura com `consultar-status`
+4. Backend confirma o pagamento, marca `Pagamento` como `PAGO`, move a solicitação para `PAGA_AGUARDANDO_ACEITE` e cria exatamente 1 convite
+5. Se houver aceite válido, o backend cria `AtendimentoFaxina` já `CONFIRMADO` e vincula o pagamento pago ao atendimento
 6. Se houver recusa ou expiração, o backend gera `CreditoSolicitacao` equivalente
 
 ---

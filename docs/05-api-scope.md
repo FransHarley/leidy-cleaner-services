@@ -235,6 +235,7 @@ Regras:
 - deve receber exatamente um vínculo: `solicitacaoId` ou `atendimentoId`
 - não pode receber os dois ao mesmo tempo
 - no fluxo pré-pago principal, o pagamento nasce com `solicitacaoId`
+- o backend valida propriedade, status da solicitação ou atendimento e prevenção de pagamento duplicado
 
 ### GET `/pagamentos/{id}`
 Consulta detalhe do pagamento.
@@ -268,7 +269,47 @@ Regras:
 
 ---
 
-## 12. Créditos de solicitação
+## 12. Monitoramento admin
+
+### GET `/pagamentos`
+Lista pagamentos para o admin.
+
+Observações:
+- o filtro pode incluir `status`, `metodoPagamento`, `atendimentoId` e `solicitacaoId`
+- pagamentos por solicitação sem atendimento devem continuar visíveis
+
+### GET `/admin/convites/monitoramento`
+Lista convites operacionais do fluxo pré-pago.
+
+Filtros principais:
+- `status`
+- `solicitacaoId`
+- `profissionalId`
+- `clienteId`
+- `expiraAntesDe`
+- `expiraDepoisDe`
+- `somenteVencidos`
+
+### GET `/admin/creditos-solicitacao`
+Lista créditos de reposição operacional.
+
+Filtros principais:
+- `status`
+- `clienteId`
+- `solicitacaoOrigemId`
+- `solicitacaoUsoId`
+- `pagamentoOrigemId`
+- `tipoServico`
+- `regiaoId`
+- `criadoDe`
+- `criadoAte`
+
+### GET `/admin/creditos-solicitacao/{id}`
+Detalha um crédito de solicitação para o admin.
+
+---
+
+## 13. Créditos de solicitação
 
 ### GET `/creditos-solicitacao/meus`
 Lista créditos de reposição do cliente autenticado.
@@ -286,7 +327,7 @@ Efeitos esperados:
 
 ---
 
-## 13. Avaliações
+## 14. Avaliações
 
 ### POST `/avaliacoes`
 Cliente cria avaliação da profissional após atendimento finalizado.
@@ -296,7 +337,7 @@ Consulta avaliações públicas ou operacionais conforme escopo da API.
 
 ---
 
-## 14. Regras transversais
+## 15. Regras transversais
 
 - frontend nunca confirma pagamento
 - backend é a fonte de verdade para elegibilidade, pagamento, convite, atendimento e crédito
