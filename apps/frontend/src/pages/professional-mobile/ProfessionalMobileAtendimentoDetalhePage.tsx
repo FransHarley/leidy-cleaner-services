@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { FormAlert } from '../../components/ui/FormAlert';
@@ -11,19 +11,32 @@ import {
 } from '../../features/atendimentos/atendimentoDisplay';
 import {
   buscarAtendimento,
+  finalizarAtendimento,
+  iniciarAtendimento,
   listarCheckpointsAtendimento,
 } from '../../features/atendimentos/atendimentosApi';
-import { formatCurrency, formatDateTime, getTipoServicoAtendimentoLabel } from '../../features/atendimentos/atendimentoLabels';
+import { canFinishAtendimento, canStartAtendimento, formatCurrency, formatDateTime, getTipoServicoAtendimentoLabel } from '../../features/atendimentos/atendimentoLabels';
 import { AtendimentoStatusBadge } from '../../features/atendimentos/AtendimentoStatusBadge';
+import { CheckpointActionForm } from '../../features/atendimentos/CheckpointActionForm';
 import { CheckpointsList } from '../../features/atendimentos/CheckpointsList';
-import type { AtendimentoVisivel } from '../../features/atendimentos/types';
+import type { AtendimentoVisivel, CheckpointServicoRequest } from '../../features/atendimentos/types';
 import { useAuth } from '../../features/auth/useAuth';
 import { ApiError, getApiErrorMessage } from '../../services/apiClient';
 
 const queryKeys = {
+  list: ['atendimentos', 'meus', 'profissional'],
   detalhe: (id: number) => ['atendimentos', 'profissional', id],
   checkpoints: (id: number) => ['atendimentos', 'profissional', id, 'checkpoints'],
 };
+
+type Feedback = {
+  tone: 'error' | 'success' | 'info';
+  title: string;
+  message: string;
+  details?: string[];
+};
+
+type AttendanceAction = 'iniciar' | 'finalizar';
 
 export function ProfessionalMobileAtendimentoDetalhePage() {
   const { id } = useParams();
@@ -31,6 +44,8 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
   const validId = Number.isFinite(atendimentoId) && atendimentoId > 0;
   const { token, logout } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const atendimentoQuery = useQuery({
     queryKey: validId ? queryKeys.detalhe(atendimentoId) : ['atendimentos', 'profissional', 'mobile', 'invalid'],
@@ -50,6 +65,62 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
     [atendimentoQuery.error, checkpointsQuery.error],
   );
 
+  const startMutation = useMutation({
+    mutationFn: (payload: CheckpointServicoRequest) => iniciarAtendimento(requireToken(token), atendimentoId, payload),
+    onMutate: () => {
+      setFeedback(null);
+    },
+    onSuccess: async () => {
+      await refreshAttendanceQueries(queryClient, atendimentoId);
+      setFeedback({
+        tone: 'success',
+        title: 'Servico iniciado',
+        message: 'Inicio do servico registrado com sucesso.',
+      });
+    },
+    onError: (error) => {
+      handleActionError({
+        error,
+        action: 'iniciar',
+        atendimentoId,
+        logout,
+        navigate,
+        queryClient,
+        refetchAtendimento: atendimentoQuery.refetch,
+        refetchCheckpoints: checkpointsQuery.refetch,
+        setFeedback,
+      });
+    },
+  });
+
+  const finishMutation = useMutation({
+    mutationFn: (payload: CheckpointServicoRequest) => finalizarAtendimento(requireToken(token), atendimentoId, payload),
+    onMutate: () => {
+      setFeedback(null);
+    },
+    onSuccess: async () => {
+      await refreshAttendanceQueries(queryClient, atendimentoId);
+      setFeedback({
+        tone: 'success',
+        title: 'Servico finalizado',
+        message: 'Finalizacao do servico registrada com sucesso.',
+      });
+    },
+    onError: (error) => {
+      handleActionError({
+        error,
+        action: 'finalizar',
+        atendimentoId,
+        logout,
+        navigate,
+        queryClient,
+        refetchAtendimento: atendimentoQuery.refetch,
+        refetchCheckpoints: checkpointsQuery.refetch,
+        setFeedback,
+      });
+    },
+  });
+
   useEffect(() => {
     if (protectedError) {
       logout();
@@ -66,6 +137,10 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
     );
   }
 
+  const atendimento = atendimentoQuery.data;
+  const actionPending = startMutation.isPending || finishMutation.isPending;
+  const atendimentoCanceladoSemExecucao = atendimento?.status === 'CANCELADO' && !atendimento.inicioRealEm && !atendimento.fimRealEm;
+
   return (
     <div className="grid gap-4">
       <section className="rounded-[1.75rem] border border-cyan-100 bg-white p-5 shadow-sm">
@@ -75,6 +150,8 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
           Consulte os dados do servico, os horarios registrados e os checkpoints ja enviados pelo sistema.
         </p>
       </section>
+
+      {feedback && <FormAlert tone={feedback.tone} title={feedback.title} message={feedback.message} details={feedback.details} />}
 
       {atendimentoQuery.isLoading && (
         <StateBox
@@ -94,9 +171,34 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
         />
       )}
 
-      {atendimentoQuery.data && <ProfessionalMobileAtendimentoDetailCard atendimento={atendimentoQuery.data} />}
+      {atendimento && <ProfessionalMobileAtendimentoDetailCard atendimento={atendimento} />}
 
-      {atendimentoQuery.data && (
+      {atendimentoCanceladoSemExecucao && (
+        <FormAlert tone="info" message="Atendimento cancelado. Nao ha acao operacional disponivel para este servico." />
+      )}
+
+      {atendimento && !atendimentoCanceladoSemExecucao && (
+        <section className="grid gap-3">
+          {canStartAtendimento(atendimento.status) && (
+            <CheckpointActionForm actionLabel="Iniciar servico" isSubmitting={actionPending} onSubmit={handleStart} />
+          )}
+
+          {canFinishAtendimento(atendimento.status) && (
+            <CheckpointActionForm
+              actionLabel="Finalizar servico"
+              isSubmitting={actionPending}
+              tone="finish"
+              onSubmit={handleFinish}
+            />
+          )}
+
+          {!canStartAtendimento(atendimento.status) && !canFinishAtendimento(atendimento.status) && (
+            <FormAlert tone="info" message="Este atendimento nao esta disponivel para iniciar ou finalizar agora." />
+          )}
+        </section>
+      )}
+
+      {atendimento && (
         <section className="grid gap-4">
           <div>
             <h3 className="text-xl font-black text-slate-900">Checkpoints</h3>
@@ -128,6 +230,24 @@ export function ProfessionalMobileAtendimentoDetalhePage() {
       <MobileBackLink />
     </div>
   );
+
+  function handleStart(payload: CheckpointServicoRequest) {
+    if (actionPending) {
+      return;
+    }
+
+    setFeedback(null);
+    startMutation.mutate(payload);
+  }
+
+  function handleFinish(payload: CheckpointServicoRequest) {
+    if (actionPending) {
+      return;
+    }
+
+    setFeedback(null);
+    finishMutation.mutate(payload);
+  }
 }
 
 function ProfessionalMobileAtendimentoDetailCard({ atendimento }: { atendimento: AtendimentoVisivel }) {
@@ -169,6 +289,140 @@ function MobileBackLink() {
     >
       Voltar para atendimentos
     </Link>
+  );
+}
+
+async function refreshAttendanceQueries(queryClient: ReturnType<typeof useQueryClient>, atendimentoId: number) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.list }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.detalhe(atendimentoId) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.checkpoints(atendimentoId) }),
+  ]);
+}
+
+function handleActionError({
+  error,
+  action,
+  atendimentoId,
+  logout,
+  navigate,
+  queryClient,
+  refetchAtendimento,
+  refetchCheckpoints,
+  setFeedback,
+}: {
+  error: unknown;
+  action: AttendanceAction;
+  atendimentoId: number;
+  logout: () => void;
+  navigate: ReturnType<typeof useNavigate>;
+  queryClient: ReturnType<typeof useQueryClient>;
+  refetchAtendimento: () => Promise<unknown>;
+  refetchCheckpoints: () => Promise<unknown>;
+  setFeedback: (feedback: Feedback) => void;
+}) {
+  if (error instanceof ApiError && error.status === 401) {
+    logout();
+    navigate('/entrar', { replace: true });
+    return;
+  }
+
+  if (shouldRefreshAfterActionError(error)) {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.list });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.detalhe(atendimentoId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.checkpoints(atendimentoId) });
+    void Promise.all([refetchAtendimento(), refetchCheckpoints()]);
+  }
+
+  setFeedback({
+    tone: 'error',
+    title: buildActionErrorTitle(error, action),
+    message: buildActionErrorMessage(error, action),
+    details: error instanceof ApiError ? error.errors : [],
+  });
+}
+
+function buildActionErrorTitle(error: unknown, action: AttendanceAction) {
+  if (error instanceof ApiError) {
+    if (error.status === 403) {
+      return 'Voce nao pode atualizar este atendimento';
+    }
+
+    if (error.code === 'ATENDIMENTO_JA_INICIADO') {
+      return 'Servico ja iniciado';
+    }
+
+    if (error.code === 'ATENDIMENTO_JA_FINALIZADO') {
+      return 'Servico ja finalizado';
+    }
+
+    if (error.code === 'ATENDIMENTO_NAO_INICIADO') {
+      return 'Servico ainda nao iniciado';
+    }
+
+    if (error.code === 'ATENDIMENTO_STATUS_INCOMPATIVEL' || error.status === 409) {
+      return action === 'iniciar' ? 'Nao foi possivel iniciar agora' : 'Nao foi possivel finalizar agora';
+    }
+
+    if (error.code === 'ATENDIMENTO_NOT_FOUND' || error.status === 404) {
+      return 'Atendimento nao encontrado';
+    }
+  }
+
+  return action === 'iniciar' ? 'Nao foi possivel iniciar o servico' : 'Nao foi possivel finalizar o servico';
+}
+
+function buildActionErrorMessage(error: unknown, action: AttendanceAction) {
+  if (error instanceof ApiError) {
+    if (error.status === 403) {
+      return 'Voce nao tem permissao para atualizar este atendimento.';
+    }
+
+    if (error.code === 'ATENDIMENTO_JA_INICIADO') {
+      return 'Este atendimento ja foi iniciado anteriormente.';
+    }
+
+    if (error.code === 'ATENDIMENTO_JA_FINALIZADO') {
+      return 'Este atendimento ja foi finalizado anteriormente.';
+    }
+
+    if (error.code === 'ATENDIMENTO_NAO_INICIADO') {
+      return 'Nao e possivel finalizar antes de registrar o inicio do servico.';
+    }
+
+    if (error.code === 'ATENDIMENTO_STATUS_INCOMPATIVEL') {
+      return action === 'iniciar'
+        ? 'Este atendimento nao esta disponivel para iniciar neste momento.'
+        : 'Este atendimento nao esta disponivel para finalizar neste momento.';
+    }
+
+    if (error.status === 409) {
+      return action === 'iniciar'
+        ? 'Este atendimento nao esta disponivel para iniciar neste momento.'
+        : 'Este atendimento nao esta disponivel para finalizar neste momento.';
+    }
+
+    if (error.code === 'ATENDIMENTO_NOT_FOUND' || error.status === 404) {
+      return 'Este atendimento nao esta disponivel para sua conta.';
+    }
+  }
+
+  return getApiErrorMessage(error);
+}
+
+function shouldRefreshAfterActionError(error: unknown) {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  return (
+    error.code === 'ATENDIMENTO_JA_INICIADO' ||
+    error.code === 'ATENDIMENTO_JA_FINALIZADO' ||
+    error.code === 'ATENDIMENTO_NAO_INICIADO' ||
+    error.code === 'ATENDIMENTO_STATUS_INCOMPATIVEL' ||
+    error.code === 'ATENDIMENTO_NOT_FOUND' ||
+    error.status === 404 ||
+    error.status === 409
   );
 }
 
