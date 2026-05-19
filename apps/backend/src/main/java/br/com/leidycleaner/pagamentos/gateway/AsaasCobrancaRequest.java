@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 
 public record AsaasCobrancaRequest(
+        String customerId,
         String externalReference,
         String callbackParametroNome,
         Long callbackReferenciaId,
@@ -14,12 +15,14 @@ public record AsaasCobrancaRequest(
 ) {
 
     public AsaasCobrancaRequest(
+            String customerId,
             Long atendimentoId,
             MetodoPagamento metodoPagamento,
             BigDecimal valor,
             String descricao
     ) {
         this(
+                customerId,
                 "atendimento-" + atendimentoId,
                 "atendimentoId",
                 atendimentoId,
@@ -30,12 +33,14 @@ public record AsaasCobrancaRequest(
     }
 
     public static AsaasCobrancaRequest paraSolicitacao(
+            String customerId,
             Long solicitacaoId,
             MetodoPagamento metodoPagamento,
             BigDecimal valor,
             String descricao
     ) {
         return new AsaasCobrancaRequest(
+                customerId,
                 "solicitacao-" + solicitacaoId,
                 "solicitacaoId",
                 solicitacaoId,

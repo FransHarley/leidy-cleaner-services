@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -28,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,6 +47,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.clientes.repository.PerfilClienteRepository;
 import br.com.leidycleaner.atendimentos.repository.CheckpointServicoRepository;
 import br.com.leidycleaner.avaliacoes.repository.AvaliacaoProfissionalRepository;
 import br.com.leidycleaner.convites.entity.ConviteProfissional;
@@ -57,6 +61,8 @@ import br.com.leidycleaner.creditos.repository.CreditoSolicitacaoRepository;
 import br.com.leidycleaner.enderecos.repository.EnderecoRepository;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutGatewayResponse;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutRequest;
+import br.com.leidycleaner.pagamentos.gateway.AsaasCustomerGatewayResponse;
+import br.com.leidycleaner.pagamentos.gateway.AsaasCustomerRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasGatewayClient;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPagamentoGatewayResponse;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPixQrCodeGatewayResponse;
@@ -100,6 +106,7 @@ class SolicitacaoFaxinaIntegrationTest {
     private final PagamentoRepository pagamentoRepository;
     private final CreditoSolicitacaoRepository creditoSolicitacaoRepository;
     private final WebhookEventRepository webhookEventRepository;
+    private final PerfilClienteRepository perfilClienteRepository;
     private final PerfilProfissionalRepository perfilProfissionalRepository;
     private final DocumentoVerificacaoRepository documentoVerificacaoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -160,6 +167,7 @@ class SolicitacaoFaxinaIntegrationTest {
             PagamentoRepository pagamentoRepository,
             CreditoSolicitacaoRepository creditoSolicitacaoRepository,
             WebhookEventRepository webhookEventRepository,
+            PerfilClienteRepository perfilClienteRepository,
             PerfilProfissionalRepository perfilProfissionalRepository,
             DocumentoVerificacaoRepository documentoVerificacaoRepository,
             UsuarioRepository usuarioRepository,
@@ -181,6 +189,7 @@ class SolicitacaoFaxinaIntegrationTest {
         this.pagamentoRepository = pagamentoRepository;
         this.creditoSolicitacaoRepository = creditoSolicitacaoRepository;
         this.webhookEventRepository = webhookEventRepository;
+        this.perfilClienteRepository = perfilClienteRepository;
         this.perfilProfissionalRepository = perfilProfissionalRepository;
         this.documentoVerificacaoRepository = documentoVerificacaoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -2386,6 +2395,69 @@ class SolicitacaoFaxinaIntegrationTest {
                     assertThat(pagamento.getUrlPagamento()).isEqualTo("https://asaas.local/invoice/pay_m5a_checkout_cria");
                     assertThat(pagamento.isWebhookProcessado()).isFalse();
                 });
+    }
+
+    @Test
+    void clienteCriaCheckoutReutilizaAsaasCustomerIdPersistido() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.reusa-customer", "75132333344");
+        var perfilCliente = buscarPerfilClienteDoAtendimento(atendimento.atendimentoId());
+        perfilCliente.registrarAsaasCustomerId("cus_cliente_existente");
+        perfilClienteRepository.saveAndFlush(perfilCliente);
+        mockarCheckoutAsaas("pay_m5a_customer_reuse", "https://asaas.local/invoice/pay_m5a_customer_reuse");
+
+        mockMvc.perform(post("/api/v1/pagamentos/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.checkoutUrl").value("https://asaas.local/invoice/pay_m5a_customer_reuse"));
+
+        verify(asaasGatewayClient, never()).criarCliente(any());
+        ArgumentCaptor<AsaasCheckoutRequest> checkoutCaptor = ArgumentCaptor.forClass(AsaasCheckoutRequest.class);
+        verify(asaasGatewayClient).criarCheckout(checkoutCaptor.capture());
+        assertThat(checkoutCaptor.getValue().customerId()).isEqualTo("cus_cliente_existente");
+        assertThat(buscarPerfilClienteDoAtendimento(atendimento.atendimentoId()).getAsaasCustomerId())
+                .isEqualTo("cus_cliente_existente");
+    }
+
+    @Test
+    void clienteCriaCheckoutCriaAsaasCustomerEPersisteIdNoPerfil() throws Exception {
+        AtendimentoCriado atendimento = criarAtendimentoAguardandoPagamento("m5a.cria-customer", "75132433344");
+        var perfilCliente = buscarPerfilClienteDoAtendimento(atendimento.atendimentoId());
+        var usuarioCliente = perfilCliente.getUsuario();
+        mockarCheckoutAsaas("pay_m5a_customer_create", "https://asaas.local/invoice/pay_m5a_customer_create");
+        given(asaasGatewayClient.criarCliente(any()))
+                .willReturn(new AsaasCustomerGatewayResponse("cus_cliente_novo"));
+        clearInvocations(asaasGatewayClient);
+
+        mockMvc.perform(post("/api/v1/pagamentos/checkout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + atendimento.tokenCliente())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(checkoutJson(atendimento.atendimentoId(), "PIX")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("PENDENTE"));
+
+        ArgumentCaptor<AsaasCustomerRequest> customerCaptor = ArgumentCaptor.forClass(AsaasCustomerRequest.class);
+        ArgumentCaptor<AsaasCheckoutRequest> checkoutCaptor = ArgumentCaptor.forClass(AsaasCheckoutRequest.class);
+        verify(asaasGatewayClient).criarCliente(customerCaptor.capture());
+        verify(asaasGatewayClient).criarCheckout(checkoutCaptor.capture());
+
+        AsaasCustomerRequest customerRequest = customerCaptor.getValue();
+        assertThat(customerRequest.name()).isEqualTo(usuarioCliente.getNomeCompleto());
+        assertThat(customerRequest.email()).isEqualTo(usuarioCliente.getEmail());
+        assertThat(customerRequest.mobilePhone()).isEqualTo("51999998888");
+        assertThat(customerRequest.phone()).isNull();
+        assertThat(customerRequest.cpfCnpj()).isEqualTo(usuarioCliente.getCpf());
+        assertThat(checkoutCaptor.getValue().customerId()).isEqualTo("cus_cliente_novo");
+        assertThat(buscarPerfilClienteDoAtendimento(atendimento.atendimentoId()).getAsaasCustomerId())
+                .isEqualTo("cus_cliente_novo");
+        assertThat(atendimentoFaxinaRepository.findById(atendimento.atendimentoId()))
+                .isPresent()
+                .get()
+                .extracting(atendimentoPersistido -> atendimentoPersistido.getStatus().name())
+                .isEqualTo("AGUARDANDO_PAGAMENTO");
     }
 
     @Test
@@ -5953,6 +6025,7 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     private void mockarCriacaoAsaas(String gatewayPaymentId, String status, String urlPagamento, String pixCopiaECola) {
+        mockarClienteAsaas("cus_cliente_teste");
         given(asaasGatewayClient.criarCobranca(any()))
                 .willReturn(new AsaasPagamentoGatewayResponse(
                         gatewayPaymentId,
@@ -5963,6 +6036,11 @@ class SolicitacaoFaxinaIntegrationTest {
                         pixCopiaECola,
                         "{\"id\":\"%s\",\"status\":\"%s\"}".formatted(gatewayPaymentId, status)
                 ));
+    }
+
+    private void mockarClienteAsaas(String customerId) {
+        given(asaasGatewayClient.criarCliente(any()))
+                .willReturn(new AsaasCustomerGatewayResponse(customerId));
     }
 
     private void mockarPixQrCodeAsaas(
@@ -5980,6 +6058,7 @@ class SolicitacaoFaxinaIntegrationTest {
     }
 
     private void mockarCheckoutAsaas(String checkoutId, String checkoutUrl) {
+        mockarClienteAsaas("cus_cliente_teste");
         given(asaasGatewayClient.criarCheckout(any()))
                 .willAnswer(invocation -> {
                     AsaasCheckoutRequest request = invocation.getArgument(0);
@@ -5993,6 +6072,13 @@ class SolicitacaoFaxinaIntegrationTest {
                             "{\"id\":\"%s\",\"billingType\":\"%s\"}".formatted(checkoutId, metodoPagamento)
                     );
                 });
+    }
+
+    private br.com.leidycleaner.clientes.entity.PerfilCliente buscarPerfilClienteDoAtendimento(Long atendimentoId) {
+        return atendimentoFaxinaRepository.findByIdWithResumo(atendimentoId)
+                .orElseThrow()
+                .getCliente()
+                ;
     }
 
     private void atualizarAgregadosProfissional(Long perfilId, String notaMedia, int totalAvaliacoes) {

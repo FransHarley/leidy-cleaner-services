@@ -30,6 +30,9 @@ public class PerfilCliente {
     @Column(name = "observacoes_internas")
     private String observacoesInternas;
 
+    @Column(name = "asaas_customer_id", length = 120, unique = true)
+    private String asaasCustomerId;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private OffsetDateTime criadoEm;
 
@@ -68,11 +71,22 @@ public class PerfilCliente {
         return observacoesInternas;
     }
 
+    public String getAsaasCustomerId() {
+        return asaasCustomerId;
+    }
+
     public OffsetDateTime getCriadoEm() {
         return criadoEm;
     }
 
     public OffsetDateTime getAtualizadoEm() {
         return atualizadoEm;
+    }
+
+    public void registrarAsaasCustomerId(String asaasCustomerId) {
+        if (asaasCustomerId == null || asaasCustomerId.isBlank()) {
+            throw new IllegalArgumentException("asaasCustomerId nao pode ser vazio");
+        }
+        this.asaasCustomerId = asaasCustomerId.trim();
     }
 }

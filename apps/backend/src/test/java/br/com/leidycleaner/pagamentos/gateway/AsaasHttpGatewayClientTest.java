@@ -55,6 +55,7 @@ class AsaasHttpGatewayClientTest {
 
         AsaasCheckoutGatewayResponse response = client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_123",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 descricaoCompleta
@@ -68,7 +69,7 @@ class AsaasHttpGatewayClientTest {
         assertThat(capturedRequest.accessToken()).isEqualTo("test-api-key");
 
         JsonNode body = capturedRequest.body();
-        assertThat(body.path("customer").asText()).isEqualTo("cus_test_123");
+        assertThat(body.path("customer").asText()).isEqualTo("cus_checkout_123");
         assertThat(body.path("billingType").asText()).isEqualTo("CREDIT_CARD");
         assertThat(body.path("value").decimalValue()).isEqualByComparingTo("180.00");
         assertThat(body.path("dueDate").asText()).isNotBlank();
@@ -81,6 +82,9 @@ class AsaasHttpGatewayClientTest {
         assertThat(body.has("cancelUrl")).isFalse();
         assertThat(body.has("expiredUrl")).isFalse();
         assertThat(body.has("callback")).isFalse();
+        assertThat(body.has("split")).isFalse();
+        assertThat(body.has("splitPayment")).isFalse();
+        assertThat(body.has("transfer")).isFalse();
     }
 
     @Test
@@ -96,6 +100,7 @@ class AsaasHttpGatewayClientTest {
 
         AsaasCheckoutGatewayResponse response = client.criarCheckout(new AsaasCheckoutRequest(
                 321L,
+                "cus_checkout_pix",
                 MetodoPagamento.PIX,
                 new BigDecimal("210.00"),
                 "Pagamento via Pix"
@@ -121,6 +126,7 @@ class AsaasHttpGatewayClientTest {
 
         client.criarCheckout(new AsaasCheckoutRequest(
                 654L,
+                "cus_checkout_log",
                 MetodoPagamento.PIX,
                 new BigDecimal("199.90"),
                 "Pagamento Pix com log"
@@ -134,6 +140,40 @@ class AsaasHttpGatewayClientTest {
                 .contains("externalReference=atendimento-654")
                 .doesNotContain("test-api-key")
                 .doesNotContain("access_token");
+    }
+
+    @Test
+    void criarClienteEnviaDadosDoPagadorSemExporSegredosNosLogs(CapturedOutput output) throws Exception {
+        iniciarServidor(200, """
+                {
+                  "id": "cus_client_123"
+                }
+                """);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties());
+
+        AsaasCustomerGatewayResponse response = client.criarCliente(new AsaasCustomerRequest(
+                "Cliente Solicitacao",
+                "cliente@example.com",
+                null,
+                "51999998888",
+                "12345678901"
+        ));
+
+        assertThat(response.customerId()).isEqualTo("cus_client_123");
+        assertThat(capturedRequest.method()).isEqualTo("POST");
+        assertThat(capturedRequest.path()).isEqualTo("/customers");
+        JsonNode body = capturedRequest.body();
+        assertThat(body.path("name").asText()).isEqualTo("Cliente Solicitacao");
+        assertThat(body.path("email").asText()).isEqualTo("cliente@example.com");
+        assertThat(body.path("mobilePhone").asText()).isEqualTo("51999998888");
+        assertThat(body.path("cpfCnpj").asText()).isEqualTo("12345678901");
+        assertThat(body.has("phone")).isFalse();
+        assertThat(output)
+                .contains("asaas_customer_create_request")
+                .contains("endpoint=/customers")
+                .doesNotContain("test-api-key")
+                .doesNotContain("access_token")
+                .doesNotContain("12345678901");
     }
 
     @Test
@@ -196,6 +236,7 @@ class AsaasHttpGatewayClientTest {
 
         client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_disabled",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -223,6 +264,7 @@ class AsaasHttpGatewayClientTest {
 
         AsaasCheckoutGatewayResponse response = client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_callback",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -254,6 +296,7 @@ class AsaasHttpGatewayClientTest {
         AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties);
 
         AsaasPagamentoGatewayResponse response = client.criarCobranca(AsaasCobrancaRequest.paraSolicitacao(
+                "cus_solicitacao_456",
                 456L,
                 MetodoPagamento.PIX,
                 new BigDecimal("180.00"),
@@ -262,6 +305,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThat(response.gatewayPaymentId()).isEqualTo("pay_test_solicitacao");
         JsonNode body = capturedRequest.body();
+        assertThat(body.path("customer").asText()).isEqualTo("cus_solicitacao_456");
         assertThat(body.path("externalReference").asText()).isEqualTo("solicitacao-456");
         assertThat(body.path("description").asText()).isEqualTo("Leidy Cleaner Services - solicitacao #456");
         assertThat(body.path("callback").path("successUrl").asText())
@@ -285,6 +329,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_400",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -320,6 +365,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_404",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -344,6 +390,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_sem_invoice",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -365,6 +412,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_sem_api",
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
@@ -378,24 +426,48 @@ class AsaasHttpGatewayClientTest {
     }
 
     @Test
-    void criarCheckoutSemDefaultCustomerIdFalhaAntesDeChamarAsaas() throws Exception {
+    void criarCheckoutSemCustomerIdEFallbackDesabilitadoFalhaAntesDeChamarAsaas() throws Exception {
         iniciarServidor(200, "{}");
-        AsaasProperties properties = properties();
-        properties.setDefaultCustomerId("");
-        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties());
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                null,
                 MetodoPagamento.CARTAO_CREDITO,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"
         )))
                 .isInstanceOfSatisfying(BusinessException.class, exception -> {
-                    assertThat(exception.getCode()).isEqualTo("ASAAS_CONFIG_INVALIDA");
+                    assertThat(exception.getCode()).isEqualTo("ASAAS_CUSTOMER_REQUIRED");
                     assertThat(exception.getStatus()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(exception.getMessage()).isEqualTo("ASAAS_DEFAULT_CUSTOMER_ID nao configurado");
+                    assertThat(exception.getMessage()).isEqualTo("Cliente do Asaas obrigatorio para criar pagamento");
                 });
         assertThat(capturedRequest).isNull();
+    }
+
+    @Test
+    void criarCheckoutSemCustomerIdUsaFallbackSomenteQuandoHabilitado() throws Exception {
+        iniciarServidor(200, """
+                {
+                  "id": "pay_fallback_enabled",
+                  "status": "PENDING",
+                  "invoiceUrl": "https://sandbox.asaas.com/i/pay_fallback_enabled"
+                }
+                """);
+        AsaasProperties properties = properties();
+        properties.setDefaultCustomerFallbackEnabled(true);
+        AsaasHttpGatewayClient client = new AsaasHttpGatewayClient(properties);
+
+        AsaasCheckoutGatewayResponse response = client.criarCheckout(new AsaasCheckoutRequest(
+                123L,
+                null,
+                MetodoPagamento.CARTAO_CREDITO,
+                new BigDecimal("180.00"),
+                "Descricao do atendimento"
+        ));
+
+        assertThat(response.checkoutId()).isEqualTo("pay_fallback_enabled");
+        assertThat(capturedRequest.body().path("customer").asText()).isEqualTo("cus_test_123");
     }
 
     @Test
@@ -405,6 +477,7 @@ class AsaasHttpGatewayClientTest {
 
         assertThatThrownBy(() -> client.criarCheckout(new AsaasCheckoutRequest(
                 123L,
+                "cus_checkout_sem_metodo",
                 null,
                 new BigDecimal("180.00"),
                 "Descricao do atendimento"

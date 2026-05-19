@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.leidycleaner.atendimentos.entity.AtendimentoFaxina;
 import br.com.leidycleaner.atendimentos.entity.StatusAtendimento;
 import br.com.leidycleaner.atendimentos.repository.AtendimentoFaxinaRepository;
+import br.com.leidycleaner.clientes.entity.PerfilCliente;
+import br.com.leidycleaner.clientes.repository.PerfilClienteRepository;
 import br.com.leidycleaner.atendimentos.service.AtendimentoExpiracaoService;
 import br.com.leidycleaner.core.exception.BusinessException;
 import br.com.leidycleaner.pagamentos.dto.CheckoutDto;
@@ -24,6 +26,8 @@ import br.com.leidycleaner.pagamentos.entity.StatusPagamento;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutGatewayResponse;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCheckoutRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasCobrancaRequest;
+import br.com.leidycleaner.pagamentos.gateway.AsaasCustomerGatewayResponse;
+import br.com.leidycleaner.pagamentos.gateway.AsaasCustomerRequest;
 import br.com.leidycleaner.pagamentos.gateway.AsaasGatewayClient;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPagamentoGatewayResponse;
 import br.com.leidycleaner.pagamentos.gateway.AsaasPixQrCodeGatewayResponse;
@@ -43,6 +47,7 @@ public class PagamentoService {
     private final AtendimentoFaxinaRepository atendimentoFaxinaRepository;
     private final SolicitacaoFaxinaRepository solicitacaoFaxinaRepository;
     private final SolicitacaoProfissionalSelecionadoRepository selecionadoRepository;
+    private final PerfilClienteRepository perfilClienteRepository;
     private final AsaasGatewayClient asaasGatewayClient;
     private final UsuarioRepository usuarioRepository;
     private final AtendimentoExpiracaoService atendimentoExpiracaoService;
@@ -53,6 +58,7 @@ public class PagamentoService {
             AtendimentoFaxinaRepository atendimentoFaxinaRepository,
             SolicitacaoFaxinaRepository solicitacaoFaxinaRepository,
             SolicitacaoProfissionalSelecionadoRepository selecionadoRepository,
+            PerfilClienteRepository perfilClienteRepository,
             AsaasGatewayClient asaasGatewayClient,
             UsuarioRepository usuarioRepository,
             AtendimentoExpiracaoService atendimentoExpiracaoService,
@@ -62,6 +68,7 @@ public class PagamentoService {
         this.atendimentoFaxinaRepository = atendimentoFaxinaRepository;
         this.solicitacaoFaxinaRepository = solicitacaoFaxinaRepository;
         this.selecionadoRepository = selecionadoRepository;
+        this.perfilClienteRepository = perfilClienteRepository;
         this.asaasGatewayClient = asaasGatewayClient;
         this.usuarioRepository = usuarioRepository;
         this.atendimentoExpiracaoService = atendimentoExpiracaoService;
@@ -85,8 +92,10 @@ public class PagamentoService {
         if (pagamentoRepository.existsByAtendimentoId(atendimento.getId())) {
             throw new BusinessException("PAGAMENTO_JA_EXISTE", "Atendimento ja possui pagamento", HttpStatus.CONFLICT);
         }
+        String asaasCustomerId = obterOuCriarAsaasCustomerId(atendimento.getCliente());
 
         AsaasPagamentoGatewayResponse gatewayResponse = asaasGatewayClient.criarCobranca(new AsaasCobrancaRequest(
+                asaasCustomerId,
                 atendimento.getId(),
                 request.metodoPagamento(),
                 atendimento.getValorServico(),
@@ -115,8 +124,10 @@ public class PagamentoService {
         if (pagamentoRepository.existsBySolicitacaoId(solicitacao.getId())) {
             throw new BusinessException("PAGAMENTO_JA_EXISTE", "Solicitacao ja possui pagamento", HttpStatus.CONFLICT);
         }
+        String asaasCustomerId = obterOuCriarAsaasCustomerId(solicitacao.getCliente());
 
         AsaasPagamentoGatewayResponse gatewayResponse = asaasGatewayClient.criarCobranca(AsaasCobrancaRequest.paraSolicitacao(
+                asaasCustomerId,
                 solicitacao.getId(),
                 request.metodoPagamento(),
                 solicitacao.getValorServico(),
@@ -253,9 +264,11 @@ public class PagamentoService {
             return checkoutDtoParaPagamentoExistente(pagamentoExistente.get());
         }
         MetodoPagamento metodoPagamento = validarMetodoPagamentoCheckout(request.metodoPagamento());
+        String asaasCustomerId = obterOuCriarAsaasCustomerId(atendimento.getCliente());
 
         AsaasCheckoutGatewayResponse gatewayResponse = asaasGatewayClient.criarCheckout(new AsaasCheckoutRequest(
                 atendimento.getId(),
+                asaasCustomerId,
                 metodoPagamento,
                 atendimento.getValorServico(),
                 "Leidy Cleaner Services - atendimento #" + atendimento.getId()
@@ -475,6 +488,79 @@ public class PagamentoService {
         }
         if (pagamento.getAtendimento() != null) {
             return "atendimento-" + pagamento.getAtendimento().getId();
+        }
+        return null;
+    }
+
+    private String obterOuCriarAsaasCustomerId(PerfilCliente cliente) {
+        PerfilCliente perfilCliente = perfilClienteRepository.findByIdForUpdate(cliente.getId())
+                .orElseThrow(() -> new BusinessException(
+                        "CLIENTE_NOT_FOUND",
+                        "Perfil de cliente nao encontrado",
+                        HttpStatus.NOT_FOUND
+                ));
+        if (perfilCliente.getAsaasCustomerId() != null && !perfilCliente.getAsaasCustomerId().isBlank()) {
+            return perfilCliente.getAsaasCustomerId();
+        }
+
+        AsaasCustomerGatewayResponse gatewayResponse = asaasGatewayClient.criarCliente(
+                criarClienteAsaasRequest(perfilCliente)
+        );
+        perfilCliente.registrarAsaasCustomerId(gatewayResponse.customerId());
+        perfilClienteRepository.save(perfilCliente);
+        return gatewayResponse.customerId();
+    }
+
+    private AsaasCustomerRequest criarClienteAsaasRequest(PerfilCliente perfilCliente) {
+        var usuario = perfilCliente.getUsuario();
+        String telefoneNormalizado = normalizarTelefoneAsaas(usuario.getTelefone());
+        String phone = telefoneFixoAsaas(telefoneNormalizado);
+        String mobilePhone = telefoneMovelAsaas(telefoneNormalizado);
+        return new AsaasCustomerRequest(
+                textoObrigatorio(usuario.getNomeCompleto(), "Nome do cliente obrigatorio para criar cliente no Asaas"),
+                textoObrigatorio(usuario.getEmail(), "Email do cliente obrigatorio para criar cliente no Asaas"),
+                phone,
+                mobilePhone,
+                normalizarDocumentoAsaas(usuario.getCpf())
+        );
+    }
+
+    private String textoObrigatorio(String valor, String mensagemErro) {
+        if (valor == null || valor.isBlank()) {
+            throw new BusinessException("CLIENTE_DADOS_INVALIDOS", mensagemErro, HttpStatus.CONFLICT);
+        }
+        return valor.trim();
+    }
+
+    private String normalizarTelefoneAsaas(String telefone) {
+        if (telefone == null || telefone.isBlank()) {
+            return null;
+        }
+        String digitos = telefone.replaceAll("\\D", "");
+        if (digitos.startsWith("55") && (digitos.length() == 12 || digitos.length() == 13)) {
+            digitos = digitos.substring(2);
+        }
+        if (digitos.length() == 10 || digitos.length() == 11) {
+            return digitos;
+        }
+        return null;
+    }
+
+    private String telefoneFixoAsaas(String telefoneNormalizado) {
+        return telefoneNormalizado != null && telefoneNormalizado.length() == 10 ? telefoneNormalizado : null;
+    }
+
+    private String telefoneMovelAsaas(String telefoneNormalizado) {
+        return telefoneNormalizado != null && telefoneNormalizado.length() == 11 ? telefoneNormalizado : null;
+    }
+
+    private String normalizarDocumentoAsaas(String documento) {
+        if (documento == null || documento.isBlank()) {
+            return null;
+        }
+        String digitos = documento.replaceAll("\\D", "");
+        if (digitos.length() == 11 || digitos.length() == 14) {
+            return digitos;
         }
         return null;
     }

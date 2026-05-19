@@ -13,6 +13,7 @@ public class AsaasProperties {
     private String apiKey;
     private String webhookToken;
     private String defaultCustomerId;
+    private boolean defaultCustomerFallbackEnabled;
     private String paymentBillingType;
     private boolean paymentAutoRedirect = true;
     private boolean paymentCallbackEnabled;
@@ -51,6 +52,14 @@ public class AsaasProperties {
 
     public void setDefaultCustomerId(String defaultCustomerId) {
         this.defaultCustomerId = defaultCustomerId;
+    }
+
+    public boolean isDefaultCustomerFallbackEnabled() {
+        return defaultCustomerFallbackEnabled;
+    }
+
+    public void setDefaultCustomerFallbackEnabled(boolean defaultCustomerFallbackEnabled) {
+        this.defaultCustomerFallbackEnabled = defaultCustomerFallbackEnabled;
     }
 
     public String getPaymentBillingType() {

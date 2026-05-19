@@ -27,6 +27,7 @@ import br.com.leidycleaner.pagamentos.entity.MetodoPagamento;
 @Service
 public class AsaasHttpGatewayClient implements AsaasGatewayClient {
 
+    private static final String CUSTOMER_ENDPOINT = "/customers";
     private static final String PAYMENT_ENDPOINT = "/payments";
     private static final String PIX_QR_CODE_ENDPOINT = "/payments/{id}/pixQrCode";
     private static final List<String> MVP_PAYMENT_BILLING_TYPES = List.of("CREDIT_CARD", "PIX");
@@ -49,10 +50,41 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
     }
 
     @Override
+    public AsaasCustomerGatewayResponse criarCliente(AsaasCustomerRequest request) {
+        validarConfiguracaoApi();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("name", request.name());
+        body.put("email", request.email());
+        adicionarSePresente(body, "phone", request.phone());
+        adicionarSePresente(body, "mobilePhone", request.mobilePhone());
+        adicionarSePresente(body, "cpfCnpj", request.cpfCnpj());
+        LOGGER.info(
+                "asaas_customer_create_request endpoint={} hasEmail={} hasPhone={} hasMobilePhone={} hasCpfCnpj={}",
+                CUSTOMER_ENDPOINT,
+                request.email() != null && !request.email().isBlank(),
+                request.phone() != null && !request.phone().isBlank(),
+                request.mobilePhone() != null && !request.mobilePhone().isBlank(),
+                request.cpfCnpj() != null && !request.cpfCnpj().isBlank()
+        );
+
+        JsonNode response = executarRequisicaoAsaas(
+                () -> restClient.post()
+                        .uri(CUSTOMER_ENDPOINT)
+                        .header("access_token", properties.getApiKey())
+                        .body(body)
+                        .retrieve()
+                        .body(JsonNode.class),
+                "Nao foi possivel criar cliente no Asaas",
+                CUSTOMER_ENDPOINT
+        );
+        return paraCustomerResponse(response);
+    }
+
+    @Override
     public AsaasPagamentoGatewayResponse criarCobranca(AsaasCobrancaRequest request) {
         validarConfiguracaoCobranca();
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("customer", properties.getDefaultCustomerId());
+        body.put("customer", resolverCustomerId(request.customerId()));
         body.put("billingType", paraBillingType(request.metodoPagamento()));
         body.put("value", request.valor());
         body.put("dueDate", LocalDate.now(clock).plusDays(1).toString());
@@ -93,6 +125,7 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
     public AsaasCheckoutGatewayResponse criarCheckout(AsaasCheckoutRequest request) {
         MetodoPagamento metodoPagamento = validarMetodoPagamentoCheckout(request.metodoPagamento());
         AsaasPagamentoGatewayResponse response = criarCobranca(new AsaasCobrancaRequest(
+                request.customerId(),
                 request.atendimentoId(),
                 metodoPagamento,
                 request.valor(),
@@ -138,13 +171,6 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
 
     private void validarConfiguracaoCobranca() {
         validarConfiguracaoApi();
-        if (properties.getDefaultCustomerId() == null || properties.getDefaultCustomerId().isBlank()) {
-            throw new BusinessException(
-                    "ASAAS_CONFIG_INVALIDA",
-                    "ASAAS_DEFAULT_CUSTOMER_ID nao configurado",
-                    HttpStatus.CONFLICT
-            );
-        }
     }
 
     private void validarConfiguracaoApi() {
@@ -216,6 +242,17 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
                     HttpStatus.BAD_REQUEST
             );
         };
+    }
+
+    private AsaasCustomerGatewayResponse paraCustomerResponse(JsonNode response) {
+        if (response == null || response.path("id").asText(null) == null) {
+            throw new BusinessException(
+                    "ASAAS_RESPONSE_INVALIDA",
+                    "Resposta invalida do Asaas",
+                    HttpStatus.BAD_GATEWAY
+            );
+        }
+        return new AsaasCustomerGatewayResponse(response.path("id").asText());
     }
 
     private AsaasPagamentoGatewayResponse paraGatewayResponse(JsonNode response) {
@@ -322,6 +359,36 @@ public class AsaasHttpGatewayClient implements AsaasGatewayClient {
             return null;
         }
         return valor.trim();
+    }
+
+    private void adicionarSePresente(Map<String, Object> body, String chave, String valor) {
+        String valorLimpo = limparTexto(valor);
+        if (valorLimpo != null) {
+            body.put(chave, valorLimpo);
+        }
+    }
+
+    private String resolverCustomerId(String customerId) {
+        String customerIdExplicito = limparTexto(customerId);
+        if (customerIdExplicito != null) {
+            return customerIdExplicito;
+        }
+        if (properties.isDefaultCustomerFallbackEnabled()) {
+            String customerPadrao = limparTexto(properties.getDefaultCustomerId());
+            if (customerPadrao != null) {
+                return customerPadrao;
+            }
+            throw new BusinessException(
+                    "ASAAS_CONFIG_INVALIDA",
+                    "ASAAS_DEFAULT_CUSTOMER_ID nao configurado",
+                    HttpStatus.CONFLICT
+            );
+        }
+        throw new BusinessException(
+                "ASAAS_CUSTOMER_REQUIRED",
+                "Cliente do Asaas obrigatorio para criar pagamento",
+                HttpStatus.CONFLICT
+        );
     }
 
     private String urlRetorno(String urlBase, Long atendimentoId) {
