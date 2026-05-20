@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './app/App';
 import { AuthProvider } from './features/auth/AuthProvider';
+import { NativePlatformBindings } from './features/native/NativePlatformBindings';
 import { ApiError } from './services/apiClient';
 import './styles.css';
 
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <NativePlatformBindings />
         <AuthProvider>
           <App />
         </AuthProvider>
