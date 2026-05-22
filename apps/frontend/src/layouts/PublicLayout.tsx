@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { BrandMark } from '../components/public/BrandMark';
@@ -40,7 +40,7 @@ const footerColumns = [
   },
 ];
 
-export function PublicLayout() {
+export function PublicLayout({ children }: { children?: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -104,7 +104,7 @@ export function PublicLayout() {
           )}
         </header>
 
-        <Outlet />
+        {children ?? <Outlet />}
 
         <WhatsAppFloatingButton />
 

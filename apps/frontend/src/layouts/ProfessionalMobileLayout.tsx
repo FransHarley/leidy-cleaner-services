@@ -89,6 +89,7 @@ export function ProfessionalMobileLayout() {
 
   const pageTitle = titleByPath.find((item) => location.pathname.startsWith(item.matchPrefix))?.title ?? 'Inicio';
   const firstName = getFirstName(user.nomeCompleto) || 'Profissional';
+  const foregroundTargetPath = foregroundPushEvent?.targetPath ?? null;
 
   function handleLogout() {
     logout();
@@ -124,13 +125,13 @@ export function ProfessionalMobileLayout() {
                 title={foregroundPushEvent.title}
                 message={foregroundPushEvent.body}
               />
-              {foregroundPushEvent.targetPath && (
+              {foregroundTargetPath && (
                 <button
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-black text-cyan-800 transition hover:bg-cyan-100"
                   type="button"
                   onClick={() => {
                     setForegroundPushEvent(null);
-                    navigate(foregroundPushEvent.targetPath);
+                    navigate(foregroundTargetPath);
                   }}
                 >
                   Abrir agora

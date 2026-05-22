@@ -4,6 +4,7 @@ import { getDashboardPath } from '../auth/session';
 import type { UsuarioAutenticado } from '../auth/types';
 
 export const PROFESSIONAL_APP_HOME_PATH = '/profissional/app';
+export const PROFESSIONAL_APP_LANDING_PATH = '/app-profissional';
 export const PROFESSIONAL_APP_ONLY_REASON = 'app-profissional';
 
 export function isNativeProfessionalApp() {
@@ -24,6 +25,10 @@ export function getPreferredAuthenticatedPath(user: Pick<UsuarioAutenticado, 'ti
 
 export function buildProfessionalAppOnlyLoginPath() {
   return `/entrar?motivo=${encodeURIComponent(PROFESSIONAL_APP_ONLY_REASON)}`;
+}
+
+export function buildProfessionalAppLoginPath(redirectTo = PROFESSIONAL_APP_HOME_PATH) {
+  return `/entrar?redirectTo=${encodeURIComponent(redirectTo)}`;
 }
 
 export function getProfessionalAppOnlyMessage() {

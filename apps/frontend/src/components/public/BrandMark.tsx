@@ -2,11 +2,12 @@ import logoUrl from '../../assets/branding/logo_300.png';
 
 type BrandMarkProps = {
   compact?: boolean;
+  href?: string;
 };
 
-export function BrandMark({ compact = false }: BrandMarkProps) {
+export function BrandMark({ compact = false, href = '/' }: BrandMarkProps) {
   return (
-    <a href="/" className="flex items-center gap-3" aria-label="Leidy Cleaner Services - início">
+    <a href={href} className="flex items-center gap-3" aria-label="Leidy Cleaner Services - inicio">
       <img
         src={logoUrl}
         alt=""

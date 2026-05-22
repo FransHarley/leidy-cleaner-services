@@ -44,11 +44,11 @@ import { ProfissionalOnboardingPage } from '../pages/app/ProfissionalOnboardingP
 import { ProfissionalRegioesPage } from '../pages/app/ProfissionalRegioesPage';
 import { ProfissionalVerificacaoPage } from '../pages/app/ProfissionalVerificacaoPage';
 import { ClientRegistrationPage } from '../pages/public/ClientRegistrationPage';
-import { HomePage } from '../pages/public/HomePage';
 import { CodeOfConductPage, PrivacyPolicyPage, TermsOfUsePage } from '../pages/public/LegalPages';
 import { LoginPage } from '../pages/public/LoginPage';
 import { NotFoundPage } from '../pages/public/NotFoundPage';
 import { PagamentoGatewayRetornoPage } from '../pages/public/PagamentoGatewayRetornoPage';
+import { ProfessionalAppLandingPage } from '../pages/public/ProfessionalAppLandingPage';
 import { ProfessionalRegistrationPage } from '../pages/public/ProfessionalRegistrationPage';
 import { RegistrationChoicePage } from '../pages/public/RegistrationChoicePage';
 import { ProfessionalMobileAtendimentosPage } from '../pages/professional-mobile/ProfessionalMobileAtendimentosPage';
@@ -67,12 +67,13 @@ import { AppHomeRedirect } from '../routes/AppHomeRedirect';
 import { RequireAuth } from '../routes/RequireAuth';
 import { RequireProfessionalAppProfile } from '../routes/RequireProfessionalAppProfile';
 import { RequireProfile } from '../routes/RequireProfile';
+import { RootEntryRoute } from '../routes/RootEntryRoute';
 
 export function App() {
   return (
     <Routes>
+      <Route path="/" element={<RootEntryRoute />} />
       <Route element={<PublicLayout />}>
-        <Route index element={<HomePage />} />
         <Route path="termos-de-uso" element={<TermsOfUsePage />} />
         <Route path="privacidade" element={<PrivacyPolicyPage />} />
         <Route path="codigo-de-conduta" element={<CodeOfConductPage />} />
@@ -80,6 +81,7 @@ export function App() {
         <Route path="pagamento/cancelado" element={<PagamentoGatewayRetornoPage resultado="cancelado" />} />
         <Route path="pagamento/expirado" element={<PagamentoGatewayRetornoPage resultado="expirado" />} />
       </Route>
+      <Route path="app-profissional" element={<ProfessionalAppLandingPage />} />
       <Route path="login" element={<Navigate to="/entrar" replace />} />
       <Route path="entrar" element={<LoginPage />} />
       <Route path="cadastro">
