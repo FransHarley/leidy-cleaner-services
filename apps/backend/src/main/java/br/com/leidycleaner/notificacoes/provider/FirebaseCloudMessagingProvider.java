@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -23,6 +25,9 @@ import com.google.firebase.messaging.Notification;
 public class FirebaseCloudMessagingProvider implements PushNotificationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseCloudMessagingProvider.class);
+    private static final String OPERATIONAL_ANDROID_CHANNEL_ID = "leidy_cleaner_operacional_high";
+    private static final String DEFAULT_NOTIFICATION_TITLE = "Leidy Cleaner Services";
+    private static final String DEFAULT_NOTIFICATION_BODY = "Voce recebeu uma nova atualizacao operacional.";
 
     private final boolean enabled;
     private final FirebaseMessaging firebaseMessaging;
@@ -63,6 +68,8 @@ public class FirebaseCloudMessagingProvider implements PushNotificationProvider 
         try {
             String token = command.token();
             PushNotificationPayload payload = command.payload();
+            String notificationTitle = normalizeNotificationText(payload.titulo(), DEFAULT_NOTIFICATION_TITLE);
+            String notificationBody = normalizeNotificationText(payload.mensagem(), DEFAULT_NOTIFICATION_BODY);
 
             // Validate token
             if (token == null || token.trim().isEmpty()) {
@@ -74,14 +81,25 @@ public class FirebaseCloudMessagingProvider implements PushNotificationProvider 
             }
 
             // Build FCM message
-            Map<String, String> dataMap = new HashMap<>(payload.dados());
+            Map<String, String> dataMap = payload.dados() == null ? new HashMap<>() : new HashMap<>(payload.dados());
             
             Message message = Message.builder()
                     .setToken(token)
+                    .setAndroidConfig(
+                            AndroidConfig.builder()
+                                    .setPriority(AndroidConfig.Priority.HIGH)
+                                    .setNotification(
+                                            AndroidNotification.builder()
+                                                    .setChannelId(OPERATIONAL_ANDROID_CHANNEL_ID)
+                                                    .setSound("default")
+                                                    .build()
+                                    )
+                                    .build()
+                    )
                     .setNotification(
                             Notification.builder()
-                                    .setTitle(payload.titulo())
-                                    .setBody(payload.mensagem())
+                                    .setTitle(notificationTitle)
+                                    .setBody(notificationBody)
                                     .build()
                     )
                     .putAllData(dataMap)
@@ -145,5 +163,13 @@ public class FirebaseCloudMessagingProvider implements PushNotificationProvider 
         }
 
         return FirebaseMessaging.getInstance(app);
+    }
+
+    private String normalizeNotificationText(String value, String fallback) {
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+
+        return value.trim();
     }
 }

@@ -36,7 +36,7 @@ public class NotificacaoPushService {
 
         PushNotificationPayload payload = new PushNotificationPayload(
                 "Teste de notificacao",
-                "As notificacoes do app profissional estao prontas para configuracao.",
+                "As notificacoes do app profissional estao prontas para uso operacional.",
                 Map.of("tipo", "TESTE_PUSH")
         );
 
